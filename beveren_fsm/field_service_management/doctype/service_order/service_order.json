@@ -1,0 +1,273 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-25 02:37:49.320139",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_ky2r",
+  "title",
+  "naming_series",
+  "customer",
+  "type",
+  "priority",
+  "column_break_llgp",
+  "transaction_date",
+  "due_date",
+  "column_break_ralr",
+  "company",
+  "amended_from",
+  "accounting_dimensions_section",
+  "cost_center",
+  "column_break_ekul",
+  "project",
+  "section_break_nsgl",
+  "services",
+  "section_break_kdif",
+  "parts",
+  "more_info_tab",
+  "contact_details_section",
+  "service_address",
+  "column_break_jctz",
+  "contact_person",
+  "asset_details_section",
+  "item",
+  "appointment_preference_section",
+  "preferred_date_1",
+  "preferred_date_2",
+  "preferred_time",
+  "column_break_gtsg",
+  "preference_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ky2r",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "SVC-ORD-.YYYY.-",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_llgp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_ralr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "{customer_name}",
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Title",
+   "no_copy": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Service Order",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "column_break_ekul",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "services",
+   "fieldtype": "Table",
+   "label": "Services",
+   "options": "Sales Order Item"
+  },
+  {
+   "fieldname": "section_break_kdif",
+   "fieldtype": "Section Break",
+   "label": "Parts"
+  },
+  {
+   "fieldname": "parts",
+   "fieldtype": "Table",
+   "label": "Parts",
+   "options": "Sales Order Item"
+  },
+  {
+   "fieldname": "section_break_nsgl",
+   "fieldtype": "Section Break",
+   "label": "Services"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date",
+   "reqd": 1
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nCritical",
+   "reqd": 1
+  },
+  {
+   "fieldname": "more_info_tab",
+   "fieldtype": "Tab Break",
+   "label": "More Info"
+  },
+  {
+   "fieldname": "contact_details_section",
+   "fieldtype": "Section Break",
+   "label": "Contact Details"
+  },
+  {
+   "fieldname": "service_address",
+   "fieldtype": "Link",
+   "label": "Service Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "column_break_jctz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact Person",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "asset_details_section",
+   "fieldtype": "Section Break",
+   "label": "Asset Details"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "appointment_preference_section",
+   "fieldtype": "Section Break",
+   "label": "Appointment Preference"
+  },
+  {
+   "fieldname": "preferred_date_1",
+   "fieldtype": "Date",
+   "label": "Preferred Date 1"
+  },
+  {
+   "fieldname": "preferred_date_2",
+   "fieldtype": "Date",
+   "label": "Preferred Date 2"
+  },
+  {
+   "fieldname": "preferred_time",
+   "fieldtype": "Select",
+   "label": "Preferred Time",
+   "options": "\nAnytime\nMorning\nAfternoon\nEvening"
+  },
+  {
+   "fieldname": "column_break_gtsg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "preference_note",
+   "fieldtype": "Small Text",
+   "label": "Preference Note"
+  },
+  {
+   "default": "Service",
+   "fieldname": "type",
+   "fieldtype": "Link",
+   "label": "Type",
+   "options": "Service Type",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-01-26 18:50:53.437086",
+ "modified_by": "Administrator",
+ "module": "Field Service Management",
+ "name": "Service Order",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

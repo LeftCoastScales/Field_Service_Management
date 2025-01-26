@@ -1,5 +1,5 @@
 app_name = "beveren_fsm"
-app_title = "Field Service Management"
+app_title = "Beveren Field Service Management"
 app_publisher = "Beveren Software"
 app_description = "Beveren Software\'s Field Service Management App"
 app_email = "info@beverensoftware.com"
