@@ -48,7 +48,7 @@ app_license = "mit"
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
-# bench --site zatca.local export-fixtures
+# bench --site fsm.local export-fixtures
 fixtures = [
     "Service Type",
     {
