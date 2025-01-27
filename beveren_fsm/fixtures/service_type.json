@@ -1,5 +1,33 @@
 [
  {
+  "description": "Inspection",
+  "docstatus": 0,
+  "doctype": "Service Type",
+  "modified": "2025-01-26 22:30:17.524784",
+  "name": "Inspection"
+ },
+ {
+  "description": "Installation",
+  "docstatus": 0,
+  "doctype": "Service Type",
+  "modified": "2025-01-26 22:30:35.026509",
+  "name": "Installation"
+ },
+ {
+  "description": "Maintenance",
+  "docstatus": 0,
+  "doctype": "Service Type",
+  "modified": "2025-01-26 22:31:27.623079",
+  "name": "Maintenance"
+ },
+ {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Service Type",
+  "modified": "2025-01-26 22:31:39.374374",
+  "name": "Emergency"
+ },
+ {
   "description": "Service",
   "docstatus": 0,
   "doctype": "Service Type",
