@@ -6,31 +6,37 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "request_details_section",
+  "overview",
   "naming_series",
+  "company",
+  "currency",
   "type",
-  "customer",
   "subject",
   "description",
   "column_break_kzwu",
+  "posting_date",
   "due_date",
   "priority",
   "project",
   "cost_center",
-  "company",
-  "contact_details_section",
-  "service_address",
-  "column_break_zrjq",
-  "contact",
-  "asset_details_section",
-  "item",
+  "status",
+  "customer_details_section",
+  "customer",
+  "customer_address",
+  "customer_contact",
+  "column_break_phrd",
+  "customer_name",
+  "address_details",
+  "contact_details",
   "appointment_preference_section",
-  "preferred_date_1",
-  "preferred_date_2",
-  "preferred_time",
+  "preferred_date_time_1",
+  "preferred_date_time_2",
+  "preferred_date_time_3",
   "column_break_extu",
   "preference_note",
   "amended_from",
+  "asset_details_section",
+  "items",
   "tab_2_tab",
   "notes"
  ],
@@ -81,45 +87,9 @@
    "reqd": 1
   },
   {
-   "allow_in_quick_entry": 1,
-   "fieldname": "contact",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Contact",
-   "reqd": 1
-  },
-  {
-   "fieldname": "request_details_section",
-   "fieldtype": "Section Break",
-   "label": "Request Details"
-  },
-  {
-   "fieldname": "contact_details_section",
-   "fieldtype": "Section Break",
-   "label": "Contact Details"
-  },
-  {
-   "allow_in_quick_entry": 1,
-   "fieldname": "service_address",
-   "fieldtype": "Link",
-   "label": "Service Address",
-   "options": "Address",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_zrjq",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "asset_details_section",
    "fieldtype": "Section Break",
    "label": "Asset Details"
-  },
-  {
-   "fieldname": "item",
-   "fieldtype": "Link",
-   "label": "Item",
-   "options": "Item"
   },
   {
    "fieldname": "appointment_preference_section",
@@ -127,24 +97,8 @@
    "label": "Appointment Preference"
   },
   {
-   "fieldname": "preferred_date_1",
-   "fieldtype": "Date",
-   "label": "Preferred Date 1"
-  },
-  {
-   "fieldname": "preferred_date_2",
-   "fieldtype": "Data",
-   "label": "Preferred Date 2"
-  },
-  {
    "fieldname": "column_break_extu",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "preferred_time",
-   "fieldtype": "Select",
-   "label": "Preferred Time",
-   "options": "\nAnytime\nMorning\nAfternoon\nEvening"
   },
   {
    "fieldname": "preference_note",
@@ -168,7 +122,8 @@
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
-   "options": "Company"
+   "options": "Company",
+   "reqd": 1
   },
   {
    "fieldname": "amended_from",
@@ -207,12 +162,103 @@
    "fieldtype": "Table",
    "label": "Notes",
    "options": "Service Notes"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "overview",
+   "fieldtype": "Section Break",
+   "label": "Overview"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nConverted\nDue Soon\nOverdue\nHold\nClosed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer_details_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Details"
+  },
+  {
+   "fieldname": "column_break_phrd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fetch_if_empty": 1,
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "customer.customer_primary_address",
+   "fetch_if_empty": 1,
+   "fieldname": "customer_address",
+   "fieldtype": "Data",
+   "label": "Customer Address",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "customer.customer_primary_contact",
+   "fetch_if_empty": 1,
+   "fieldname": "customer_contact",
+   "fieldtype": "Data",
+   "label": "Customer Contact",
+   "read_only": 1
+  },
+  {
+   "fieldname": "address_details",
+   "fieldtype": "Data",
+   "label": "Address Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "contact_details",
+   "fieldtype": "Data",
+   "label": "Contact Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "preferred_date_time_1",
+   "fieldtype": "Datetime",
+   "label": "Preferred Date & Time - 1"
+  },
+  {
+   "fieldname": "preferred_date_time_2",
+   "fieldtype": "Datetime",
+   "label": "Preferred Date & Time - 2"
+  },
+  {
+   "fieldname": "preferred_date_time_3",
+   "fieldtype": "Datetime",
+   "label": "Preferred Date & Time - 3"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Service Items"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-26 18:41:27.769555",
+ "modified": "2025-01-30 08:21:38.877641",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
