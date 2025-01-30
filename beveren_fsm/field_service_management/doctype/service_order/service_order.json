@@ -13,7 +13,7 @@
   "type",
   "priority",
   "column_break_llgp",
-  "transaction_date",
+  "posting_date",
   "due_date",
   "column_break_ralr",
   "company",
@@ -91,13 +91,6 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "transaction_date",
-   "fieldtype": "Date",
-   "label": "Date",
-   "reqd": 1
   },
   {
    "allow_on_submit": 1,
@@ -240,12 +233,20 @@
    "label": "Type",
    "options": "Service Type",
    "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-26 18:50:53.437086",
+ "modified": "2025-01-30 12:36:51.076653",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",

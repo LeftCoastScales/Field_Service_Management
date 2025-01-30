@@ -23,11 +23,14 @@
   "customer_details_section",
   "customer",
   "customer_address",
-  "customer_contact",
+  "address_details",
+  "contact_person",
+  "contact_person_name",
   "column_break_phrd",
   "customer_name",
-  "address_details",
-  "contact_details",
+  "email_id",
+  "phone",
+  "fax",
   "appointment_preference_section",
   "preferred_date_time_1",
   "preferred_date_time_2",
@@ -176,16 +179,24 @@
    "label": "Overview"
   },
   {
+   "default": "Today",
    "fieldname": "posting_date",
    "fieldtype": "Date",
    "label": "Posting Date",
    "reqd": 1
   },
   {
+   "allow_on_submit": 1,
+   "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Status",
-   "options": "Open\nConverted\nDue Soon\nOverdue\nHold\nClosed",
+   "no_copy": 1,
+   "options": "Open\nConverted\nDue Soon\nOverdue\nOn Hold\nClosed",
+   "print_hide": 1,
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -214,23 +225,9 @@
    "read_only": 1
   },
   {
-   "fetch_from": "customer.customer_primary_contact",
-   "fetch_if_empty": 1,
-   "fieldname": "customer_contact",
-   "fieldtype": "Data",
-   "label": "Customer Contact",
-   "read_only": 1
-  },
-  {
    "fieldname": "address_details",
    "fieldtype": "Data",
    "label": "Address Details",
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_details",
-   "fieldtype": "Data",
-   "label": "Contact Details",
    "read_only": 1
   },
   {
@@ -253,12 +250,43 @@
    "fieldtype": "Table",
    "label": "Items",
    "options": "Service Items"
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fax",
+   "fieldtype": "Data",
+   "label": "Fax",
+   "read_only": 1
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Link",
+   "label": "Contact Person",
+   "options": "Lead"
+  },
+  {
+   "fetch_from": "contact_person.lead_name",
+   "fieldname": "contact_person_name",
+   "fieldtype": "Data",
+   "label": "Contact Person Name",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-30 08:21:38.877641",
+ "modified": "2025-01-30 13:22:06.286376",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
