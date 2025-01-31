@@ -9,6 +9,7 @@
   "section_break_ky2r",
   "title",
   "naming_series",
+  "status",
   "customer",
   "type",
   "priority",
@@ -63,7 +64,6 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "{customer_name}",
    "fieldname": "title",
    "fieldtype": "Data",
    "hidden": 1,
@@ -126,7 +126,7 @@
    "fieldname": "services",
    "fieldtype": "Table",
    "label": "Services",
-   "options": "Sales Order Item"
+   "options": "Service Order Item"
   },
   {
    "fieldname": "section_break_kdif",
@@ -137,7 +137,7 @@
    "fieldname": "parts",
    "fieldtype": "Table",
    "label": "Parts",
-   "options": "Sales Order Item"
+   "options": "Service Order Item"
   },
   {
    "fieldname": "section_break_nsgl",
@@ -155,6 +155,8 @@
    "default": "Medium",
    "fieldname": "priority",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Priority",
    "options": "Low\nMedium\nHigh\nCritical",
    "reqd": 1
@@ -204,6 +206,8 @@
   {
    "fieldname": "preferred_date_1",
    "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Preferred Date 1"
   },
   {
@@ -230,23 +234,27 @@
    "default": "Service",
    "fieldname": "type",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Type",
    "options": "Service Type",
    "reqd": 1
   },
   {
    "allow_on_submit": 1,
-   "default": "Today",
-   "fieldname": "posting_date",
-   "fieldtype": "Date",
-   "label": "Posting Date",
-   "reqd": 1
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nAppointment\nScheduled\nDispatched\nIn Progress\nCompleted",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-30 12:36:51.076653",
+ "modified": "2025-01-30 15:25:12.790687",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",
@@ -269,6 +277,31 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "color": "Blue",
+   "title": "Open"
+  },
+  {
+   "color": "Cyan",
+   "title": "Appointment"
+  },
+  {
+   "color": "Orange",
+   "title": "Scheduled"
+  },
+  {
+   "color": "Yellow",
+   "title": "Dispatched"
+  },
+  {
+   "color": "Purple",
+   "title": "In Progress"
+  },
+  {
+   "color": "Green",
+   "title": "Completed"
+  }
+ ],
  "track_changes": 1
 }

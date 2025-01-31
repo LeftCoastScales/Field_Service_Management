@@ -1,46 +1,40 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "ST-.#######",
- "creation": "2025-01-25 03:37:40.466216",
+ "autoname": "SKILL-.####",
+ "creation": "2025-01-30 04:31:34.638684",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "first_name",
-  "column_break_jvsh",
-  "other_names",
-  "full_name"
+  "skill",
+  "column_break_efqd",
+  "proficiency"
  ],
  "fields": [
   {
-   "fieldname": "column_break_jvsh",
+   "fieldname": "skill",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Skill",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_efqd",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "other_names",
-   "fieldtype": "Data",
-   "label": "Other Names"
-  },
-  {
-   "fieldname": "full_name",
-   "fieldtype": "Data",
-   "label": "Full Name",
-   "read_only": 1
-  },
-  {
-   "fieldname": "first_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "First Name",
-   "reqd": 1
+   "default": "5",
+   "fieldname": "proficiency",
+   "fieldtype": "Rating",
+   "label": "Proficiency"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-30 09:45:30.881827",
+ "modified": "2025-01-30 04:37:21.604330",
  "modified_by": "Administrator",
  "module": "Field Service Management",
- "name": "Service Technician",
+ "name": "Service Technician Skill",
  "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
@@ -57,10 +51,9 @@
    "write": 1
   }
  ],
- "quick_entry": 1,
  "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "full_name"
+ "title_field": "skill"
 }

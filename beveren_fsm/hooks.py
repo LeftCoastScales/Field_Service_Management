@@ -155,6 +155,12 @@ fixtures = [
 # 		"on_trash": "method"
 # 	}
 # }
+doc_events = {
+	"Sales Invoice": {
+		"on_submit": "beveren_fsm.field_service_management.fsm_utils.update_invoice_status",
+		"on_cancel": "beveren_fsm.field_service_management.fsm_utils.update_invoice_status"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
