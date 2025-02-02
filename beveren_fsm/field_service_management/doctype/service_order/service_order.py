@@ -17,14 +17,16 @@ class ServiceOrder(Document):
 				"item_code": service.item_code,
 				"qty": service.qty, 
 				"rate": service.rate,
-				"amount": service.amount
+				"amount": service.amount,
+				"invoice_status": service.invoice_status
 			})
 		for parts in self.parts:  
 			appointment.append("parts", {
 				"item_code": parts.item_code,
 				"qty": parts.qty,  
 				"rate": parts.rate,
-				"amount": parts.amount
+				"amount": parts.amount,
+				"invoice_status": parts.invoice_status
 			})
 		
 		self.update_status()
