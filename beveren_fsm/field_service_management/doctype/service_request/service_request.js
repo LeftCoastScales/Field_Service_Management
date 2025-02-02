@@ -49,25 +49,82 @@ frappe.ui.form.on("Service Request", {
             });
         }
     },
+//     refresh: function (frm) {
+//         if (frm.doc.status === "On Hold") {
+//             frm.add_custom_button(__('Resume'), function () {
+//                 frm.remove_custom_button('Hold', 'Status');
+//                 frm.set_value('status', 'Open');
+//                 frm.save('Submit')
+//             }, __('Status'));
+//         }
+//         if (frm.doc.status === "Closed") {
+//             frm.add_custom_button(__('Reopen'), function () {
+//                 frm.remove_custom_button('Close', 'Status');
+//                 frm.set_value('status', 'Open');
+//                 frm.save('Submit')
+//             }, __('Status'));
+//         }
+//         if (frm.doc.docstatus === 1) {
+//             frm.add_custom_button(__('Hold'), function () {
+//                 frm.set_value('status', 'On Hold');
+//                 frm.save('Submit')
+//             }, __('Status'));
+//             frm.add_custom_button(__('Close'), function () {
+//                 frm.set_value('status', 'Closed');
+//                 frm.save('Submit')
+//             }, __('Status'));
+//             frm.add_custom_button(__('Create Service Order'), function () {
+//                 frm.doc.status = "Converted"
+//                 frm.save('Submit');
+//                 frm.remove_custom_button('Hold', 'Status');
+//                 frm.remove_custom_button('Close', 'Status');
+//                 frm.remove_custom_button('Create Service Order', 'Action');
+//                 frappe.new_doc('Service Order', {
+//                     service_request: frm.doc.name,
+//                     customer: frm.doc.customer,
+//                     due_date: frm.doc.due_date
+//                 });
+//             }, __('Actions'));
+//         }
+//     }
+// });
     refresh: function (frm) {
         if (frm.doc.docstatus === 1) {
-            frm.add_custom_button(__('Hold'), function () {
-                frm.set_value('status', 'On Hold');
-                frm.save('Submit')
-            }, __('Status'));
-            frm.add_custom_button(__('Close'), function () {
-                frm.set_value('status', 'Closed');
-                frm.save('Submit')
-            }, __('Status'));
+            if (frm.doc.status === "On Hold") {
+                frm.add_custom_button(__('Resume'), function () {
+                    frm.set_value('status', 'Open');
+                    frm.save('Submit');
+                }, __('Status'));
+            } else {
+                frm.add_custom_button(__('Hold'), function () {
+                    frm.set_value('status', 'On Hold');
+                    frm.save('Submit');
+                }, __('Status'));
+            }
+            if (frm.doc.status === "Closed") {
+                frm.add_custom_button(__('Reopen'), function () {
+                    frm.set_value('status', 'Open');
+                    frm.save('Submit');
+                    frm.remove_custom_button('Create');
+                }, __('Status'));
+            } else {
+                frm.add_custom_button(__('Close'), function () {
+                    frm.set_value('status', 'Closed');
+                    frm.save('Submit');
+                    frm.remove_custom_button('Create');
+                }, __('Status'));
+            }
             frm.add_custom_button(__('Create Service Order'), function () {
-                frm.doc.status = "Converted"
-                frm.save('Submit');
-                frappe.new_doc('Service Order', {
-                    service_request: frm.doc.name,
-                    customer: frm.doc.customer,
-                    due_date: frm.doc.due_date
+                frm.set_value('status', 'Converted');
+                frm.save('Submit').then(() => {
+                    frappe.new_doc('Service Order', {
+                        service_request: frm.doc.name,
+                        customer: frm.doc.customer,
+                        due_date: frm.doc.due_date
+                    });
                 });
-            }, __('Actions'));
+            }, __('Create'));
         }
     }
 });
+
