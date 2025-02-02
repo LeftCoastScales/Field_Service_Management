@@ -14,7 +14,7 @@
   "type",
   "priority",
   "column_break_llgp",
-  "posting_date",
+  "transaction_date",
   "due_date",
   "column_break_ralr",
   "company",
@@ -249,6 +249,13 @@
    "label": "Status",
    "options": "Open\nAppointment\nScheduled\nDispatched\nIn Progress\nCompleted",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -259,7 +266,7 @@
    "link_fieldname": "service_order"
   }
  ],
- "modified": "2025-02-01 14:23:44.679453",
+ "modified": "2025-02-02 00:39:51.377954",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",
@@ -286,22 +293,6 @@
   {
    "color": "Blue",
    "title": "Open"
-  },
-  {
-   "color": "Cyan",
-   "title": "Appointment"
-  },
-  {
-   "color": "Orange",
-   "title": "Scheduled"
-  },
-  {
-   "color": "Yellow",
-   "title": "Dispatched"
-  },
-  {
-   "color": "Purple",
-   "title": "In Progress"
   },
   {
    "color": "Green",
