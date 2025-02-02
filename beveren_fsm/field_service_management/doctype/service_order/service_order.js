@@ -3,7 +3,6 @@
 
 frappe.ui.form.on("Service Order", {
 	refresh(frm) {
-		$('[data-label="Actions"]').find('button').addClass('btn-primary');
 		frm.trigger('filter_services');
 		frm.trigger('filter_parts');
 
@@ -30,11 +29,11 @@ frappe.ui.form.on("Service Order", {
         };
 	},
 	add_actions_button: frm => {
-		frm.page.add_action_item(__('Appointment'), function() {
+		frm.page.add_action_item(__(' Create Appointment'), function() {
 			frm.trigger('create_appointment');
 		});
 
-		frm.page.add_action_item(__('Invoice'), function() {
+		frm.page.add_action_item(__('Create Invoice'), function() {
 			frm.trigger('create_service_invoice');
 		});
 	},
@@ -90,12 +89,12 @@ frappe.ui.form.on("Service Order", {
 		non_invoiced_items = mergeDuplicates(non_invoiced_items);
 		
 		const dialog = new frappe.ui.Dialog({
-			title: __("Select Services and Parts to Invoice"),
+			title: __("Services and Parts to Invoice"),
 			fields: [
 				{
 					fieldname: "service_items",
 					fieldtype: "Table",
-					label: __("Service Team"),
+					label: __("Services and Parts"),
 					options: "Services and Parts",
 					in_place_edit: true,
 					reqd: 1,

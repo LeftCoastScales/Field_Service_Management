@@ -11,7 +11,8 @@ class ServiceAppointment(Document):
 	def validate(self):
 		self.set_scheduled_status()
 	def on_update_after_submit(self):
-		self.update_service_order_status()
+		# self.update_service_order_status()
+		pass
 	def set_scheduled_status(self):
 		if self.status == "Open" and self.scheduled_start_datetime and self.scheduled_finish_datetime:
 			self.status = "Scheduled"
@@ -24,3 +25,5 @@ class ServiceAppointment(Document):
 		if self.status == "In Progress": service_order.status = "In Progress"
 		if self.status == "Completed": service_order.status = "Completed"
 		service_order.save('Update')
+
+		

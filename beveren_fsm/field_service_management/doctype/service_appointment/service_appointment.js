@@ -36,11 +36,11 @@ frappe.ui.form.on("Service Appointment", {
 			frm.page.add_action_item(__('Reschedule'), function() {
 				frm.trigger('schedule_appointment');
 			});
-			frm.page.add_action_item(__('Invoice'), function() {
-				frm.trigger('invoice_appointment');
-			});
 			frm.page.add_action_item(__('Dispatch'), function() {
 				frm.trigger('dispatch_appointment');
+			});
+			frm.page.add_action_item(__('Invoice'), function() {
+				frm.trigger('invoice_appointment');
 			});
 		}
 		if (frm.doc.status == 'Dispatched' && frm.doc.docstatus == 1) {
@@ -99,12 +99,12 @@ frappe.ui.form.on("Service Appointment", {
 		}
 		non_invoiced_items = mergeDuplicates(non_invoiced_items);
 		const dialog = new frappe.ui.Dialog({
-			title: __("Select Services and Parts to Invoice"),
+			title: __("Services and Parts to Invoice"),
 			fields: [
 				{
 					fieldname: "service_items",
 					fieldtype: "Table",
-					label: __("Service Team"),
+					label: __("Services and Parts"),
 					options: "Services and Parts",
 					in_place_edit: true,
 					reqd: 1,
@@ -204,7 +204,7 @@ frappe.ui.form.on("Service Appointment", {
 				{
 					fieldname: "service_technician_item",
 					fieldtype: "Table",
-					label: __("Service Team"),
+					label: __("Service Crew"),
 					options: "Service Technician Item",
 					in_place_edit: true,
 					reqd: 1,
@@ -261,7 +261,7 @@ frappe.ui.form.on("Service Appointment", {
 				{
 					fieldname: "service_technician_item",
 					fieldtype: "Table",
-					label: __("Service Team"),
+					label: __("Service Crew"),
 					options: "Service Technician Item",
 					in_place_edit: true,
 					reqd: 1,
@@ -304,11 +304,18 @@ frappe.ui.form.on("Service Appointment", {
 		frm.save('Update');
 	},
 	complete_work: frm => {
-		// Set actual finish datetime
-		frm.set_value('actual_finish_datetime', frappe.datetime.now_datetime());
+		frappe.confirm('Are you sure you want to <strong>Complete this Appointment</strong>?',
+			() => {
+				// Set actual finish datetime
+				frm.set_value('actual_finish_datetime', frappe.datetime.now_datetime());
+				// Set status and Completed
+				frm.set_value('status', 'Completed');
+				frm.save('Update');
+			}, () => {
+				// Do nothing
+			});
 
-		frm.set_value('status', 'Completed');
-		frm.save('Update');
+		
 	},
 	
 });
