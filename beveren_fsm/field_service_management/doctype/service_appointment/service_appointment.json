@@ -1,11 +1,12 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{service_order}-For-{customer}",
+ "autoname": "naming_series:",
  "creation": "2025-01-25 03:15:56.686299",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series",
   "service_order",
   "service_type",
   "column_break_coqg",
@@ -73,6 +74,7 @@
    "label": "Scheduled Finish Datetime"
   },
   {
+   "depends_on": "eval:doc.actual_start_datetime",
    "fieldname": "column_break_bczc",
    "fieldtype": "Column Break",
    "label": "Actual Working Time"
@@ -106,6 +108,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
+   "no_copy": 1,
    "options": "Open\nScheduled\nDispatched\nIn Progress\nCompleted",
    "read_only": 1
   },
@@ -157,16 +160,23 @@
    "fieldtype": "Datetime",
    "label": "Actual Start Datetime",
    "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SVC-APP-.YYYY.-",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-30 14:33:48.082750",
+ "modified": "2025-02-01 14:30:28.012343",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",
- "naming_rule": "Expression (old style)",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
