@@ -159,13 +159,16 @@ fixtures = [
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"beveren_fsm.tasks.all"
 # 	],
-# 	"daily": [
-# 		"beveren_fsm.tasks.daily"
-# 	],
+	# "daily": [
+	# 	"beveren_fsm.tasks.daily"
+	# ],
+    "daily" : [
+        "beveren_fsm.field_service_management.doctype.service_request.service_request.update_status"
+    ]
 # 	"hourly": [
 # 		"beveren_fsm.tasks.hourly"
 # 	],
@@ -175,7 +178,7 @@ fixtures = [
 # 	"monthly": [
 # 		"beveren_fsm.tasks.monthly"
 # 	],
-# }
+}
 
 # Testing
 # -------

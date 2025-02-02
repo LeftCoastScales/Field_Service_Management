@@ -8,29 +8,26 @@
  "field_order": [
   "overview",
   "naming_series",
-  "company",
-  "currency",
+  "customer",
+  "customer_name",
   "type",
   "subject",
   "description",
   "column_break_kzwu",
   "posting_date",
   "due_date",
+  "company",
+  "currency",
   "priority",
   "project",
   "cost_center",
   "status",
-  "customer_details_section",
-  "customer",
+  "customer_addresses_contacts_section",
   "customer_address",
   "address_details",
-  "contact_person",
-  "contact_person_name",
   "column_break_phrd",
-  "customer_name",
-  "email_id",
-  "phone",
-  "fax",
+  "customer_contact",
+  "contact_details",
   "appointment_preference_section",
   "preferred_date_time_1",
   "preferred_date_time_2",
@@ -92,6 +89,7 @@
   {
    "fieldname": "asset_details_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Asset Details"
   },
   {
@@ -200,11 +198,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "customer_details_section",
-   "fieldtype": "Section Break",
-   "label": "Customer Details"
-  },
-  {
    "fieldname": "column_break_phrd",
    "fieldtype": "Column Break"
   },
@@ -217,16 +210,14 @@
    "read_only": 1
   },
   {
-   "fetch_from": "customer.customer_primary_address",
-   "fetch_if_empty": 1,
    "fieldname": "customer_address",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "label": "Customer Address",
-   "read_only": 1
+   "options": "Address"
   },
   {
    "fieldname": "address_details",
-   "fieldtype": "Data",
+   "fieldtype": "Small Text",
    "label": "Address Details",
    "read_only": 1
   },
@@ -252,41 +243,28 @@
    "options": "Service Items"
   },
   {
-   "fieldname": "email_id",
-   "fieldtype": "Data",
-   "label": "Email ID",
-   "read_only": 1
-  },
-  {
-   "fieldname": "phone",
-   "fieldtype": "Data",
-   "label": "Phone",
-   "read_only": 1
-  },
-  {
-   "fieldname": "fax",
-   "fieldtype": "Data",
-   "label": "Fax",
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_person",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Lead"
+   "fieldname": "customer_addresses_contacts_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Addresses & Contacts"
   },
   {
    "fetch_from": "contact_person.lead_name",
-   "fieldname": "contact_person_name",
-   "fieldtype": "Data",
-   "label": "Contact Person Name",
+   "fieldname": "contact_details",
+   "fieldtype": "Small Text",
+   "label": "Contact Details",
    "read_only": 1
+  },
+  {
+   "fieldname": "customer_contact",
+   "fieldtype": "Link",
+   "label": "Customer Contact",
+   "options": "Contact"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-30 13:22:06.286376",
+ "modified": "2025-02-02 09:25:21.221175",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
@@ -308,6 +286,35 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
+ "states": [
+  {
+   "color": "Gray",
+   "title": "Open"
+  },
+  {
+   "color": "Green",
+   "title": "Converted"
+  },
+  {
+   "color": "Orange",
+   "title": "Due Soon"
+  },
+  {
+   "color": "Red",
+   "title": "Overdue"
+  },
+  {
+   "color": "Purple",
+   "title": "On Hold"
+  },
+  {
+   "color": "Blue",
+   "title": "Closed"
+  },
+  {
+   "color": "Red",
+   "title": "Cancelled"
+  }
+ ],
  "track_changes": 1
 }
