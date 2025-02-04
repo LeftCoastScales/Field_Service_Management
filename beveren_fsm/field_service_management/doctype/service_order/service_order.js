@@ -104,7 +104,19 @@ frappe.ui.form.on('Service Order', {
 		frm.service_order.calculate_totals();
 		if (frm.doc.docstatus == 1) {
 			frm.trigger("add_actions_button");
-		  }
+		}
+		if(frm.doc.status == 'Open'){
+			frm.add_custom_button(
+				__("Hold"),
+				() => frappe.msgprint('Coming Soon!'),
+				__("Status")
+			);
+			frm.add_custom_button(
+				__("Complete"),
+				() => frappe.msgprint('Coming Soon!'),
+				__("Status")
+			);
+		}
 	},
 
 	validate(frm) {
@@ -141,6 +153,7 @@ frappe.ui.form.on('Service Order', {
 		frm.page.add_action_item(__("Create Invoice"), function () {
 			frm.trigger("create_service_invoice");
 		});
+
 	},
 	create_appointment: (frm) => {
 		if (frm.doc.docstatus == 1) {
