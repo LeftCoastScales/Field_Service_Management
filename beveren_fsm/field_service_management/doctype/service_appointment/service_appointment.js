@@ -6,7 +6,7 @@ frappe.ui.form.on("Service Appointment", {
 		// Show dialogue to complete the appointment if scheduled datetime is not set
 		if (!frm.doc.scheduled_start_datetime && route_options.hasOwnProperty('source') 
 			&& route_options.source === "Service Order") {
-			frappe.msgprint(__("Fill out Missing Fields in this Appointment."));
+			frappe.msgprint(__("Fill out Scheduling Fields in this Appointment."));
 		}
 	},
 	refresh(frm) {
@@ -67,17 +67,11 @@ frappe.ui.form.on("Service Appointment", {
 	},
 	invoice_appointment: frm => {
 		// Fetch all parts and services which are not invoiced
-		let parts = frm.doc.parts || [];
-		let services = frm.doc.services || [];
+		let items = frm.doc.items || [];
 		let non_invoiced_items = [];
-		parts.forEach(item => {
+		items.forEach(item => {
 			if (item.invoice_status != 'Invoiced') {
 				non_invoiced_items.push(item);
-			}
-		});
-		services.forEach(service => {
-			if (service.invoice_status != 'Invoiced') {
-				non_invoiced_items.push(service);
 			}
 		});
 		if (non_invoiced_items.length == 0) {

@@ -25,6 +25,23 @@ class ServiceOrder(AccountsController):
 		self.calculate_taxes()
 		self.calculate_base_amounts()
 		self.set_in_words()
+
+	@frappe.whitelist()
+	def create_appointment(self, service_order):
+		appointment = frappe.new_doc("Service Appointment")
+		appointment.service_order = service_order
+		appointment.customer = self.customer
+
+		for item in self.items:
+			appointment.append("items", {
+				"item_code": item.item_code,
+				"qty": item.qty,
+				"rate": item.rate,
+				"amount": item.amount,
+				"invoice_status": item.invoice_status
+			})
+		appointment.insert()
+		return appointment.name
 	
 	@property
 	def company_currency(self):

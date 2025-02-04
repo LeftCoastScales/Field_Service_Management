@@ -25,6 +25,7 @@
   "services_section",
   "services",
   "parts",
+  "items",
   "amended_from"
  ],
  "fields": [
@@ -90,6 +91,7 @@
   {
    "fieldname": "parts",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Parts",
    "options": "Service Order Item",
    "read_only": 1
@@ -97,6 +99,7 @@
   {
    "fieldname": "services",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Services",
    "options": "Service Order Item",
    "read_only": 1
@@ -167,12 +170,24 @@
    "label": "Series",
    "options": "SVC-APP-.YYYY.-",
    "reqd": 1
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Service Order Item",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2025-02-01 14:30:28.012343",
+ "links": [
+  {
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_reference_service_document"
+  }
+ ],
+ "modified": "2025-02-04 03:39:44.428781",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",

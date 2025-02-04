@@ -725,9 +725,13 @@
   {
    "link_doctype": "Service Appointment",
    "link_fieldname": "service_order"
+  },
+  {
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-04 02:12:10.555606",
+ "modified": "2025-02-04 03:40:38.166669",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",

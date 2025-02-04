@@ -34,7 +34,9 @@ def update_invoice_status(doc, method):
 	reference_docname = doc.custom_reference_service_document
 	service_doc = frappe.get_doc(reference_doctype, reference_docname)
 
-	child_tables = ["parts", "services"]
+	# child_tables = ["parts", "services", 'items']
+	child_tables = ['items']
+	
 	updated = False
 	for item in items:
 		item_code = item.item_code
@@ -71,6 +73,7 @@ def update_service_order_or_appointment_invoice_status(doc, method):
 	source_doc = frappe.get_doc(doc.custom_reference_service_doctype, doc.custom_reference_service_document)
 	source_services = source_doc.get("services", [])
 	source_parts = source_doc.get("parts", [])
+	source_items = source_doc.get("items", [])
 
 	# Target doctype
 	doctypes = ["Service Order", "Service Appointment"]
@@ -90,40 +93,48 @@ def update_service_order_or_appointment_invoice_status(doc, method):
 			pluck="name"
 		)
 		for appointment_name in similar_appointments:
-			update_target_documents(source_doc.doctype, appointment_name, source_services, source_parts)
+			update_target_documents(source_doc.doctype, appointment_name, source_items)
 
 	# Update target documents
 	for docname in target_docnames:
-		update_target_documents(target_doctype, docname, source_services, source_parts)
+		update_target_documents(target_doctype, docname, source_items)
 
-def update_target_documents(target_doctype, target_docname, source_services, source_parts):
+def update_target_documents(target_doctype, target_docname, source_items):
 	'''
 	Update the invoice status of services and parts in the target document based on the source document.
 	'''
 	# Initialize flags
 	services_updated = False
 	parts_updated = False
+	items_updated = False
 
 	# Fetch the target document
 	doc = frappe.get_doc(target_doctype, target_docname)
 
 	# Create dictionaries for quick lookup
-	doc_services = {row.item_code: row for row in doc.get("services", [])}
-	doc_parts = {row.item_code: row for row in doc.get("parts", [])}
+	# doc_services = {row.item_code: row for row in doc.get("services", [])}
+	# doc_parts = {row.item_code: row for row in doc.get("parts", [])}
+	doc_items = {row.item_code: row for row in doc.get("items", [])}
 
 	# Update services
-	for service in source_services:
-		if service.item_code in doc_services:
-			doc_services[service.item_code].invoice_status = service.invoice_status
-			services_updated = True
+	# for service in source_services:
+	# 	if service.item_code in doc_services:
+	# 		doc_services[service.item_code].invoice_status = service.invoice_status
+	# 		services_updated = True
 
-	# Update parts
-	for part in source_parts:
-		if part.item_code in doc_parts:
-			doc_parts[part.item_code].invoice_status = part.invoice_status
-			parts_updated = True
+	# # Update parts
+	# for part in source_parts:
+	# 	if part.item_code in doc_parts:
+	# 		doc_parts[part.item_code].invoice_status = part.invoice_status
+	# 		parts_updated = True
+
+	# # Update Items
+	for item in source_items:
+		if item.item_code in doc_items:
+			doc_items[item.item_code].invoice_status = item.invoice_status
+			items_updated = True
 
 	# Save the document if updates were made
-	if services_updated or parts_updated:
+	if services_updated or parts_updated or items_updated:
 		doc.save()
 		frappe.msgprint(f"Updated invoice status for <strong>Services and Parts</strong> in <strong>{target_doctype}</strong> {target_docname}")
