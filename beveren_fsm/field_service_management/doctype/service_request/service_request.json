@@ -8,20 +8,23 @@
  "field_order": [
   "overview",
   "naming_series",
-  "customer",
-  "customer_name",
+  "status",
   "type",
+  "customer",
   "subject",
   "description",
   "column_break_kzwu",
   "posting_date",
   "due_date",
-  "company",
-  "currency",
   "priority",
-  "project",
+  "column_break_cazs",
+  "company",
+  "accounting_dimensions_section",
   "cost_center",
-  "status",
+  "column_break_digf",
+  "project",
+  "currency_and_price_list_section",
+  "currency",
   "customer_addresses_contacts_section",
   "customer_address",
   "address_details",
@@ -188,6 +191,7 @@
    "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
@@ -200,14 +204,6 @@
   {
    "fieldname": "column_break_phrd",
    "fieldtype": "Column Break"
-  },
-  {
-   "fetch_from": "customer.customer_name",
-   "fetch_if_empty": 1,
-   "fieldname": "customer_name",
-   "fieldtype": "Data",
-   "label": "Customer Name",
-   "read_only": 1
   },
   {
    "fieldname": "customer_address",
@@ -245,7 +241,7 @@
   {
    "fieldname": "customer_addresses_contacts_section",
    "fieldtype": "Section Break",
-   "label": "Customer Addresses & Contacts"
+   "label": "Service Address & Contact"
   },
   {
    "fetch_from": "contact_person.lead_name",
@@ -259,12 +255,32 @@
    "fieldtype": "Link",
    "label": "Customer Contact",
    "options": "Contact"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "column_break_digf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_cazs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "currency_and_price_list_section",
+   "fieldtype": "Section Break",
+   "label": "Currency and Price List"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-02-02 09:25:21.221175",
+ "modified": "2025-02-05 04:58:21.467746",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
