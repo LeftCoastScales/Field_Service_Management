@@ -1,7 +1,29 @@
 [
  {
-  "charts": [],
-  "content": "[{\"id\":\"Jwk7FRQ6i2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":12}},{\"id\":\"4WNmCS56qX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Request\",\"col\":3}},{\"id\":\"m4X3-WrFBc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Order\",\"col\":3}},{\"id\":\"dFa0pdrg3n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Appointment\",\"col\":3}},{\"id\":\"cluLNwq4G8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Report\",\"col\":3}},{\"id\":\"_U1ndekMHI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Technician\",\"col\":3}}]",
+  "charts": [
+   {
+    "chart_name": "Service Order by Status",
+    "label": "Service Order by Status",
+    "parent": "Service",
+    "parentfield": "charts",
+    "parenttype": "Workspace"
+   },
+   {
+    "chart_name": "Service Appointment By Status",
+    "label": "Service Appointment By Status",
+    "parent": "Service",
+    "parentfield": "charts",
+    "parenttype": "Workspace"
+   },
+   {
+    "chart_name": "Service Requests by Status",
+    "label": "Service Requests by Status",
+    "parent": "Service",
+    "parentfield": "charts",
+    "parenttype": "Workspace"
+   }
+  ],
+  "content": "[{\"id\":\"OM5Asnk3Yb\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Requests\",\"col\":4}},{\"id\":\"15UfPq6SKv\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Orders\",\"col\":4}},{\"id\":\"w7mtVc_wCw\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Scheduled Appointments\",\"col\":4}},{\"id\":\"fl3xb8L-7m\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Requests by Status\",\"col\":6}},{\"id\":\"bjmOVGdrIM\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Appointment By Status\",\"col\":6}},{\"id\":\"oaawrUz3_E\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Order by Status\",\"col\":12}},{\"id\":\"MvJuMndtJP\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Jwk7FRQ6i2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":12}},{\"id\":\"_U1ndekMHI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Technician\",\"col\":3}},{\"id\":\"dFa0pdrg3n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Appointment\",\"col\":3}},{\"id\":\"4WNmCS56qX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Request\",\"col\":3}},{\"id\":\"m4X3-WrFBc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Order\",\"col\":3}}]",
   "custom_blocks": [],
   "docstatus": 0,
   "doctype": "Workspace",
@@ -12,10 +34,32 @@
   "is_hidden": 0,
   "label": "Service",
   "links": [],
-  "modified": "2025-01-25 03:38:35.218241",
+  "modified": "2025-02-15 03:23:07.965355",
   "module": null,
   "name": "Service",
-  "number_cards": [],
+  "number_cards": [
+   {
+    "label": "Open Requests",
+    "number_card_name": "Open Service Requests",
+    "parent": "Service",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Open Orders",
+    "number_card_name": "Open Service Orders",
+    "parent": "Service",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   },
+   {
+    "label": "Scheduled Appointments",
+    "number_card_name": "Scheduled Service Appointments",
+    "parent": "Service",
+    "parentfield": "number_cards",
+    "parenttype": "Workspace"
+   }
+  ],
   "parent_page": "",
   "public": 1,
   "quick_lists": [],
@@ -79,22 +123,6 @@
     "kanban_board": null,
     "label": "Service Appointment",
     "link_to": "Service Appointment",
-    "parent": "Service",
-    "parentfield": "shortcuts",
-    "parenttype": "Workspace",
-    "restrict_to_domain": null,
-    "stats_filter": "[]",
-    "type": "DocType",
-    "url": null
-   },
-   {
-    "color": "Grey",
-    "doc_view": "List",
-    "format": null,
-    "icon": null,
-    "kanban_board": null,
-    "label": "Service Report",
-    "link_to": "Service Report",
     "parent": "Service",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
