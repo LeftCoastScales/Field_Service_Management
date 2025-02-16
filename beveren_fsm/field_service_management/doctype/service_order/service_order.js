@@ -99,7 +99,48 @@ frappe.ui.form.on('Service Order', {
 	setup(frm) {
 		frm.service_order = new beveren_fsm.field_management_system.ServiceOrder({frm: frm});
 	},
-
+	customer: function(frm) {
+        frm.set_query("customer_address", function (doc) {
+            return {
+                filters: {
+                    link_doctype: "Customer",
+                    link_name: doc.customer,
+                },
+            };
+        });
+        frm.set_query("customer_contact", function (doc) {
+			return {
+				filters: {
+                    link_doctype: "Customer",
+                    link_name: doc.customer,
+				},
+			};
+		});
+    },
+	customer_address: function(frm) {
+        if (frm.doc.customer_address) {
+            frappe.call({
+                method:"beveren_fsm.field_service_management.utils.address_util.get_address_details",
+                args: {"customer_address" : frm.doc.customer_address},
+                callback: function(r) {
+                    let details = r.message["details"] || "";
+                    frm.set_value("address_details", details);
+                }
+            });
+        }
+    },
+    customer_contact: function(frm) {
+        if (frm.doc.customer_contact) {
+            frappe.call({
+                method: "beveren_fsm.field_service_management.utils.address_util.get_contact_details",
+                args: {"customer_contact": frm.doc.customer_contact},
+                callback: function(r) {
+                    let details = r.message["details"] || "";
+                    frm.set_value("contact_details", details);
+                }
+            });
+        }
+    },
 	refresh(frm) {
 		frm.service_order.calculate_totals();
 		if (frm.doc.docstatus == 1) {

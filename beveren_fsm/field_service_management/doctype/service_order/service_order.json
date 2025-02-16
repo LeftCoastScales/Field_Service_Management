@@ -10,20 +10,23 @@
   "title",
   "naming_series",
   "status",
-  "customer",
   "type",
-  "priority",
+  "customer",
   "column_break_llgp",
   "transaction_date",
   "due_date",
-  "service_request",
   "column_break_ralr",
+  "priority",
   "company",
   "amended_from",
   "accounting_dimensions_section",
   "cost_center",
   "column_break_ekul",
   "project",
+  "currency_and_price_list_section",
+  "currency",
+  "column_break_jheb",
+  "conversion_rate",
   "section_break_nsgl",
   "items",
   "section_break_kdif",
@@ -59,31 +62,19 @@
   "advance_paid",
   "more_info_tab",
   "contact_details_section",
-  "service_address",
+  "customer_address",
+  "address_details",
   "column_break_jctz",
-  "contact_person",
-  "asset_details_section",
-  "item",
+  "customer_contact",
+  "contact_details",
   "appointment_preference_section",
   "preferred_date_1",
   "preferred_date_2",
   "preferred_time",
   "column_break_gtsg",
   "preference_note",
-  "sec_tax_breakup",
-  "other_charges_calculation",
-  "section_break_kugg",
-  "currency",
-  "column_break_ofgp",
-  "conversion_rate",
-  "contact_info",
-  "customer_address",
-  "address_display",
-  "contact_display",
-  "contact_mobile",
-  "contact_email",
-  "company_address_display",
-  "company_address"
+  "asset_details_section",
+  "item"
  ],
  "fields": [
   {
@@ -312,25 +303,6 @@
    "options": "Sales Taxes and Charges"
   },
   {
-   "collapsible": 1,
-   "fieldname": "sec_tax_breakup",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Tax Breakup"
-  },
-  {
-   "fieldname": "other_charges_calculation",
-   "fieldtype": "Text Editor",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Taxes and Charges Calculation",
-   "no_copy": 1,
-   "oldfieldtype": "HTML",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_43",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -524,23 +496,11 @@
   {
    "fieldname": "contact_details_section",
    "fieldtype": "Section Break",
-   "label": "Contact Details"
-  },
-  {
-   "fieldname": "service_address",
-   "fieldtype": "Link",
-   "label": "Service Address",
-   "options": "Address"
+   "label": "Service Address & Contact"
   },
   {
    "fieldname": "column_break_jctz",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "contact_person",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Contact"
   },
   {
    "fieldname": "asset_details_section",
@@ -597,99 +557,16 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "Open",
    "fieldname": "status",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
    "options": "Open\nAppointment\nScheduled\nDispatched\nIn Progress\nCompleted",
-   "read_only": 1
-  },
-  {
-   "fieldname": "service_request",
-   "fieldtype": "Link",
-   "label": "Service Request",
-   "options": "Service Request"
-  },
-  {
-   "collapsible": 1,
-   "depends_on": "customer",
-   "fieldname": "contact_info",
-   "fieldtype": "Tab Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Address & Contact",
-   "options": "fa fa-bullhorn"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "customer_address",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Customer Address",
-   "options": "Address",
-   "print_hide": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "address_display",
-   "fieldtype": "Small Text",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Address",
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_person",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Contact"
-  },
-  {
-   "fieldname": "contact_display",
-   "fieldtype": "Small Text",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "in_global_search": 1,
-   "label": "Contact",
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_mobile",
-   "fieldtype": "Small Text",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Mobile No",
-   "options": "Phone",
-   "read_only": 1
-  },
-  {
-   "fieldname": "contact_email",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Contact Email",
-   "options": "Email",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "company_address_display",
-   "fieldtype": "Small Text",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Company Address",
-   "read_only": 1
-  },
-  {
-   "fieldname": "company_address",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Company Address Name",
-   "options": "Address"
+   "read_only": 1,
+   "reqd": 1
   },
   {
    "fieldname": "items",
@@ -698,18 +575,10 @@
    "options": "Service Order Item"
   },
   {
-   "fieldname": "section_break_kugg",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
    "options": "Currency"
-  },
-  {
-   "fieldname": "column_break_ofgp",
-   "fieldtype": "Column Break"
   },
   {
    "default": "1.00",
@@ -717,6 +586,40 @@
    "fieldtype": "Float",
    "label": "Conversion Rate",
    "precision": "2"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "currency_and_price_list_section",
+   "fieldtype": "Section Break",
+   "label": "Currency and Price List"
+  },
+  {
+   "fieldname": "column_break_jheb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_address",
+   "fieldtype": "Link",
+   "label": "Service Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "address_details",
+   "fieldtype": "Small Text",
+   "label": "Address Details",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_contact",
+   "fieldtype": "Link",
+   "label": "Contact Person",
+   "options": "Contact"
+  },
+  {
+   "fieldname": "contact_details",
+   "fieldtype": "Small Text",
+   "label": "Contact Details",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -731,7 +634,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-04 03:40:38.166669",
+ "modified": "2025-02-16 06:21:50.974192",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",
