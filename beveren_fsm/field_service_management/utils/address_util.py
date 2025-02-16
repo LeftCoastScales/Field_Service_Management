@@ -3,7 +3,7 @@ from frappe.model.document import Document
 from frappe.utils import today, add_days, getdate
 
 @frappe.whitelist()
-def address_details(customer_address):
+def get_address_details(customer_address):
     address_doc = frappe.get_doc("Address", customer_address)
     address_parts = [str(address_doc.get(field)) for field in ["address_line1", "address_line2", "city", "county", "state", "country", "pincode"] if address_doc.get(field)]
     address = ", ".join(address_parts)
@@ -19,7 +19,7 @@ def address_details(customer_address):
     return {"details": details}
 
 @frappe.whitelist()
-def contact_details(customer_contact):
+def get_contact_details(customer_contact):
     contact_doc = frappe.get_doc("Contact", customer_contact)
     full_name_parts = [contact_doc.get(field) for field in ["first_name", "middle_name", "last_name"] if contact_doc.get(field)]
     full_name = " ".join(full_name_parts)
