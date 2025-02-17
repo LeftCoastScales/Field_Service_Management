@@ -31,17 +31,21 @@
   "column_break_phrd",
   "customer_contact",
   "contact_details",
+  "asset_details_section",
+  "serial_no",
+  "item_code",
+  "item_name",
+  "column_break_mgix",
+  "warranty_amc_status",
+  "warranty_expiry_date",
+  "amc_expiry_date",
   "appointment_preference_section",
   "preferred_date_1",
   "preferred_date_2",
   "preferred_time",
   "column_break_extu",
   "preference_note",
-  "amended_from",
-  "asset_details_section",
-  "items",
-  "tab_2_tab",
-  "notes"
+  "amended_from"
  ],
  "fields": [
   {
@@ -90,12 +94,13 @@
    "reqd": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "asset_details_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
-   "label": "Asset Details"
+   "label": "Warranty / AMC Details"
   },
   {
+   "collapsible": 1,
    "fieldname": "appointment_preference_section",
    "fieldtype": "Section Break",
    "label": "Appointment Preference"
@@ -155,19 +160,6 @@
    "options": "Cost Center"
   },
   {
-   "allow_on_submit": 1,
-   "fieldname": "tab_2_tab",
-   "fieldtype": "Tab Break",
-   "label": "Notes"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "notes",
-   "fieldtype": "Table",
-   "label": "Notes",
-   "options": "Service Notes"
-  },
-  {
    "fieldname": "currency",
    "fieldtype": "Link",
    "label": "Currency",
@@ -216,12 +208,6 @@
    "fieldtype": "Small Text",
    "label": "Address Details",
    "read_only": 1
-  },
-  {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "options": "Service Items"
   },
   {
    "fieldname": "customer_addresses_contacts_section",
@@ -276,12 +262,59 @@
    "fieldtype": "Select",
    "label": "Preferred Time",
    "options": "\nAnytime\nMorning\nAfternoon\nEvening"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "label": "Serial No",
+   "options": "Serial No"
+  },
+  {
+   "fetch_from": "serial_no.item_code",
+   "fetch_if_empty": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1,
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
+  },
+  {
+   "fieldname": "column_break_mgix",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "serial_no.maintenance_status",
+   "fetch_if_empty": 1,
+   "fieldname": "warranty_amc_status",
+   "fieldtype": "Select",
+   "label": "Warranty / AMC Status",
+   "options": "\nUnder Warranty\nOut of Warranty\nUnder AMC\nOut of AMC"
+  },
+  {
+   "fetch_from": "serial_no.warranty_expiry_date",
+   "fetch_if_empty": 1,
+   "fieldname": "warranty_expiry_date",
+   "fieldtype": "Date",
+   "label": "Warranty Expiry Date"
+  },
+  {
+   "fetch_from": "serial_no.amc_expiry_date",
+   "fetch_if_empty": 1,
+   "fieldname": "amc_expiry_date",
+   "fieldtype": "Date",
+   "label": "AMC Expiry Date"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-02-15 03:30:56.558461",
+ "modified": "2025-02-17 03:51:31.044097",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
