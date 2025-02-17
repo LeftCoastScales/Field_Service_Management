@@ -10,6 +10,7 @@
   "service_order",
   "service_type",
   "column_break_coqg",
+  "posting_date",
   "status",
   "customer",
   "scheduling_section",
@@ -177,6 +178,11 @@
    "label": "Items",
    "options": "Service Order Item",
    "read_only": 1
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -187,7 +193,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-04 03:39:44.428781",
+ "modified": "2025-02-13 23:25:06.535333",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",
