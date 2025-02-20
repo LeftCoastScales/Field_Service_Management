@@ -6,5 +6,4 @@ from frappe.model.document import Document
 
 
 class ServiceTechnician(Document):
-	def before_save(self):
-		self.full_name = f"{self.first_name} {self.other_names}"
+    pass

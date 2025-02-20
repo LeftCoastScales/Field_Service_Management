@@ -6,10 +6,9 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "first_name",
+  "full_name",
   "column_break_jvsh",
-  "other_names",
-  "full_name"
+  "employee"
  ],
  "fields": [
   {
@@ -17,27 +16,25 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "other_names",
-   "fieldtype": "Data",
-   "label": "Other Names"
-  },
-  {
+   "fetch_from": "employee.employee_name",
+   "fetch_if_empty": 1,
    "fieldname": "full_name",
    "fieldtype": "Data",
-   "label": "Full Name",
-   "read_only": 1
+   "in_list_view": 1,
+   "label": "Technician Name",
+   "reqd": 1
   },
   {
-   "fieldname": "first_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "First Name",
-   "reqd": 1
+   "allow_in_quick_entry": 1,
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-30 09:45:30.881827",
+ "modified": "2025-02-17 20:28:14.478876",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Technician",
