@@ -28,6 +28,13 @@
   "name": "Emergency"
  },
  {
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Service Type",
+  "modified": "2025-02-17 03:57:34.035306",
+  "name": "Warranty Claim"
+ },
+ {
   "description": "Service",
   "docstatus": 0,
   "doctype": "Service Type",

@@ -34,8 +34,8 @@
   "is_hidden": 0,
   "label": "Service",
   "links": [],
-  "modified": "2025-02-15 03:23:07.965355",
-  "module": null,
+  "modified": "2025-02-17 20:31:46.971165",
+  "module": "Field Service Management",
   "name": "Service",
   "number_cards": [
    {
