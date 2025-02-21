@@ -3,18 +3,81 @@
 
 import frappe
 from frappe.model.document import Document
+from frappe.model.mapper import get_mapped_doc
 
 
 class ServiceAppointment(Document):
-    def before_save(self):
-        self.set_scheduled_status()
+	def before_submit(self):
+		self.set_scheduled_status()
+		self.set_service_order_status()
 
-    def validate(self):
-        self.set_scheduled_status()
+	def validate(self):
+		self.set_scheduled_status()
 
-    def set_scheduled_status(self):
-        if self.scheduled_start_datetime and self.scheduled_finish_datetime:
-            if self.get("service_technicians") and len(self.get("service_technicians")) > 0:
-                self.status = "Dispatched"
-            elif self.status == "Open":
-                self.status = "Scheduled"
+	def before_update_after_submit(self):
+		self.update_service_order_status()
+	def set_scheduled_status(self):
+		if self.scheduled_start_datetime and self.scheduled_finish_datetime:
+			if self.get("service_technicians") and len(self.get("service_technicians")) > 0:
+				self.status = "Scheduled"
+			elif self.status == "Open":
+				self.status = "Scheduled"
+	def set_service_order_status(self):
+		if self.service_order:
+			order = frappe.get_doc('Service Order', self.service_order)
+			order.status = "Scheduled"
+			order.save()
+	
+	def update_service_order_status(self):
+		if not self.service_order:
+			return
+
+		order = frappe.get_doc('Service Order', self.service_order)
+		status_mapping = {
+			"Scheduled": "Scheduled",
+			"Dispatched": "Dispatched",
+			"In Progress": "In Progress",
+			"Completed": "Review"
+		}
+
+		if self.status in status_mapping:
+			order.status = status_mapping[self.status]
+			order.save()
+
+@frappe.whitelist()
+def make_appointment_from_order(source_name, target_doc=None, selected_items=None):
+	mapping = {
+		"Service Order": {
+			"doctype": "Service Appointment",
+			"field_map": {
+				"name": "service_quotation",
+				"party_name": "customer",
+				"company": "company",
+				"type": "service_type",
+				"priority": "priority",
+				"due_date": "due_date",
+				"service_address": "customer_address",
+				"cost_center": "cost_center",
+				"project": "project",
+				"currency": "currency",
+				"serial_no": "serial_no",
+				"preferred_date_1": "preferred_date_1",
+				"preferred_date_1": "preferred_date_1",
+				"preferred_time": "preferred_time",
+				"preference_note": "preference_note"
+			},
+		},
+		"Service Order Item": {
+			"doctype": "Service Order Item",
+			"field_map": {
+				"item_code": "item_code",
+				"description": "description",
+				"qty": "qty",
+				"rate": "rate",
+				"amount": "amount"
+			},
+			"add_if_empty": True
+		}
+	}
+	doc = get_mapped_doc("Service Order", source_name, mapping, target_doc)
+	return doc

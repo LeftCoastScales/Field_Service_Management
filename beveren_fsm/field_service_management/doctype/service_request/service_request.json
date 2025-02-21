@@ -188,7 +188,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Open\nConverted\nDue Soon\nOverdue\nOn Hold\nClosed",
+   "options": "Open\nQuotation\nConverted\nDue Soon\nOverdue\nOn Hold\nClosed",
    "print_hide": 1,
    "read_only": 1,
    "reqd": 1
@@ -313,8 +313,17 @@
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2025-02-17 03:51:31.044097",
+ "links": [
+  {
+   "link_doctype": "Service Quotation",
+   "link_fieldname": "service_request"
+  },
+  {
+   "link_doctype": "Service Order",
+   "link_fieldname": "service_request"
+  }
+ ],
+ "modified": "2025-02-21 06:57:57.002303",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Request",
@@ -338,8 +347,12 @@
  "sort_order": "DESC",
  "states": [
   {
-   "color": "Gray",
+   "color": "Blue",
    "title": "Open"
+  },
+  {
+   "color": "Orange",
+   "title": "Quotation"
   },
   {
    "color": "Green",

@@ -1,104 +1,84 @@
-frappe.provide('beveren_fsm.field_management_system');
+// Ensure this namespace exists
+frappe.provide("beveren_fsm.field_service_management");
 
-beveren_fsm.field_management_system.ServiceOrder = class ServiceOrder {
-	constructor(opts) {
-		$.extend(this, opts);
-		this.setup();
-	}
+cur_frm.cscript.tax_table = "Sales Taxes and Charges";
+erpnext.accounts.taxes.setup_tax_validations("Sales Taxes and Charges Template");
+erpnext.accounts.taxes.setup_tax_filters("Sales Taxes and Charges");
+erpnext.sales_common.setup_selling_controller();
 
-	setup() {
-		this.items_field = "items";
-		this.tax_field = "taxes";
-		this.bind_events();
-	}
+frappe.ui.form.on("Service Order", {
+    setup: function (frm) {
+        frm.custom_make_buttons = {
+            "Service Appointment": "Service Appointment"
+        };
+    },
+	onload: function(frm){
+		// Hide either quotation or request
+        if(frm.doc.service_request) frm.toggle_enable('service_quotation', 0)
+		if(frm.doc.service_quotation) frm.toggle_enable('service_request', 0)
+	},
+	refresh(frm) {
+		// set posting date
+		frm.trigger('set_posting_date')
 
-	bind_events() {
-		// Bind to item table changes
-		frappe.ui.form.on(this.frm.doctype + " Item", {
-			items_add: () => this.calculate_totals(),
-			items_remove: () => this.calculate_totals(),
-			qty: () => this.calculate_totals(),
-			rate: () => this.calculate_totals(),
-			item_code: () => this.calculate_totals()
-		});
+		// Hide either quotation or request
+        if(frm.doc.service_request) frm.toggle_enable('service_quotation', 0)
+		if(frm.doc.service_quotation) frm.toggle_enable('service_request', 0)
 
-		// Bind to tax table changes
-		frappe.ui.form.on(this.frm.doctype + " Tax", {
-			taxes_add: () => this.calculate_totals(),
-			taxes_remove: () => this.calculate_totals(),
-			rate: () => this.calculate_totals(),
-			tax_amount: () => this.calculate_totals()
-		});
-	}
+		// Enable/Disable Invoicing
+		frm.trigger('set_enable_invoicing')
+		frm.trigger('disable_creating_appointment')
+		frm.trigger('disable_items_edit')
 
-	calculate_totals() {
-		this.calculate_item_values();
-		this.calculate_taxes();
-		this.calculate_grand_total();
-		this.frm.refresh_fields();
-	}
-
-	calculate_item_values() {
-		const items = this.frm.doc[this.items_field] || [];
-		let total = 0;
-
-		items.forEach(item => {
-			item.amount = flt(item.qty * item.rate);
-			item.net_amount = item.amount;
-			total += item.amount;
-		});
-
-		this.frm.doc.total = total;
-		this.frm.doc.net_total = total;
-	}
-
-	calculate_taxes() {
-		const me = this;
-		const items = this.frm.doc[this.items_field] || [];
-		const taxes = this.frm.doc[this.tax_field] || [];
-
-		// Reset tax amounts
-		taxes.forEach(tax => {
-			tax.tax_amount = 0;
-			tax.total = 0;
-		});
-
-		// Calculate tax for each item
-		items.forEach(item => {
-			taxes.forEach(tax => {
-				if (tax.charge_type === "On Net Total") {
-					tax.tax_amount += (item.net_amount * tax.rate) / 100;
+		if(frm.doc.status == 'Open' && !frm.doc.__islocal){
+			frm.add_custom_button(
+				__("Hold"),
+				() => frappe.msgprint('Coming Soon!'),
+				__("Status")
+			);
+			frm.add_custom_button(
+				__("Complete"),
+				() => frappe.msgprint('Coming Soon!'),
+				__("Status")
+			);
+		}
+		if (frm.doc.docstatus === 1 && !frm.is_dirty()){
+			if(!['Scheduled', 'Dispatched', 'In Progress', 'Completed', 'Review'].includes(frm.doc.status)){
+				frm.add_custom_button(__("Service Appointment"), () => {
+					frm.trigger('make_appointment_from_order')
+				}, __("Create"));
+			}
+			// Enable Invoice on Condition
+			let items = frm.doc.items || [];
+			let non_invoiced_items = [];
+			items.forEach(item => {
+				if (item.invoice_status != 'Invoiced') {
+					non_invoiced_items.push(item);
 				}
 			});
-		});
 
-		// Update tax totals
-		let grand_total = this.frm.doc.net_total;
-		taxes.forEach(tax => {
-			tax.total = grand_total;
-			grand_total += tax.tax_amount;
-		});
-	}
-
-	calculate_grand_total() {
-		const taxes = this.frm.doc[this.tax_field] || [];
-		let grand_total = this.frm.doc.net_total;
-		let total_taxes = 0;
-
-		taxes.forEach(tax => {
-			total_taxes += tax.tax_amount;
-		});
-
-		this.frm.doc.total_taxes = total_taxes;
-		this.frm.doc.grand_total = grand_total + total_taxes;
-		this.frm.doc.rounded_total = Math.round(this.frm.doc.grand_total);
-	}
-}
-
-frappe.ui.form.on('Service Order', {
-	setup(frm) {
-		frm.service_order = new beveren_fsm.field_management_system.ServiceOrder({frm: frm});
-	},
+			if(non_invoiced_items.length){
+				frm.add_custom_button(__("Sales Invoice"), () =>{
+					frm.trigger('create_service_invoice')
+				}, __("Create"));
+			}
+			cur_frm.page.set_inner_btn_group_as_primary(__("Create"));
+		}
+		
+		// Complete Button
+		if (frm.doc.status == "Review"){
+			frm.add_custom_button(__('Complete'), function() {
+				frm.set_value('status', 'Completed')
+				frm.save('Update')
+			}).removeClass('btn-default').addClass('btn-success')
+		}
+		
+    },
+    set_posting_date: function (frm) {
+        if (!frm.doc.posting_date) {
+            frm.set_value("posting_date", frappe.datetime.get_today());
+        }
+    },
 	customer: function(frm) {
         frm.set_query("customer_address", function (doc) {
             return {
@@ -141,78 +121,44 @@ frappe.ui.form.on('Service Order', {
             });
         }
     },
-	refresh(frm) {
-		frm.service_order.calculate_totals();
-		if (frm.doc.docstatus == 1) {
-			frm.trigger("add_actions_button");
-		}
-		if(frm.doc.status == 'Open'){
-			frm.add_custom_button(
-				__("Hold"),
-				() => frappe.msgprint('Coming Soon!'),
-				__("Status")
-			);
-			frm.add_custom_button(
-				__("Complete"),
-				() => frappe.msgprint('Coming Soon!'),
-				__("Status")
-			);
-		}
-	},
-
-	validate(frm) {
-		frm.service_order.calculate_totals();
-	},
-	// Add new handler for taxes_and_charges
-	taxes_and_charges: function(frm) {
-		if(frm.doc.taxes_and_charges) {
-			frappe.call({
-				method: 'erpnext.controllers.accounts_controller.get_taxes_and_charges',
-				args: {
-					"master_doctype": "Sales Taxes and Charges Template",
-					"master_name": frm.doc.taxes_and_charges
-				},
-				callback: function(r) {
-					if(!r.exc) {
-						frm.clear_table("taxes");
-						for(var i=0; i<r.message.length; i++) {
-							var d = frm.add_child("taxes");
-							$.extend(d, r.message[i]);
-						}
-						frm.refresh_field("taxes");
-						frm.service_order.calculate_totals();
-					}
-				}
-			});
-		}
-	},
-	add_actions_button: (frm) => {
-		frm.page.add_action_item(__(" Create Appointment"), function () {
-			frm.trigger("create_appointment");
+	set_enable_invoicing: frm => {
+		// Fetch all parts and services which are not invoiced
+		let items = frm.doc.items || [];
+		let non_invoiced_items = [];
+		items.forEach(item => {
+			if (item.invoice_status != 'Invoiced') {
+				non_invoiced_items.push(item);
+			}
 		});
 
-		frm.page.add_action_item(__("Create Invoice"), function () {
-			frm.trigger("create_service_invoice");
-		});
-
-	},
-	create_appointment: (frm) => {
-		if (frm.doc.docstatus == 1) {
-			frappe.call({
-				method: "create_appointment",
-				doc: frm.doc,
-				args: {
-					service_order: frm.doc.name,
-				},
-				callback: function (r) {
-					if (r.message) {
-						route_options = { source: "Service Order" };
-						frappe.set_route("Form", "Service Appointment", r.message);
-					}
-				},
-			});
+		if(non_invoiced_items.length){
+			return
 		}
+		else{
+			$('.open-notification[title="Open Sales Invoice"]').hide();
+			$('.icon-btn[data-doctype="Sales Invoice"]').hide();
+		} 
 	},
+	disable_items_edit: frm => { 
+		//when appointment is going on, if anything add in appointment
+		let is_not_allowed = !['Scheduled', 'Dispatched', 'In Progress', 'Completed'].includes(frm.doc.status)
+		frm.toggle_enable(['items', 'service_technicians'], is_not_allowed)
+	},
+	disable_creating_appointment: frm => {
+		if(!['Scheduled', 'Dispatched', 'In Progress', 'Completed'].includes(frm.doc.status)){
+			return
+		}
+		else{
+			$('.open-notification[title="Open Service Appointment"]').hide();
+			$('.icon-btn[data-doctype="Service Appointment"]').hide();
+		} 
+	},
+	make_appointment_from_order: frm => {
+		frappe.model.open_mapped_doc({
+			method: "beveren_fsm.field_service_management.doctype.service_appointment.service_appointment.make_appointment_from_order",
+			frm:frm
+		});
+    },
 	create_service_invoice: (frm) => {
 		// Fetch all parts and services which are not invoiced
 		let items = frm.doc.items || [];
@@ -316,3 +262,50 @@ frappe.ui.form.on('Service Order', {
 		dialog.show();
 	},
 });
+
+beveren_fsm.field_service_management.ServiceOrderController = class ServiceOrderController extends erpnext.selling.SellingController {
+    onload(doc, dt, dn) {
+        super.onload(doc, dt, dn);
+    }
+    refresh(doc, dt, dn) {
+        super.refresh(doc, dt, dn);
+        if (doc.__islocal && !doc.posting_date) {
+            this.frm.set_value("posting_date", frappe.datetime.get_today());
+        }
+		if (doc.__islocal && !doc.due_date) {
+            this.frm.set_value("due_date", frappe.datetime.add_months(doc.posting_date, 1));
+        }
+    }
+};
+
+cur_frm.script_manager.make(beveren_fsm.field_service_management.ServiceOrderController);
+frappe.ui.form.on(
+    "Service Order Item",
+    "items_on_form_rendered",
+    "packed_items_on_form_rendered",
+    function (frm, cdt, cdn) {
+        // enable tax_amount field if Actual
+    }
+);
+
+cur_frm.cscript.calculate_totals = function(frm) {
+    let net_total = 0;
+    let tax_total = 0;
+    let grand_total = 0;
+    // Iterate only over billable items
+    (frm.doc.items || []).forEach(item => {
+        if (item.is_billable == 1) {
+            // Sum up amounts from billable items
+            net_total += flt(item.amount);
+            if (item.tax_amount)
+                tax_total += flt(item.tax_amount);
+        }
+    });
+    grand_total = net_total + tax_total;
+    frm.set_value("net_total", net_total);
+    frm.set_value("tax_total", tax_total);
+    frm.set_value("grand_total", grand_total);
+    frm.refresh_field("net_total");
+    frm.refresh_field("tax_total");
+    frm.refresh_field("grand_total");
+};

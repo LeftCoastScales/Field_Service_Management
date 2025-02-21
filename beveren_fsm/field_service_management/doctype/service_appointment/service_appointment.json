@@ -24,8 +24,6 @@
   "service_team_section",
   "service_technicians",
   "services_section",
-  "services",
-  "parts",
   "items",
   "amended_from"
  ],
@@ -42,7 +40,7 @@
    "in_standard_filter": 1,
    "label": "Customer",
    "options": "Customer",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "service_details_tab",
@@ -65,7 +63,8 @@
    "fieldtype": "Datetime",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Scheduled Start Datetime"
+   "label": "Scheduled Start Datetime",
+   "reqd": 1
   },
   {
    "allow_on_submit": 1,
@@ -73,7 +72,8 @@
    "fieldtype": "Datetime",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Scheduled Finish Datetime"
+   "label": "Scheduled Finish Datetime",
+   "reqd": 1
   },
   {
    "depends_on": "eval:doc.actual_start_datetime",
@@ -86,24 +86,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Service Order",
-   "options": "Service Order",
-   "reqd": 1
-  },
-  {
-   "fieldname": "parts",
-   "fieldtype": "Table",
-   "hidden": 1,
-   "label": "Parts",
-   "options": "Service Order Item",
-   "read_only": 1
-  },
-  {
-   "fieldname": "services",
-   "fieldtype": "Table",
-   "hidden": 1,
-   "label": "Services",
-   "options": "Service Order Item",
-   "read_only": 1
+   "options": "Service Order"
   },
   {
    "allow_on_submit": 1,
@@ -134,7 +117,7 @@
    "fieldtype": "Table",
    "label": "Service Technicians",
    "options": "Service Technician Item",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "amended_from",
@@ -173,16 +156,18 @@
    "reqd": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "items",
    "fieldtype": "Table",
    "label": "Items",
    "options": "Service Order Item",
-   "read_only": 1
+   "reqd": 1
   },
   {
    "fieldname": "posting_date",
    "fieldtype": "Date",
-   "label": "Posting Date"
+   "label": "Posting Date",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -193,7 +178,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-13 23:25:06.535333",
+ "modified": "2025-02-19 07:45:04.232183",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",

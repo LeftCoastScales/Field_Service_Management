@@ -2,38 +2,37 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "naming_series:",
- "creation": "2025-01-25 02:37:49.320139",
+ "creation": "2025-01-22 01:15:55.614060",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "section_break_ky2r",
-  "title",
+  "overview",
   "naming_series",
-  "status",
-  "service_quotation",
+  "quotation_to",
+  "party_name",
   "service_request",
-  "type",
-  "customer",
-  "column_break_llgp",
+  "status",
+  "customer_group",
+  "column_break_kzwu",
   "posting_date",
   "due_date",
-  "column_break_ralr",
-  "priority",
+  "column_break_cazs",
   "company",
-  "amended_from",
+  "type",
+  "priority",
   "accounting_dimensions_section",
   "cost_center",
-  "column_break_ekul",
+  "column_break_digf",
   "project",
   "currency_and_price_list_section",
   "currency",
   "conversion_rate",
-  "column_break_jheb",
+  "column_break2",
   "selling_price_list",
   "price_list_currency",
   "plc_conversion_rate",
   "ignore_pricing_rule",
-  "section_break_nsgl",
+  "services_and_parts_section",
   "items",
   "section_break_31",
   "total_qty",
@@ -65,17 +64,17 @@
   "in_words",
   "advance_paid",
   "more_info_tab",
-  "contact_details_section",
-  "customer_address",
+  "customer_addresses_contacts_section",
+  "service_address",
   "address_details",
-  "column_break_jctz",
+  "column_break_phrd",
   "customer_contact",
   "contact_details",
   "asset_details_section",
   "serial_no",
   "item_code",
   "item_name",
-  "column_break_gakd",
+  "column_break_mgix",
   "warranty_amc_status",
   "warranty_expiry_date",
   "amc_expiry_date",
@@ -83,83 +82,54 @@
   "preferred_date_1",
   "preferred_date_2",
   "preferred_time",
-  "column_break_gtsg",
-  "preference_note"
+  "column_break_extu",
+  "preference_note",
+  "amended_from",
+  "lost_reason_section",
+  "lost_reason"
  ],
  "fields": [
   {
-   "fieldname": "section_break_ky2r",
-   "fieldtype": "Section Break"
+   "fieldname": "column_break_kzwu",
+   "fieldtype": "Column Break"
   },
   {
-   "fieldname": "naming_series",
+   "default": "Medium",
+   "fieldname": "priority",
    "fieldtype": "Select",
-   "label": "Series",
-   "no_copy": 1,
-   "options": "SVC-ORD-.YYYY.-",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_llgp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_ralr",
-   "fieldtype": "Column Break"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Title",
-   "no_copy": 1
-  },
-  {
-   "bold": 1,
-   "fieldname": "customer",
-   "fieldtype": "Link",
-   "in_global_search": 1,
    "in_list_view": 1,
-   "in_preview": 1,
    "in_standard_filter": 1,
-   "label": "Customer",
-   "options": "Customer",
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nCritical",
    "reqd": 1
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Service Order",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "label": "Company",
-   "options": "Company",
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date",
    "reqd": 1
   },
   {
    "collapsible": 1,
-   "fieldname": "accounting_dimensions_section",
+   "fieldname": "asset_details_section",
    "fieldtype": "Section Break",
-   "label": "Accounting Dimensions"
+   "label": "Warranty / AMC Details"
   },
   {
-   "fieldname": "cost_center",
-   "fieldtype": "Link",
-   "label": "Cost Center",
-   "options": "Cost Center"
+   "collapsible": 1,
+   "fieldname": "appointment_preference_section",
+   "fieldtype": "Section Break",
+   "label": "Appointment Preference"
   },
   {
-   "fieldname": "column_break_ekul",
+   "fieldname": "column_break_extu",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "preference_note",
+   "fieldtype": "Small Text",
+   "label": "Preference Note"
   },
   {
    "fieldname": "project",
@@ -168,9 +138,241 @@
    "options": "Project"
   },
   {
-   "fieldname": "section_break_nsgl",
+   "default": "SQ-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SQ-.YYYY.-"
+  },
+  {
+   "default": "Customer",
+   "fieldname": "quotation_to",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Quotation To",
+   "oldfieldname": "quotation_to",
+   "oldfieldtype": "Select",
+   "options": "DocType",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "bold": 1,
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
+   "in_global_search": 1,
+   "in_standard_filter": 1,
+   "label": "Party",
+   "oldfieldname": "customer",
+   "oldfieldtype": "Link",
+   "options": "quotation_to",
+   "print_hide": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Service",
+   "fieldname": "type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Type",
+   "options": "Service Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "description": "Rate at which customer's currency is converted to company's base currency",
+   "fieldname": "conversion_rate",
+   "fieldtype": "Float",
+   "label": "Exchange Rate",
+   "oldfieldname": "conversion_rate",
+   "oldfieldtype": "Currency",
+   "precision": "9",
+   "print_hide": 1,
+   "reqd": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "column_break2",
+   "fieldtype": "Column Break",
+   "width": "50%"
+  },
+  {
+   "fieldname": "selling_price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "oldfieldname": "price_list_name",
+   "oldfieldtype": "Select",
+   "options": "Price List",
+   "print_hide": 1,
+   "reqd": 1,
+   "width": "100px"
+  },
+  {
+   "fieldname": "price_list_currency",
+   "fieldtype": "Link",
+   "label": "Price List Currency",
+   "options": "Currency",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Rate at which Price list currency is converted to company's base currency",
+   "fieldname": "plc_conversion_rate",
+   "fieldtype": "Float",
+   "label": "Price List Exchange Rate",
+   "precision": "9",
+   "print_hide": 1,
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "ignore_pricing_rule",
+   "fieldtype": "Check",
+   "label": "Ignore Pricing Rule",
+   "permlevel": 1,
+   "print_hide": 1
+  },
+  {
+   "fieldname": "overview",
    "fieldtype": "Section Break",
-   "label": "Services & Parts"
+   "label": "Overview"
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Open\nOrdered\nConverted\nDue Soon\nOverdue\nOn Hold\nClosed\nLost",
+   "print_hide": 1,
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:(doc.quotation_to=='Customer' && doc.party_name)",
+   "fieldname": "customer_group",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Customer Group",
+   "oldfieldname": "customer_group",
+   "oldfieldtype": "Link",
+   "options": "Customer Group",
+   "print_hide": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "column_break_digf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_cazs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "currency_and_price_list_section",
+   "fieldtype": "Section Break",
+   "label": "Currency and Price List"
+  },
+  {
+   "fieldname": "preferred_date_1",
+   "fieldtype": "Date",
+   "label": "Preferred Date 1"
+  },
+  {
+   "fieldname": "preferred_date_2",
+   "fieldtype": "Date",
+   "label": "Preferred Date 2"
+  },
+  {
+   "fieldname": "preferred_time",
+   "fieldtype": "Select",
+   "label": "Preferred Time",
+   "options": "\nAnytime\nMorning\nAfternoon\nEvening"
+  },
+  {
+   "fieldname": "serial_no",
+   "fieldtype": "Link",
+   "label": "Serial No",
+   "options": "Serial No"
+  },
+  {
+   "fetch_from": "serial_no.item_code",
+   "fetch_if_empty": 1,
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fetch_from": "item_code.item_name",
+   "fetch_if_empty": 1,
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "Item Name"
+  },
+  {
+   "fieldname": "column_break_mgix",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "serial_no.maintenance_status",
+   "fetch_if_empty": 1,
+   "fieldname": "warranty_amc_status",
+   "fieldtype": "Select",
+   "label": "Warranty / AMC Status",
+   "options": "\nUnder Warranty\nOut of Warranty\nUnder AMC\nOut of AMC"
+  },
+  {
+   "fetch_from": "serial_no.warranty_expiry_date",
+   "fetch_if_empty": 1,
+   "fieldname": "warranty_expiry_date",
+   "fieldtype": "Date",
+   "label": "Warranty Expiry Date"
+  },
+  {
+   "fetch_from": "serial_no.amc_expiry_date",
+   "fetch_if_empty": 1,
+   "fieldname": "amc_expiry_date",
+   "fieldtype": "Date",
+   "label": "AMC Expiry Date"
   },
   {
    "fieldname": "section_break_31",
@@ -463,21 +665,15 @@
    "read_only": 1
   },
   {
-   "allow_on_submit": 1,
-   "fieldname": "due_date",
-   "fieldtype": "Date",
-   "label": "Due Date",
-   "reqd": 1
+   "fieldname": "services_and_parts_section",
+   "fieldtype": "Section Break",
+   "label": "Services and Parts"
   },
   {
-   "default": "Medium",
-   "fieldname": "priority",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Priority",
-   "options": "Low\nMedium\nHigh\nCritical",
-   "reqd": 1
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Service Quotation Item"
   },
   {
    "fieldname": "more_info_tab",
@@ -485,109 +681,43 @@
    "label": "More Info"
   },
   {
-   "fieldname": "contact_details_section",
+   "fieldname": "column_break_phrd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_addresses_contacts_section",
    "fieldtype": "Section Break",
    "label": "Service Address & Contact"
   },
   {
-   "fieldname": "column_break_jctz",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "asset_details_section",
-   "fieldtype": "Section Break",
-   "label": "Warranty / AMC Details"
-  },
-  {
-   "fieldname": "appointment_preference_section",
-   "fieldtype": "Section Break",
-   "label": "Appointment Preference"
-  },
-  {
-   "fieldname": "preferred_date_1",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Preferred Date 1"
-  },
-  {
-   "fieldname": "preferred_date_2",
-   "fieldtype": "Date",
-   "label": "Preferred Date 2"
-  },
-  {
-   "fieldname": "preferred_time",
-   "fieldtype": "Select",
-   "label": "Preferred Time",
-   "options": "\nAnytime\nMorning\nAfternoon\nEvening"
-  },
-  {
-   "fieldname": "column_break_gtsg",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "preference_note",
+   "fetch_from": "contact_person.lead_name",
+   "fieldname": "contact_details",
    "fieldtype": "Small Text",
-   "label": "Preference Note"
+   "label": "Contact Details",
+   "read_only": 1
   },
   {
-   "default": "Service",
-   "fieldname": "type",
+   "fieldname": "customer_contact",
    "fieldtype": "Link",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Type",
-   "options": "Service Type",
-   "reqd": 1
+   "label": "Service Contact",
+   "options": "Contact"
   },
   {
-   "allow_on_submit": 1,
-   "default": "Open",
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "hidden": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Status",
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
    "no_copy": 1,
-   "options": "Open\nScheduled\nDispatched\nIn Progress\nReview\nCompleted",
+   "options": "Service Quotation",
+   "print_hide": 1,
    "read_only": 1,
-   "reqd": 1
+   "search_index": 1
   },
   {
-   "fieldname": "items",
-   "fieldtype": "Table",
-   "label": "Items",
-   "options": "Service Order Item"
-  },
-  {
-   "fieldname": "currency",
-   "fieldtype": "Link",
-   "label": "Currency",
-   "options": "Currency"
-  },
-  {
-   "default": "1.00",
-   "fieldname": "conversion_rate",
-   "fieldtype": "Float",
-   "label": "Conversion Rate",
-   "precision": "2"
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "currency_and_price_list_section",
-   "fieldtype": "Section Break",
-   "label": "Currency and Price List"
-  },
-  {
-   "fieldname": "column_break_jheb",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "customer_address",
+   "fieldname": "service_address",
    "fieldtype": "Link",
    "label": "Service Address",
-   "options": "Address"
+   "options": "Address",
+   "print_hide": 1
   },
   {
    "fieldname": "address_details",
@@ -596,138 +726,37 @@
    "read_only": 1
   },
   {
-   "fieldname": "customer_contact",
-   "fieldtype": "Link",
-   "label": "Contact Person",
-   "options": "Contact"
+   "fieldname": "lost_reason_section",
+   "fieldtype": "Section Break",
+   "label": "Lost Reason"
   },
   {
-   "fieldname": "contact_details",
+   "allow_on_submit": 1,
+   "fieldname": "lost_reason",
    "fieldtype": "Small Text",
-   "label": "Contact Details",
+   "label": "Lost Reason",
    "read_only": 1
-  },
-  {
-   "fieldname": "serial_no",
-   "fieldtype": "Link",
-   "label": "Serial No",
-   "options": "Serial No"
-  },
-  {
-   "fetch_from": "serial_no.item_code",
-   "fetch_if_empty": 1,
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "label": "Item Code",
-   "options": "Item"
-  },
-  {
-   "fetch_from": "item_code.item_name",
-   "fetch_if_empty": 1,
-   "fieldname": "item_name",
-   "fieldtype": "Data",
-   "label": "Item Name"
-  },
-  {
-   "fieldname": "column_break_gakd",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fetch_from": "serial_no.maintenance_status",
-   "fetch_if_empty": 1,
-   "fieldname": "warranty_amc_status",
-   "fieldtype": "Select",
-   "label": "Warranty / AMC Status",
-   "options": "\nUnder Warranty\nOut of Warranty\nUnder AMC\nOut of AMC"
-  },
-  {
-   "fetch_from": "serial_no.warranty_expiry_date",
-   "fetch_if_empty": 1,
-   "fieldname": "warranty_expiry_date",
-   "fieldtype": "Date",
-   "label": "Warranty Expiry Date"
-  },
-  {
-   "fetch_from": "serial_no.amc_expiry_date",
-   "fetch_if_empty": 1,
-   "fieldname": "amc_expiry_date",
-   "fieldtype": "Date",
-   "label": "AMC Expiry Date"
-  },
-  {
-   "fieldname": "service_quotation",
-   "fieldtype": "Link",
-   "label": "Service Quotation",
-   "no_copy": 1,
-   "options": "Service Quotation"
   },
   {
    "fieldname": "service_request",
    "fieldtype": "Link",
    "label": "Service Request",
-   "no_copy": 1,
-   "options": "Service Request",
-   "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "posting_date",
-   "fieldtype": "Date",
-   "label": "Date",
-   "reqd": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "ignore_pricing_rule",
-   "fieldtype": "Check",
-   "label": "Ignore Pricing Rule",
-   "permlevel": 1,
-   "print_hide": 1
-  },
-  {
-   "description": "Rate at which Price list currency is converted to company's base currency",
-   "fieldname": "plc_conversion_rate",
-   "fieldtype": "Float",
-   "label": "Price List Exchange Rate",
-   "precision": "9",
-   "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "price_list_currency",
-   "fieldtype": "Link",
-   "label": "Price List Currency",
-   "options": "Currency",
-   "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "selling_price_list",
-   "fieldtype": "Link",
-   "label": "Price List",
-   "options": "Price List",
-   "print_hide": 1,
-   "reqd": 1
+   "link_filters": "[[\"Service Request\",\"docstatus\",\"=\",\"1\"]]",
+   "options": "Service Request"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [
   {
-   "link_doctype": "Service Appointment",
-   "link_fieldname": "service_order"
-  },
-  {
-   "link_doctype": "Sales Invoice",
-   "link_fieldname": "custom_reference_service_document"
+   "link_doctype": "Service Order",
+   "link_fieldname": "service_quotation"
   }
  ],
- "modified": "2025-02-21 06:40:55.436705",
+ "modified": "2025-02-21 02:48:27.727693",
  "modified_by": "Administrator",
  "module": "Field Service Management",
- "name": "Service Order",
+ "name": "Service Quotation",
  "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
@@ -741,7 +770,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
    "write": 1
   }
  ],
@@ -753,24 +781,36 @@
    "title": "Open"
   },
   {
-   "color": "Light Blue",
-   "title": "Scheduled"
-  },
-  {
    "color": "Yellow",
-   "title": "Dispatched"
-  },
-  {
-   "color": "Orange",
-   "title": "In Progress"
-  },
-  {
-   "color": "Purple",
-   "title": "Review"
+   "title": "Ordered"
   },
   {
    "color": "Green",
-   "title": "Completed"
+   "title": "Converted"
+  },
+  {
+   "color": "Orange",
+   "title": "Due Soon"
+  },
+  {
+   "color": "Red",
+   "title": "Overdue"
+  },
+  {
+   "color": "Purple",
+   "title": "On Hold"
+  },
+  {
+   "color": "Blue",
+   "title": "Closed"
+  },
+  {
+   "color": "Red",
+   "title": "Cancelled"
+  },
+  {
+   "color": "Cyan",
+   "title": "Lost"
   }
  ],
  "track_changes": 1
