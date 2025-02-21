@@ -288,24 +288,3 @@ frappe.ui.form.on(
     }
 );
 
-cur_frm.cscript.calculate_totals = function(frm) {
-    let net_total = 0;
-    let tax_total = 0;
-    let grand_total = 0;
-    // Iterate only over billable items
-    (frm.doc.items || []).forEach(item => {
-        if (item.is_billable == 1) {
-            // Sum up amounts from billable items
-            net_total += flt(item.amount);
-            if (item.tax_amount)
-                tax_total += flt(item.tax_amount);
-        }
-    });
-    grand_total = net_total + tax_total;
-    frm.set_value("net_total", net_total);
-    frm.set_value("tax_total", tax_total);
-    frm.set_value("grand_total", grand_total);
-    frm.refresh_field("net_total");
-    frm.refresh_field("tax_total");
-    frm.refresh_field("grand_total");
-};
