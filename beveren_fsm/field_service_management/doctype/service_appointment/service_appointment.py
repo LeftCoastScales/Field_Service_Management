@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
@@ -12,10 +13,20 @@ class ServiceAppointment(Document):
 		self.set_service_order_status()
 
 	def validate(self):
+		self.validate_items()
+		self.validate_technicians()
 		self.set_scheduled_status()
 
 	def before_update_after_submit(self):
 		self.update_service_order_status()
+	def on_cancel(self):
+		self.cancel_linked_order()
+	def validate_items(self):
+		if not self.items:
+			frappe.throw(_("Please add at least one item"))
+	def validate_technicians(self):
+		if not self.get("service_technicians"):
+			frappe.throw(_("Please add at least one technician"))
 	def set_scheduled_status(self):
 		if self.scheduled_start_datetime and self.scheduled_finish_datetime:
 			if self.get("service_technicians") and len(self.get("service_technicians")) > 0:
@@ -43,6 +54,14 @@ class ServiceAppointment(Document):
 		if self.status in status_mapping:
 			order.status = status_mapping[self.status]
 			order.save()
+
+	def cancel_linked_order(self):
+		if not self.service_order:
+			return
+		order = frappe.get_doc('Service Order', self.service_order)
+		order.status = "Open"
+		self. service_order = ""
+		order.save()
 
 @frappe.whitelist()
 def make_appointment_from_order(source_name, target_doc=None, selected_items=None):

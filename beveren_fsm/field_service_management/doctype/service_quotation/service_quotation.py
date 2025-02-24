@@ -2,17 +2,33 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.document import Document
 
 
 class ServiceQuotation(Document):
+	def validate(self):
+		self.validate_items()
 	def before_submit(self):
 		if self.service_request:
 			request = frappe.get_doc('Service Request', self.service_request)
 			request.status = "Quotation"
 			request.save()
+	def on_cancel(self):
+		self.cancel_linked_request()
 
+	def validate_items(self):
+		if not self.items:
+			frappe.throw(_("Please add at least one item"))
+
+	def cancel_linked_request(self):
+		if not self.service_request:
+			return
+		request = frappe.get_doc('Service Request', self.service_request)
+		request.status = "Open"
+		self. service_request = ""
+		request.save()
 
 @frappe.whitelist()
 def make_service_quotation(

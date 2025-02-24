@@ -98,7 +98,7 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Open\nScheduled\nDispatched\nIn Progress\nCompleted",
+   "options": "Open\nScheduled\nDispatched\nIn Progress\nCompleted\nCancelled",
    "read_only": 1
   },
   {
@@ -198,7 +198,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-23 11:52:47.836241",
+ "modified": "2025-02-24 01:57:02.536013",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",

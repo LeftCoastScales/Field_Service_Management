@@ -7,13 +7,23 @@ from frappe.utils import flt
 from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 
-class ServiceOrder(Document):		
+class ServiceOrder(Document):	
+	def validate(self):
+		self.set_in_words()
+		self.validate_items()	
 	def before_submit(self):
 		self.update_linked_doc_status_before_submit()
 
 	def on_update_after_submit(self):
 		self.update_linked_doc_status_after_submit()
 
+	def on_cancel(self):
+		self.cancel_linked_request()
+		self.cancel_linked_quotation()
+
+	def validate_items(self):
+		if not self.get("items"):
+			frappe.throw(_("Please add at least one item"))
 	def update_linked_doc_status_before_submit(self):
 		if not self.service_quotation and not self.service_request:
 			return
@@ -44,9 +54,21 @@ class ServiceOrder(Document):
 		if is_allowed_status and quotation_not_converted:
 			quotation.status = "Converted"
 			quotation.save()
-
-	def validate(self):
-		self.set_in_words()
+	
+	def cancel_linked_quotation(self):
+		if not self.service_quotation:
+			return
+		quote = frappe.get_doc('Service Quotation', self.service_quotation)
+		quote.status = "Open"
+		self. service_quotation = ""
+		quote.save()
+	def cancel_linked_request(self):
+		if not self.service_request:
+			return
+		request = frappe.get_doc('Service Request', self.service_request)
+		request.status = "Open"
+		self. service_request = ""
+		request.save()
 
 	@frappe.whitelist()
 	def create_appointment(self, service_order):

@@ -745,7 +745,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-23 15:02:18.761460",
+ "modified": "2025-02-23 21:28:58.354725",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",
@@ -770,11 +770,11 @@
  "sort_order": "DESC",
  "states": [
   {
-   "color": "Blue",
+   "color": "Pink",
    "title": "Open"
   },
   {
-   "color": "Light Blue",
+   "color": "Blue",
    "title": "Scheduled"
   },
   {
