@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-23 22:09:04.963548",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "time_and_durations_section",
+  "default_due_date_after"
+ ],
+ "fields": [
+  {
+   "fieldname": "time_and_durations_section",
+   "fieldtype": "Section Break",
+   "label": "Time and Durations"
+  },
+  {
+   "default": "10",
+   "description": "Default time(in Days) between Posting Date and Due Date",
+   "fieldname": "default_due_date_after",
+   "fieldtype": "Float",
+   "label": "Default Due Date After",
+   "non_negative": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-02-23 22:11:47.927440",
+ "modified_by": "Administrator",
+ "module": "Field Service Management",
+ "name": "Field Service Management Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
