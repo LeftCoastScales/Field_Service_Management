@@ -13,21 +13,22 @@ class ServiceQuotation(Document):
 			request.status = "Quotation"
 			request.save()
 
+
 @frappe.whitelist()
 def make_service_quotation(
-        source_name,
-        target_doc=None, 
-        selected_items=None
-    ):
-    mapping = {
-        "Service Request": {
-            "doctype": "Service Quotation",
-            "field_map": {
-                "name": "service_request",
-                "customer": "party_name",
-                "company": "company",
-                "posting_date": "posting_date",
-                "due_date": "due_date",
+		source_name,
+		target_doc=None, 
+		selected_items=None
+	):
+	mapping = {
+		"Service Request": {
+			"doctype": "Service Quotation",
+			"field_map": {
+				"name": "service_request",
+				"customer": "party_name",
+				"company": "company",
+				"posting_date": "posting_date",
+				"due_date": "due_date",
 				"customer_address": "service_address",
 				"cost_center": "cost_center",
 				"project": "project",
@@ -37,8 +38,8 @@ def make_service_quotation(
 				"preferred_date_1": "preferred_date_1",
 				"preferred_time": "preferred_time",
 				"preference_note": "preference_note"
-            },
-        }
-    }
-    doc = get_mapped_doc("Service Request", source_name, mapping, target_doc)
-    return doc
+			},
+		}
+	}
+	doc = get_mapped_doc("Service Request", source_name, mapping, target_doc)
+	return doc

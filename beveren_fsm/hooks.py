@@ -156,8 +156,14 @@ fixtures = [
 # }
 doc_events = {
 	"Sales Invoice": {
-		"on_submit": "beveren_fsm.field_service_management.fsm_utils.update_invoice_status",
-		"on_cancel": "beveren_fsm.field_service_management.fsm_utils.update_invoice_status"
+		"on_submit": [
+            "beveren_fsm.field_service_management.fsm_utils.update_invoice_status",
+            "beveren_fsm.field_service_management.fsm_utils.update_per_billed_status"
+            ],
+		"on_cancel": [
+            "beveren_fsm.field_service_management.fsm_utils.update_invoice_status",
+            "beveren_fsm.field_service_management.fsm_utils.update_per_billed_status"
+            ]
 	}
 }
 

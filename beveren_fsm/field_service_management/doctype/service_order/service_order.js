@@ -51,9 +51,13 @@ frappe.ui.form.on("Service Order", {
 			// Enable Invoice on Condition
 			let items = frm.doc.items || [];
 			let non_invoiced_items = [];
-			items.forEach(item => {
-				if (item.invoice_status != 'Invoiced') {
-					non_invoiced_items.push(item);
+			items.forEach((item) => {
+				let invoiced_qty = item.invoiced_qty || 0;
+				let remaining_qty = item.qty - invoiced_qty;
+				if (remaining_qty > 0) {
+					non_invoiced_items.push({
+						item_code: item.item_code,
+					});
 				}
 			});
 
@@ -125,9 +129,13 @@ frappe.ui.form.on("Service Order", {
 		// Fetch all parts and services which are not invoiced
 		let items = frm.doc.items || [];
 		let non_invoiced_items = [];
-		items.forEach(item => {
-			if (item.invoice_status != 'Invoiced') {
-				non_invoiced_items.push(item);
+		items.forEach((item) => {
+			let invoiced_qty = item.invoiced_qty || 0;
+			let remaining_qty = item.qty - invoiced_qty;
+			if (remaining_qty > 0) {
+				non_invoiced_items.push({
+					item_code: item.item_code,
+				});
 			}
 		});
 
@@ -160,33 +168,46 @@ frappe.ui.form.on("Service Order", {
 		});
     },
 	create_service_invoice: (frm) => {
-		// Fetch all parts and services which are not invoiced
 		let items = frm.doc.items || [];
 		let non_invoiced_items = [];
+	
 		items.forEach((item) => {
-			if (item.invoice_status != "Invoiced") {
-				non_invoiced_items.push(item);
+			let invoiced_qty = item.invoiced_qty || 0;
+			let remaining_qty = item.qty - invoiced_qty;
+			if (remaining_qty > 0) {
+				non_invoiced_items.push({
+					item_code: item.item_code,
+					item_name: item.item_name,
+					qty: remaining_qty,
+					max_qty: remaining_qty,
+					rate: item.rate, 
+					amount: item.rate * remaining_qty
+				});
 			}
 		});
-		if (non_invoiced_items.length == 0) {
-			frappe.msgprint("This Appointment is already fully Invoiced.");
+	
+		if (non_invoiced_items.length === 0) {
+			frappe.msgprint("This Order is already fully Invoiced.");
 			return;
 		}
+	
 		function mergeDuplicates(items) {
 			let mergedItems = items.reduce((acc, item) => {
 				let existingItem = acc.find((i) => i.item_code === item.item_code);
 				if (existingItem) {
 					existingItem.qty += item.qty;
+					existingItem.max_qty += item.max_qty;
+					existingItem.amount = existingItem.rate * existingItem.qty;
 				} else {
 					acc.push({ ...item });
 				}
 				return acc;
 			}, []);
-
 			return mergedItems;
 		}
 		non_invoiced_items = mergeDuplicates(non_invoiced_items);
-
+	
+		// Create the dialog to show non-invoiced items
 		const dialog = new frappe.ui.Dialog({
 			title: __("Services and Parts to Invoice"),
 			fields: [
@@ -194,7 +215,7 @@ frappe.ui.form.on("Service Order", {
 					fieldname: "service_items",
 					fieldtype: "Table",
 					label: __("Services and Parts"),
-					options: "Services and Parts",
+					options: "Service Order Item",
 					in_place_edit: true,
 					reqd: 1,
 					fields: [
@@ -203,34 +224,48 @@ frappe.ui.form.on("Service Order", {
 							label: __("Item Code"),
 							fieldtype: "Link",
 							options: "Item",
-							in_list_view: 1,
-						},
-						{
-							fieldname: "item_name",
-							label: __("Item Name"),
-							fieldtype: "Data",
-							in_list_view: 1,
+							in_list_view: 1
 						},
 						{
 							fieldname: "qty",
 							label: __("Quantity"),
-							fieldtype: "Int",
+							fieldtype: "Float",
+							in_list_view: 1
+						},
+						{
+							fieldname: "rate",
+							label: __("Rate"),
+							fieldtype: "Currency",
 							in_list_view: 1,
+							read_only: 1
 						},
 						{
 							fieldname: "amount",
 							label: __("Amount"),
 							fieldtype: "Currency",
-							in_list_view: 1,
+							in_list_view: 1
 						},
-					],
-				},
+						{
+							fieldname: "max_qty",
+							label: __("Max Quantity"),
+							fieldtype: "Float",
+							hidden: 1
+						}
+					]
+				}
 			],
 			primary_action: (values) => {
-				// Create Invoice
+				let tableField = dialog.get_field("service_items");
+				tableField.df.data.forEach((item) => {
+					if(item.max_qty < item.qty){
+						frappe.throw(__("Quantity for {0} cannot exceed {1}", [item.item_code, item.max_qty]));
+						return
+					}
+					item.amount = item.rate * item.qty;
+				})
+				tableField.grid.refresh();
 				frappe.call({
-					method:
-						"beveren_fsm.field_service_management.fsm_utils.create_service_invoice",
+					method: "beveren_fsm.field_service_management.fsm_utils.create_service_invoice",
 					args: {
 						doctype: frm.doc.doctype,
 						docname: frm.doc.name,
@@ -239,28 +274,34 @@ frappe.ui.form.on("Service Order", {
 					},
 					callback: function (r) {
 						if (r.message) {
-							// Route to Sales Invoice
 							frappe.set_route("Form", "Sales Invoice", r.message);
 						}
 					},
 				});
-
 				dialog.hide();
 			},
 			primary_action_label: __("Create Invoice"),
-			secondary_action: () => {
-				dialog.hide();
+			secondary_action: (e, values) => {
+				let tableField = dialog.get_field("service_items");
+				tableField.df.data.forEach((item) => {
+					if(item.max_qty < item.qty){
+						frappe.throw(__("Quantity for {0} cannot exceed {1}", [item.item_code, item.max_qty]));
+						return
+					}
+					item.amount = item.rate * item.qty;
+				})
+				tableField.grid.refresh();
 			},
-			secondary_action_label: __("Cancel"),
+			secondary_action_label: __("Refresh Amount"),
 		});
-
-		// Prefill the table with non-invoiced items
 		let tableField = dialog.get_field("service_items");
 		tableField.df.data = non_invoiced_items;
 		tableField.grid.refresh();
-
+	
 		dialog.show();
+		
 	},
+	
 });
 
 beveren_fsm.field_service_management.ServiceOrderController = class ServiceOrderController extends erpnext.selling.SellingController {

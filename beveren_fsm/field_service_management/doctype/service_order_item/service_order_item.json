@@ -62,6 +62,8 @@
   "gross_profit",
   "invoice_status_section",
   "invoice_status",
+  "column_break_vqdy",
+  "invoiced_qty",
   "drop_ship_section",
   "delivered_by_supplier",
   "supplier",
@@ -899,7 +901,7 @@
    "in_list_view": 1,
    "label": "Invoice Status",
    "no_copy": 1,
-   "options": "Not Invoiced\nInvoiced",
+   "options": "Not Invoiced\nPartly Invoiced\nInvoiced",
    "read_only": 1
   },
   {
@@ -913,12 +915,27 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Is Billable"
+  },
+  {
+   "fieldname": "column_break_vqdy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0.0",
+   "fieldname": "invoiced_qty",
+   "fieldtype": "Float",
+   "label": "Invoiced Quantity",
+   "no_copy": 1,
+   "non_negative": 1,
+   "precision": "1",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-19 06:29:17.165994",
+ "modified": "2025-02-23 12:58:39.740200",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order Item",

@@ -85,6 +85,8 @@
   "column_break_extu",
   "preference_note",
   "amended_from",
+  "status_section",
+  "per_billed",
   "lost_reason_section",
   "lost_reason"
  ],
@@ -743,6 +745,23 @@
    "label": "Service Request",
    "link_filters": "[[\"Service Request\",\"docstatus\",\"=\",\"1\"]]",
    "options": "Service Request"
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "depends_on": "eval:!doc.__islocal",
+   "description": "% of Parts and Services billed against this Service Quotation",
+   "fieldname": "per_billed",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Amount Billed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "width": "100px"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -753,7 +772,7 @@
    "link_fieldname": "service_quotation"
   }
  ],
- "modified": "2025-02-21 02:48:27.727693",
+ "modified": "2025-02-21 09:36:56.329285",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Quotation",

@@ -25,7 +25,9 @@
   "service_technicians",
   "services_section",
   "items",
-  "amended_from"
+  "amended_from",
+  "invoice_status_section",
+  "per_billed"
  ],
  "fields": [
   {
@@ -168,6 +170,24 @@
    "fieldtype": "Date",
    "label": "Posting Date",
    "reqd": 1
+  },
+  {
+   "fieldname": "invoice_status_section",
+   "fieldtype": "Section Break",
+   "label": "Invoice Status"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:!doc.__islocal",
+   "description": "% of items and parts billed against this Service Appointment",
+   "fieldname": "per_billed",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "% Amount Billed",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "width": "100px"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -178,7 +198,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-19 07:45:04.232183",
+ "modified": "2025-02-23 11:52:47.836241",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",

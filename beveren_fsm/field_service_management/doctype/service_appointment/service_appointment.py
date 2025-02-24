@@ -74,7 +74,8 @@ def make_appointment_from_order(source_name, target_doc=None, selected_items=Non
 				"description": "description",
 				"qty": "qty",
 				"rate": "rate",
-				"amount": "amount"
+				"amount": "amount",
+				"invoice_status": "invoice_status"
 			},
 			"add_if_empty": True
 		}

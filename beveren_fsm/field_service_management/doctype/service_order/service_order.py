@@ -44,7 +44,7 @@ class ServiceOrder(Document):
 		if is_allowed_status and quotation_not_converted:
 			quotation.status = "Converted"
 			quotation.save()
-		
+
 	def validate(self):
 		self.set_in_words()
 
