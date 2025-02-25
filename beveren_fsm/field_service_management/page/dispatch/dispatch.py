@@ -1,50 +1,35 @@
 import frappe
 from frappe.utils import getdate, get_datetime
 
-def get_context(context):
-	# This ties the "dispatch.html" template to the "dispatch" page name
-	context.template = "beveren_fsm/field_service_management/page/dispatch/dispatch.html"
-
 @frappe.whitelist()
 def get_schedule_data(selected_date, all_dates=False):
-	# Fetch Technicians
 	technicians = frappe.get_all("Service Technician", fields=["name", "full_name"])
 	
-	# Convert selected_date to a date object
 	selected_date = getdate(selected_date)
 	
 	if all_dates:
-		# Fetch ALL appointments
 		appointments = frappe.get_all(
 			"Service Appointment",
 			fields=["name", "posting_date", "service_order", "scheduled_start_datetime", "scheduled_finish_datetime", "status"],
+			filters={"docstatus": 1},
 			order_by="posting_date desc"
 		)
-	else: 
-		# Fetch Service Appointments for the selected date
+	else:
 		appointments = frappe.get_all("Service Appointment", filters={
 			"posting_date": selected_date,
-		}, fields=["name", "posting_date", "service_order", "scheduled_start_datetime", "scheduled_finish_datetime"])
+		}, fields=["name", "posting_date", "service_order", "scheduled_start_datetime", "scheduled_finish_datetime", "status"])
 	
-	# Get metadata for Service Appointment to fetch workflow states and their colors
 	meta = frappe.get_meta("Service Appointment")
-	
 	appointments_with_technicians = []
 	for appointment in appointments:
-		# Get the full document to access child table and status.
 		appointment_doc = frappe.get_doc("Service Appointment", appointment.name)
-		
-		# Fetch service technicians from child table
 		service_technicians = [
 			frappe.get_doc("Service Technician", tech.service_technician).name
 			for tech in appointment_doc.service_technicians
 		]
-		
-		# Convert scheduled datetime fields to proper datetime objects
 		start_time = get_datetime(appointment_doc.scheduled_start_datetime)
 		finish_time = get_datetime(appointment_doc.scheduled_finish_datetime)
 		
-		# Get the color for the current state using meta.states
 		state_color = None
 		if meta.states:
 			for s in meta.states:
@@ -52,7 +37,6 @@ def get_schedule_data(selected_date, all_dates=False):
 					state_color = s.color
 					break
 		
-		# Prepare the structured appointment data
 		structured_appointment = {
 			"name": appointment.name,
 			"posting_date": appointment.posting_date,
@@ -71,13 +55,11 @@ def get_schedule_data(selected_date, all_dates=False):
 	}
 
 @frappe.whitelist()
-def create_service_appointment(selected_date, service_order, scheduled_start_datetime, scheduled_finish_datetime, technician):
+def create_service_appointment(selected_date, service_order, scheduled_start_datetime, scheduled_finish_datetime, technician, dispatch=0):
 	from frappe.utils import getdate, get_datetime
-	# Convert the datetime strings to datetime objects.
 	scheduled_start_datetime = get_datetime(scheduled_start_datetime)
 	scheduled_finish_datetime = get_datetime(scheduled_finish_datetime)
 	
-	# Search for an existing Service Appointment using the main filters.
 	appointment_list = frappe.get_all('Service Appointment', filters={
 		'posting_date': getdate(selected_date),
 		'service_order': service_order,
@@ -88,7 +70,6 @@ def create_service_appointment(selected_date, service_order, scheduled_start_dat
 	found = None
 	for app in appointment_list:
 		app_doc = frappe.get_doc("Service Appointment", app.name)
-		# Check if the technician is in the child table.
 		for row in app_doc.get("service_technicians"):
 			if row.service_technician == technician:
 				found = app_doc
@@ -99,19 +80,30 @@ def create_service_appointment(selected_date, service_order, scheduled_start_dat
 	if found:
 		appointment = found
 	else:
-		# Create a new Service Appointment.
+		service_order_doc = frappe.get_doc("Service Order", service_order)
 		appointment = frappe.new_doc('Service Appointment')
 		appointment.posting_date = getdate(selected_date)
 		appointment.service_order = service_order
 		appointment.scheduled_start_datetime = scheduled_start_datetime
 		appointment.scheduled_finish_datetime = scheduled_finish_datetime
+		appointment.customer = service_order_doc.customer
+		for item in service_order_doc.get("items") or []:
+			appointment.append("items", {
+				"item_code": item.item_code,
+				"qty": item.qty,
+				"uom": item.uom,
+				"invoice_status": item.invoice_status
+			})
 		appointment.append('service_technicians', {
 			'service_technician': technician
 		})
 		appointment.save()
 		appointment.submit()
+		# Dispatch
+		if int(dispatch) == 1:
+			appointment.status = "Dispatched"
+			appointment.save()
 	
-	# Get metadata to fetch the workflow state color.
 	meta = frappe.get_meta("Service Appointment")
 	state_color = None
 	if meta.states:
@@ -134,7 +126,6 @@ def update_service_appointment(appointment_id, selected_date, service_order, sch
 		"scheduled_finish_datetime": get_datetime(scheduled_finish_datetime)
 	})
 	
-	# Clear existing technicians and add the new one.
 	appointment.set("service_technicians", [])
 	appointment.append("service_technicians", {
 		"service_technician": technician
@@ -153,28 +144,21 @@ def start_work(appointment_id):
 	else:
 		frappe.throw("Appointment is not in Dispatched status. Cannot start work.")
 
-
-
 @frappe.whitelist()
 def get_sidebar_data(mode):
-	"""
-	Fetch live data for either Service Order or Service Appointment,
-	including child tables. We assume 'invoice_status' is a field
-	in the child table "Service Order Item".
-	And "Service Technician Item" has 'name' and 'full_name'.
-	"""
 	if mode == "Service Order":
 		orders = frappe.get_all(
 			"Service Order",
-			fields=["name", "customer", "priority", "transaction_date", "status"],
-			order_by="transaction_date desc",
+			fields=["name", "customer", "priority", "posting_date", "status"],
+			filters={"docstatus": 1},
+			order_by="posting_date desc",
 			limit=30
 		)
 		for o in orders:
 			items = frappe.get_all(
 				"Service Order Item",
 				filters={"parent": o.name},
-				fields=["item_code", "item_name", "qty", "uom", "invoice_status"]  # replaced 'description' with 'invoice_status'
+				fields=["item_code", "item_name", "qty", "uom", "invoice_status"]
 			)
 			o["items"] = items
 		return orders
@@ -183,17 +167,16 @@ def get_sidebar_data(mode):
 		appointments = frappe.get_all(
 			"Service Appointment",
 			fields=["name", "posting_date", "status", "scheduled_start_datetime", "scheduled_finish_datetime"],
+			filters={"docstatus": 1},
 			order_by="posting_date desc",
 			limit=30
 		)
 		for a in appointments:
-			# items
 			items = frappe.get_all(
 				"Service Order Item",
 				filters={"parent": a.name},
 				fields=["item_code", "item_name", "qty", "uom", "invoice_status"]
 			)
-			# technicians
 			techs = frappe.get_all(
 				"Service Technician Item",
 				filters={"parent": a.name},
@@ -205,4 +188,3 @@ def get_sidebar_data(mode):
 
 	else:
 		return []
-
