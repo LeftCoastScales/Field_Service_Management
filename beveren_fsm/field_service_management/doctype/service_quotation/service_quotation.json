@@ -746,7 +746,8 @@
    "link_filters": "[[\"Service Request\",\"docstatus\",\"=\",\"1\"],[\"Service Request\",\"status\",\"=\",\"Open\"]]",
    "no_copy": 1,
    "options": "Service Request",
-   "read_only": 1
+   "read_only": 1,
+   "unique": 1
   },
   {
    "fieldname": "status_section",
@@ -774,7 +775,7 @@
    "link_fieldname": "service_quotation"
   }
  ],
- "modified": "2025-02-23 22:00:04.659802",
+ "modified": "2025-02-24 19:03:17.639933",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Quotation",

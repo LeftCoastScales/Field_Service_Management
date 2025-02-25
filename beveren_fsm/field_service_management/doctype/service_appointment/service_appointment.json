@@ -198,7 +198,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-24 01:57:02.536013",
+ "modified": "2025-02-25 01:59:52.111164",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Appointment",
@@ -226,11 +226,11 @@
    "title": "Open"
   },
   {
-   "color": "Cyan",
+   "color": "Blue",
    "title": "Scheduled"
   },
   {
-   "color": "Yellow",
+   "color": "Purple",
    "title": "Dispatched"
   },
   {
