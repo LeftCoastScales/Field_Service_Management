@@ -7,8 +7,10 @@
  "engine": "InnoDB",
  "field_order": [
   "full_name",
+  "service_area",
   "column_break_jvsh",
-  "employee"
+  "employee",
+  "specialization"
  ],
  "fields": [
   {
@@ -30,11 +32,23 @@
    "fieldtype": "Link",
    "label": "Employee",
    "options": "Employee"
+  },
+  {
+   "fieldname": "service_area",
+   "fieldtype": "Link",
+   "label": "Service Area",
+   "options": "Service Area"
+  },
+  {
+   "fieldname": "specialization",
+   "fieldtype": "Link",
+   "label": "Specialization",
+   "options": "Service Specialization"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-02-17 20:28:14.478876",
+ "modified": "2025-03-05 03:42:59.542678",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Technician",
