@@ -5,3 +5,7 @@
 tags
 node_modules
 __pycache__
+
+
+beveren_fsm/public/schedule
+beveren_fsm/www/schedule.html
