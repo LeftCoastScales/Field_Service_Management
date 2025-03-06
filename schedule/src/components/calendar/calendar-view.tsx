@@ -173,9 +173,9 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 		tippy(info.el, {
 			content: tooltipContent,
 			allowHTML: true,
-			theme: "light-border",
+			theme: "light",
 			trigger: "click",
-			placement: "right-end",
+			placement: "top",
 		});
 	};
 
