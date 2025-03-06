@@ -589,7 +589,8 @@
    "fieldname": "customer_address",
    "fieldtype": "Link",
    "label": "Service Address",
-   "options": "Address"
+   "options": "Address",
+   "reqd": 1
   },
   {
    "fieldname": "address_details",
@@ -747,7 +748,7 @@
    "link_fieldname": "custom_reference_service_document"
   }
  ],
- "modified": "2025-02-25 03:04:18.979652",
+ "modified": "2025-03-06 17:00:24.573594",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Order",

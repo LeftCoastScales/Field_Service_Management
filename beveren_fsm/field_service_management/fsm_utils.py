@@ -148,3 +148,44 @@ def update_per_billed_status(doc, method):
 
     ref_doc.per_billed = (billed_amount / total_amount) * 100 if total_amount else 0.0
     ref_doc.save()
+
+
+
+@frappe.whitelist()
+def update_appointment_from_api(
+		name,
+		scheduled_start_datetime,
+		scheduled_finish_datetime,
+		service_technicians,
+		items
+	):
+
+	appointment = frappe.get_doc("Service Appointment", name)
+	# delete all items from the appointment
+	appointment.service_technicians = []
+	appointment.items = []
+
+	# delete all service_technicians from the appointment
+	
+
+	for item in items:
+		appointment.append("items", {
+			"item_code": item["item_code"],
+			"qty": item["qty"],
+			"rate": item["rate"],
+			"amount": item["amount"]
+		})
+
+	for service_technician in service_technicians:
+		appointment.append("service_technicians", {
+			"service_technician": service_technician["service_technician"],
+			"full_name": service_technician["full_name"],
+			# "service_area": service_technician["service_area"],
+			# "specialization": service_technician["specialization"]
+		})
+
+	appointment.scheduled_start_datetime = scheduled_start_datetime
+	appointment.scheduled_finish_datetime = scheduled_finish_datetime
+
+	appointment.save()
+	return appointment.name
