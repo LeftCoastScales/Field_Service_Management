@@ -5,6 +5,14 @@
 tags
 node_modules
 __pycache__
+yarn.lock
+dist
+dist-ssr
+*.local
+*.log
+*.suo
+*.ntvs*
+*.njsproj
 
 
 beveren_fsm/public/schedule

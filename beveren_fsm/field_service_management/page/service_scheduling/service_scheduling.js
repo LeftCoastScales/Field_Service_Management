@@ -751,7 +751,6 @@ function create_appointment(selected_date, service_order, scheduled_start_dateti
 		},
 		callback: (r) => {
 			if (!r.exc) {
-				console.log(r.message);
 				if (callback) {
 					callback(r.message);
 				}
