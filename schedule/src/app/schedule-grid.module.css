@@ -1,151 +1,14 @@
 /* Timeline container */
-.timelineContainer :global(.react-calendar-timeline) {
-  font-family: inherit;
-  background-color: var(--background);
-}
-
 .timelineContainer {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* Prevent any scrolling at this level */
-  max-width: 100vw; /* Ensure no content exceeds viewport width */
+  overflow: hidden;
+  max-width: 100vw;
 }
 
 /* Header */
-.timelineContainer :global(.rct-header-root) {
-  background-color: var(--background);
-  border-bottom: 1px solid var(--border);
-  padding: 0;
-}
-
-.timelineHeader {
-  display: flex;
-  border-bottom: 1px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 10;
-}
-
-/* Sidebar */
-.timelineContainer :global(.rct-sidebar) {
-  border-right: 1px solid var(--border);
-  background-color: var(--background);
-  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.05);
-}
-
-.timelineContainer :global(.rct-sidebar-row) {
-  padding: 0;
-  border-bottom: 1px solid var(--border);
-  background-color: var(--background);
-}
-
-/* Time markers */
-.timelineContainer :global(.rct-dateHeader) {
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  padding: 0.5rem;
-  background-color: var(--accent);
-}
-
-/* Grid lines */
-.timelineContainer :global(.rct-vertical-lines .rct-vl) {
-  border-left: 1px solid var(--border);
-}
-
-.timelineContainer :global(.rct-horizontal-lines .rct-hl) {
-  border-bottom: 1px solid var(--border);
-}
-
-/* Current time marker */
-.timelineContainer :global(.rct-now) {
-  background-color: var(--primary);
-  width: 2px;
-  opacity: 0.6;
-}
-
-/* Cursor */
-.timelineContainer :global(.rct-cursor-line) {
-  background-color: var(--primary);
-  width: 2px;
-  opacity: 0.6;
-}
-
-/* Selection */
-.timelineContainer :global(.rct-selection) {
-  background-color: rgba(var(--primary), 0.1);
-  border: 1px solid var(--primary);
-}
-
-/* Group divider */
-.timelineContainer :global(.group-divider) {
-  background-color: var(--accent);
-  height: 1px;
-  opacity: 0.5;
-}
-
-/* Scrollbar */
-.timelineContainer :global(.rct-scroll) {
-  scrollbar-width: thin;
-  scrollbar-color: var(--primary) transparent;
-}
-
-.timelineContainer :global(.rct-scroll::-webkit-scrollbar) {
-  width: 6px;
-  height: 6px;
-}
-
-.timelineContainer :global(.rct-scroll::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-.timelineContainer :global(.rct-scroll::-webkit-scrollbar-thumb) {
-  background-color: var(--primary);
-  border-radius: 3px;
-}
-
-/* Calendar header */
-.timelineContainer :global(.rct-calendar-header) {
-  border-bottom: 1px solid var(--border);
-  background-color: var(--accent);
-}
-
-/* Item hover and drag effects */
-.timelineContainer :global(.rct-item:hover) {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.timelineContainer :global(.rct-item.dragging) {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Resize handles */
-.timelineContainer :global(.rct-item .rct-item-handler) {
-  border-color: rgba(0, 0, 0, 0.1);
-  width: 6px;
-}
-
-.timelineContainer :global(.rct-item .rct-item-handler:hover) {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.timelineContent {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.gridContainer {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
 .headerRow {
   display: flex;
   height: 40px;
@@ -157,7 +20,7 @@
 }
 
 .techHeader {
-  width: 220px; /* Increased from 180px to 220px */
+  width: 220px;
   min-width: 220px;
   padding: 8px;
   border-right: 1px solid #e2e8f0;
@@ -165,11 +28,7 @@
   align-items: center;
 }
 
-/* Remove the buffer column that we added before */
-.bufferColumn {
-  display: none;
-}
-
+/* Time labels */
 .timeLabels {
   display: flex;
   flex: 1;
@@ -191,44 +50,37 @@
 .timeLabel::before {
   content: attr(data-time);
   position: absolute;
-  left: 0; /* Align at the left edge of the grid line */
+  left: 0;
   transform: translateX(-50%);
   padding-left: 4px;
   white-space: nowrap;
 }
 
-/* Restore vertical grid lines */
 .timeLabel::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 0;
   height: 100vh;
-  border-left: 1px dashed #e2e8f0; /* Dotted vertical line */
+  border-left: 1px dashed #e2e8f0;
   z-index: 1;
 }
 
 .timeLabel:first-child::before {
-  left: 0; /* First label should align with the grid line */
-  transform: translateX(-30%); /* Adjust position to be more aligned */
+  left: 0;
+  transform: translateX(-30%);
   padding-left: 0;
 }
 
-/* Media query for small screens to reduce font size */
-@media (max-width: 768px) {
-  .timeLabel::before {
-    font-size: 10px;
-  }
-}
-
+/* Scroll container */
 .scrollContainer {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  min-height: 0; /* Allow container to shrink */
-  max-height: calc(100% - 40px); /* Subtract header height */
+  min-height: 0;
+  max-height: calc(100% - 40px);
 }
 
 .scrollContainer::-webkit-scrollbar {
@@ -248,21 +100,22 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
+/* Rows & technician info */
 .rows {
   position: relative;
-  height: fit-content; /* Adjust to actual content height */
+  height: fit-content;
 }
 
 .row {
   display: flex;
   height: 60px;
   border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease;
 }
 
-/* Update the technician info column width to match header */
 .technicianInfo {
   padding: 8px;
-  width: 220px; /* Match the increased header width */
+  width: 220px;
   min-width: 220px;
   border-right: 1px solid #e2e8f0;
   background: #f8fafc;
@@ -274,37 +127,32 @@
   text-overflow: ellipsis;
 }
 
+/* Appointments container */
 .appointmentsContainer {
-  display: flex;
   flex: 1;
   position: relative;
-  max-width: 100%; /* Prevent exceeding container width */
-  overflow: hidden; /* Prevent overflow */
+  max-width: 100%;
+  overflow: hidden;
 }
 
-.appointments {
-  position: relative;
-  flex: 1;
-}
-
+/* Appointment event styling */
 .appointment {
   position: absolute;
   height: 48px;
   top: 6px;
   border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  color: white;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: #333;
   cursor: pointer;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  backdrop-filter: saturate(1.2);
-  text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+  background: #fff;
 }
 
 .appointment:hover {
@@ -313,25 +161,39 @@
   filter: brightness(1.05);
 }
 
-/* Make short appointments more compact */
-.appointment[style*="width: calc"] {
-  padding: 4px 6px;
+/* Internal layout of appointment event */
+.appointmentContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-/* For very small appointments (<3% width), only show a colored block */
-/* .appointment[style*="width: 1"] > *,
-.appointment[style*="width: 2"] > * {
-  display: none;
+.appointmentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.appointment[style*="width: 1"]::after,
-.appointment[style*="width: 2"]::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-} */
+.appointmentName {
+  font-weight: bold;
+  font-size: 12px;
+}
 
+.appointmentBody {
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  gap: 2px;
+}
+
+.appointmentLocation,
+.appointmentTime {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Resize handles */
 .resizeHandle {
   position: absolute;
   top: 0;
@@ -341,16 +203,14 @@
   z-index: 20;
 }
 
+/* Status icon repositioned to top right */
 .statusIcon {
   position: absolute;
-  bottom: 2px;
+  top: 2px;
   right: 2px;
 }
 
-.row {
-  transition: background-color 0.2s ease;
-}
-
+/* Flash animation for highlighted appointment */
 @keyframes flash {
   0% { background-color: yellow; }
   50% { background-color: transparent; }
@@ -362,9 +222,8 @@
   .timeLabel::before {
     font-size: 10px;
   }
-  
   .techHeader, .technicianInfo {
-    width: 180px; /* Keep smaller width on mobile */
+    width: 180px;
     min-width: 180px;
   }
 }

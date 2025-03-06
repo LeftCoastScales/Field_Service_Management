@@ -5,15 +5,15 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 interface GridContextType {
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
-  highlightedAppointmentId: number | null;
-  setHighlightedAppointmentId: (id: number | null) => void;
+  highlightedAppointmentId: string | null;
+  setHighlightedAppointmentId: (name: string | null) => void;
 }
 
 const GridContext = createContext<GridContextType | undefined>(undefined);
 
 export function GridProvider({ children }: { children: ReactNode }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [highlightedAppointmentId, setHighlightedAppointmentId] = useState<number | null>(null);
+  const [highlightedAppointmentId, setHighlightedAppointmentId] = useState<string | null>(null);
 
   return (
     <GridContext.Provider

@@ -1,9 +1,8 @@
-// lib/context.tsx
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { Resource, Appointment, Technician, Order } from "./types";
-import { fetchResources } from "./appointments-data";
+import { fetchResources } from "./resources-data";
 
 const extractAppointments = (resources: Resource[]): Appointment[] =>
   resources.filter((r) => r.resourceType === "appointment") as Appointment[];
@@ -86,8 +85,6 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       )
     );
   };
-
-  console.log(resources);
   
 
   const removeAppointment = (id: number) => {

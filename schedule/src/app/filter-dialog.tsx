@@ -24,16 +24,13 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
 
   // Extract filter options from live resources.
   const appointmentOptions = Array.from(
-    new Set(resources.filter((r) => r.type === "appointment").map((a) => a.name))
+    new Set(resources.filter((r) => r.resourceType === "appointment").map((a) => a.name))
   );
   const locationOptions = Array.from(
-    new Set(resources.filter((r) => r.type === "appointment").map((a) => a.customer))
+    new Set(resources.filter((r) => r.resourceType === "appointment").map((a) => a.location))
   );
   const technicianOptions = Array.from(
-    new Set(resources.filter((r) => r.type === "technician").map((t) => t.name))
-  );
-  const orderOptions = Array.from(
-    new Set(resources.filter((r) => r.type === "order").map((o) => o.name))
+    new Set(resources.filter((r) => r.resourceType === "technician").map((t) => t.full_name))
   );
 
   const handleApplyFilter = () => {
@@ -48,7 +45,7 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Filter</DialogTitle>
         </DialogHeader>
@@ -91,22 +88,6 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
               </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="order" className="text-right">
-                Order
-              </Label>
-              <select
-                id="order"
-                value={order}
-                onChange={(e) => setOrder(e.target.value)}
-                className="col-span-3 h-8 border rounded px-2"
-              >
-                <option value="">All</option>
-                {orderOptions.map((ord) => (
-                  <option key={ord} value={ord}>
-                    {ord}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="technician" className="text-right">

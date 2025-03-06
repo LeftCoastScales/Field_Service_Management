@@ -35,14 +35,14 @@ export default function TopBar() {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between px-4 py-2 bg-white border-b border-gray-200">
       <div className="flex items-center space-x-4 mb-2 md:mb-0">
-        <h2 className="text-lg font-semibold">
+        {/* <h2 className="text-lg font-semibold">
           {currentDate.toLocaleDateString("en-US", {
             month: "long",
             year: "numeric",
             ...(view === "day" && { day: "numeric" }),
             ...(view === "week" && { day: "numeric" }),
           })}
-        </h2>
+        </h2> */}
       </div>
       <div className="flex flex-wrap items-center space-x-2 space-y-2 md:space-y-0">
         <Select value={view} onValueChange={(value: any) => setView(value)}>

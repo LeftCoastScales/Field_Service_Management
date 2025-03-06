@@ -1,4 +1,3 @@
-// lib/frappeData.ts
 import { any } from "prop-types";
 import { Appointment, Technician, Order, Resource } from "./types";
 

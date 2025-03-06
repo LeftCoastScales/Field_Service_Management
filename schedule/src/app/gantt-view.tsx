@@ -214,7 +214,6 @@ export default function GanttView() {
 									<div className="flex flex-col h-screen w-full">
 										<TopBar />
 										<div className="flex flex-1 w-full overflow-hidden">
-											{/* <Sidebar /> */}
 											<div className="flex-1 overflow-hidden">
 												<CalendarView selectedDate={selectedDate} filters={filters} />
 											</div>
