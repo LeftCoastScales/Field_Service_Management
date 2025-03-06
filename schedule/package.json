@@ -58,7 +58,6 @@
     "interactjs": "^1.10.27",
     "lucide-react": "^0.454.0",
     "moment": "^2.30.1",
-    "next": "^15.2.0",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-calendar-timeline": "^0.30.0-beta.3",
