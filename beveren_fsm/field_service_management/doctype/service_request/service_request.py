@@ -9,28 +9,29 @@ class ServiceRequest(Document):
 	pass
 
 def update_status():
-    two_days_from_now = add_days(today(), 2)
+    
     current_date = getdate(today())
-
-    docs_to_update_soon = frappe.get_all(
+    two_days_from_now = add_days(today(), 2)
+    
+    docs_to_update_due_soon = frappe.get_all(
         "Service Request",
         filters={
             "due_date": two_days_from_now,
-            "status": ["!=", "Due Soon"]
+            "status": "Open"
         },
         fields=["name"]
     )
-    
+
     docs_to_update_overdue = frappe.get_all(
         "Service Request",
         filters={
             "due_date": ["<", current_date],
-            "status": ["!=", "Overdue"]
+            "status": ["in", ["Open", "Due Soon"]]
         },
         fields=["name"]
     )
-    
-    for doc in docs_to_update_soon:
+
+    for doc in docs_to_update_due_soon:
         document = frappe.get_doc("Service Request", doc["name"])
         document.status = "Due Soon"
         document.save()
