@@ -8,20 +8,36 @@
  * The fetchItems function fetches Item doctype records.
  */
 
+
+export interface CreateAppointmentPayload {
+    posting_date: string;
+    service_order: string;
+    customer: string;
+    scheduled_start_datetime?: string;
+    scheduled_finish_datetime?: string;
+    service_technicians?: any[] | Record<string, any>;
+    items?: any[];
+    changed_status?: string;
+}
+
 export interface UpdateAppointmentPayload {
     name: string;
     scheduled_start_datetime?: string;
     scheduled_finish_datetime?: string;
-    service_technicians?: any[];
+    service_technicians?: any[] | Record<string, any>;
     items?: any[];
+    changed_status?: string;
+    reschedule?: boolean;
+    edit_item_list?: boolean;
+    edit_technician_list?: boolean;
 }
 
-export async function updateAppointment(
-    payload: UpdateAppointmentPayload
+export async function createAppointment(
+    payload: CreateAppointmentPayload
 ): Promise<any> {
     try {
         const response = await fetch(
-            '/api/method/beveren_fsm.field_service_management.fsm_utils.update_appointment_from_api',
+            '/api/method/beveren_fsm.field_service_management.api.schedule.create_appointment_from_api',
             {
                 method: "POST",
                 headers: {
@@ -35,13 +51,45 @@ export async function updateAppointment(
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to get logged in user: ${errorText}`);
+            throw new Error(`Failed to create Appointment: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.message;
+        console.log('msageeee',data.message);
+        
+    } catch (error) {
+        console.error("Error Creating Appointment:", error);
+        throw error;
+    }
+}
+
+export async function updateAppointment(
+    payload: UpdateAppointmentPayload
+): Promise<any> {
+    try {
+        const response = await fetch(
+            '/api/method/beveren_fsm.field_service_management.api.schedule.update_appointment_from_api',
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify(payload),
+
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to update appointment: ${errorText}`);
         }
 
         const data = await response.json();
         return data.message;
     } catch (error) {
-        console.error("Error getting logged in user:", error);
+        console.error("Error Updating Appointment:", error);
         throw error;
     }
 }
