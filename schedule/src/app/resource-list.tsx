@@ -21,6 +21,8 @@ import { updateAppointment } from "../lib/appointments-api";
 
 // Import a toast library. Adjust the import if you use another toast provider.
 import { toast } from "react-hot-toast";
+import { any } from "prop-types";
+import dayjs from "dayjs";
 
 type ViewType = "orders" | "appointments" | "technicians";
 
@@ -153,6 +155,8 @@ export function ResourceList() {
 
   // When updating an appointment (only for scheduled appointments)
   const handleUpdateAppointment = (apt: Appointment) => {
+    console.log("Updating appointment:", apt);
+    
     setUpdateDialogData(apt);
   };
 
@@ -187,13 +191,22 @@ export function ResourceList() {
 
   const handleUpdateConfirm = async () => {
     if (!updateDialogData) return;
+
+    console.log("Updating appointment:", dayjs(updateDialogData.scheduled_start_datetime).format('YYYY-MM-DD HH:mm'));
+    console.log("Updating appointment:", dayjs(updateDialogData.scheduled_finish_datetime).format('YYYY-MM-DD HH:mm'));
+    
+    
     try {
       const result = await updateAppointment({
         name: updateDialogData.name,
-        scheduled_start_datetime: updateDialogData.scheduled_start_datetime,
-        scheduled_finish_datetime: updateDialogData.scheduled_finish_datetime,
+        scheduled_start_datetime: dayjs(updateDialogData.scheduled_start_datetime).format('YYYY-MM-DD HH:mm'),
+        scheduled_finish_datetime: dayjs(updateDialogData.scheduled_finish_datetime).format('YYYY-MM-DD HH:mm'),
         service_technicians: updateDialogData.service_technicians,
         items: updateDialogData.items,
+        reschedule: true,
+        edit_item_list: true,
+        edit_technician_list: true,
+
       });
       // Display a success toast with the returned appointment
       toast.success(`Appointment ${result} Updated Successfully!`);

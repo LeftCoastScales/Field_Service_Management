@@ -1,4 +1,4 @@
-// components/add-dialog.tsx
+// components/create-dialog.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,7 +32,23 @@ import {
 import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { useCalendar } from "../lib/context";
 import type { Appointment } from "../lib/types";
-import { fetchItems } from "../lib/appointments-api";
+import { fetchItems, createAppointment } from "../lib/appointments-api";
+import dayjs from "dayjs";
+
+// Import validations
+import {
+  validateTimeRange,
+  validateMinimumDuration,
+  validateBusinessHours,
+  validateNonEmptyField,
+} from "../lib/validations";
+
+export interface AppointmentPrefill {
+  service_order?: string;
+  customer?: string;
+  service_type?: string;
+  items?: Item[];
+}
 
 // Frappe-required metadata interfaces for child tables.
 interface Item {
@@ -55,13 +71,6 @@ interface TechnicianItem {
   full_name?: string;
 }
 
-export interface AppointmentPrefill {
-  service_order?: string;
-  customer?: string;
-  service_type?: string;
-  items?: Item[];
-}
-
 interface AddDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -69,8 +78,10 @@ interface AddDialogProps {
 }
 
 export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
+  // Message and validation states.
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { orders, technicians, appointments } = useCalendar();
@@ -87,6 +98,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [finishTime, setFinishTime] = useState("");
+  const [changedStatus, setChangedStatus] = useState("Scheduled");
 
   // Items state – each item includes Frappe-required metadata.
   const [items, setItems] = useState<Item[]>(prefillData?.items || []);
@@ -114,28 +126,20 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     }
   }, [newItem.qty, newItem.rate]);
 
-  // Technicians state – now with 'id' field instead of employee.
+  // Technicians state – now with 'id' field.
   const [techniciansItems, setTechniciansItems] = useState<TechnicianItem[]>([]);
 
-  // Update local state if prefillData changes (for auto filling from an Order).
+  // Update local state if prefillData changes.
   useEffect(() => {
     if (prefillData) {
-      if (prefillData.service_order) {
-        setServiceOrder(prefillData.service_order);
-      }
-      if (prefillData.customer) {
-        setCustomer(prefillData.customer);
-      }
-      if (prefillData.service_type) {
-        setServiceType(prefillData.service_type);
-      }
-      if (prefillData.items) {
-        setItems(prefillData.items);
-      }
+      if (prefillData.service_order) setServiceOrder(prefillData.service_order);
+      if (prefillData.customer) setCustomer(prefillData.customer);
+      if (prefillData.service_type) setServiceType(prefillData.service_type);
+      if (prefillData.items) setItems(prefillData.items);
     }
   }, [prefillData]);
 
-  // When a service order is selected, prefill customer, service type, and items from global orders.
+  // When a service order is selected, prefill customer, service type, and items.
   useEffect(() => {
     if (serviceOrder) {
       const order = orders.find((o) => o.name === serviceOrder);
@@ -163,7 +167,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   const formatDateTime = (date: string, time: string) => {
     const dt = new Date(`${date}T${time}`);
     return dt.toISOString().replace("T", " ").split(".")[0];
-  };  
+  };
 
   // Add a new item row.
   const addItem = () => {
@@ -234,12 +238,11 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     setTechniciansItems([]);
     setErrorMessage("");
     setSuccessMessage("");
+    setValidationErrors([]);
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      resetForm();
-    }
+    if (!isOpen) resetForm();
   }, [isOpen]);
 
   // Build appointment summary for confirmation.
@@ -253,144 +256,149 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     "Finish Time": finishTime,
   };
 
-  // Confirmation dialog.
+  // Confirmation dialog with tabbed view for Items and Technicians.
   const ConfirmationDialog = () => (
     <Dialog open={confirmOpen} onOpenChange={(open) => !open && setConfirmOpen(false)}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[400px] p-4">
         <DialogHeader>
-          <DialogTitle>Confirm Appointment</DialogTitle>
-          <DialogDescription>Please review the appointment details below.</DialogDescription>
+          <DialogTitle className="text-sm">Confirm Appointment</DialogTitle>
+          <DialogDescription className="text-xs">
+            Review the details below before confirming.
+          </DialogDescription>
         </DialogHeader>
-        <div className="mt-4">
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
           {Object.entries(appointmentSummary).map(([key, value]) => (
-            <div key={key} className="flex">
-              <span className="font-medium w-32">{key}:</span>
-              <span className="flex-1">{value || "-"}</span>
+            <div key={key} className="flex flex-col">
+              <span className="font-medium">{key}</span>
+              <span>{value || "-"}</span>
             </div>
           ))}
         </div>
-        <div className="mt-4">
-          <p className="font-medium">Items:</p>
-          <Table className="mt-2">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Item Code</TableHead>
-                <TableHead className="text-xs">Item Name</TableHead>
-                <TableHead className="text-xs">Quantity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((it, index) => (
-                <TableRow key={index}>
-                  <TableCell className="text-xs">{it.item_code}</TableCell>
-                  <TableCell className="text-xs">{it.item_name || "-"}</TableCell>
-                  <TableCell className="text-xs">{it.qty}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        {/* Tabbed view for Items and Service Technicians */}
+        <div className="mt-3">
+          <Tabs defaultValue="items" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="items" className="text-xs">Items</TabsTrigger>
+              <TabsTrigger value="technicians" className="text-xs">Technicians</TabsTrigger>
+            </TabsList>
+            <TabsContent value="items">
+              <Table className="mt-2 text-xs">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Qty</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((it, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{it.item_code}</TableCell>
+                      <TableCell>{it.qty}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+            <TabsContent value="technicians">
+              <Table className="mt-2 text-xs">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Technician</TableHead>
+                    <TableHead>Name</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {techniciansItems.map((tech, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{tech.service_technician}</TableCell>
+                      <TableCell>{tech.full_name || "-"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
         </div>
-        <div className="mt-4">
-          <p className="font-medium">Service Technicians:</p>
-          <Table className="mt-2">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Technician</TableHead>
-                <TableHead className="text-xs">Name</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {techniciansItems.map((tech, index) => (
-                <TableRow key={index}>
-                  <TableCell className="text-xs">{tech.service_technician}</TableCell>
-                  <TableCell className="text-xs">{tech.full_name || "-"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        <DialogFooter className="mt-4 flex justify-end space-x-2">
-          <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
+        <DialogFooter className="mt-3 flex justify-end space-x-2">
+          <Button variant="ghost" onClick={() => setConfirmOpen(false)} className="text-xs">
             Cancel
           </Button>
-          <Button onClick={() => { setConfirmOpen(false); confirmAndSubmit(); }}>
-            Confirm
+          <Button
+            onClick={() => { setConfirmOpen(false); setChangedStatus('Scheduled'); confirmAndSubmit('Scheduled'); }}
+            className="text-xs"
+          >
+            Schedule
+          </Button>
+          <Button
+            onClick={() => { setConfirmOpen(false); setChangedStatus('Dispatched'); confirmAndSubmit('Dispatched'); }}
+            className="text-xs"
+          >
+            Schedule &amp; Dispatch
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 
-  // Submit the appointment: create the draft then submit it.
-  const confirmAndSubmit = async () => {
-    if (items.length === 0) {
-      setErrorMessage("Please add at least one valid item.");
+  // Submit the appointment using the createAppointment API.
+  // The function now accepts a parameter for changed_status.
+  const confirmAndSubmit = async (changed_status: any) => {
+    // Clear previous validations.
+    setValidationErrors([]);
+    let errors: string[] = [];
+
+    // Run validations.
+    const timeRangeResult = validateTimeRange(startTime, finishTime);
+    if (timeRangeResult !== true) errors.push(timeRangeResult as string);
+    const durationResult = validateMinimumDuration(startTime, finishTime, 60);
+    if (durationResult !== true) errors.push(durationResult as string);
+    const businessResult = validateBusinessHours(startTime, finishTime, "07:00", "19:00");
+    if (businessResult !== true) errors.push(businessResult as string);
+    const serviceOrderResult = validateNonEmptyField(serviceOrder, "Service Order");
+    if (serviceOrderResult !== true) errors.push(serviceOrderResult as string);
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
       return;
     }
-    // Format datetimes to "YYYY-MM-DD HH:MM:SS"
+
+    // Format datetimes.
     const scheduled_start_datetime = formatDateTime(startDate, startTime);
     const scheduled_finish_datetime = formatDateTime(startDate, finishTime);
 
-    // Build the appointment object.
-    const appointment: Appointment = {
-      name: "",
+    // Build the payload using only the keys expected by your backend.
+    const appointmentPayload = {
       posting_date: postingDate,
-      service_order: serviceOrder,
-      customer,
-      service_type: serviceType,
-      scheduled_start_datetime,
-      scheduled_finish_datetime,
-      status: "scheduled",
-      priority: "",
-      resourceType: "appointment",
-      items: items,
+      service_order: serviceOrder, 
+      customer:customer,
+      scheduled_start_datetime: scheduled_start_datetime,
+      scheduled_finish_datetime:scheduled_finish_datetime,
       service_technicians: techniciansItems,
+      items:items,
+      changed_status: changed_status,
     };
-
+    console.log(appointmentPayload);
+    
     try {
-      const headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      };
-      // Create the appointment draft.
-      const response = await fetch("/api/resource/Service Appointment", {
-        method: "POST",
-        headers,
-        body: JSON.stringify(appointment),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setErrorMessage(result.exc || "Error creating appointment.");
-        return;
+      const result = await createAppointment(appointmentPayload);
+      console.log(result);
+      
+      if (result) {
+        setSuccessMessage("Appointment created and submitted successfully!");
+        setTimeout(() => {
+          setSuccessMessage("");
+          onClose();
+        }, 1500);
+      } else {
+        setErrorMessage(result.message || "Error creating appointment.");
       }
-      const appointmentName = result.data.name;
-
-      // Now submit the appointment using the document-level API.
-      const submitResponse = await fetch(
-        `/api/v2/document/Service Appointment/${appointmentName}/method/submit`,
-        {
-          method: "POST",
-          headers,
-          body: "{}",
-        }
-      );
-      const submitResult = await submitResponse.json();
-      if (!submitResponse.ok) {
-        console.error("Submit error:", submitResult);
-        setErrorMessage(submitResult.exc || "Error submitting appointment.");
-        return;
-      }
-      setSuccessMessage("Appointment created and submitted successfully!");
-      setTimeout(() => {
-        setSuccessMessage("");
-        onClose();
-      }, 1500);
     } catch (error: any) {
       setErrorMessage(error.message || "An unexpected error occurred.");
     }
   };
 
   const handleSubmit = () => {
+    // Basic field validations.
     if (!serviceOrder) {
       setErrorMessage("Service Order is required.");
       return;
@@ -407,14 +415,12 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
       setErrorMessage("Finish Time is required.");
       return;
     }
-    if (
-      techniciansItems.length === 0 ||
-      techniciansItems.some((tech) => !tech.service_technician)
-    ) {
+    if (techniciansItems.length === 0 || techniciansItems.some((tech) => !tech.service_technician)) {
       setErrorMessage("At least one Service Technician must be selected.");
       return;
     }
     setErrorMessage("");
+    setValidationErrors([]);
     setConfirmOpen(true);
   };
 
@@ -423,14 +429,14 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     <div className="grid grid-cols-2 gap-4 py-4">
       <div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="serviceOrder" className="text-right">
+          <Label htmlFor="serviceOrder" className="text-right text-xs">
             Service Order
           </Label>
           <Select value={serviceOrder} onValueChange={(val: string) => setServiceOrder(val)}>
-            <SelectTrigger className="w-full text-xs min-w-[200px]">
+            <SelectTrigger className="w-full text-xs min-w-[120px]">
               <SelectValue placeholder="Select Order" />
             </SelectTrigger>
-            <SelectContent className="min-w-[180px]">
+            <SelectContent className="min-w-[120px]">
               {filteredOrders.map((order) => (
                 <SelectItem key={order.name} value={order.name}>
                   {order.name}
@@ -439,70 +445,70 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
             </SelectContent>
           </Select>
         </div>
-        <div className="grid grid-cols-4 items-center gap-4 mt-4">
-          <Label htmlFor="customer" className="text-right">
+        <div className="grid grid-cols-4 items-center gap-4 mt-3">
+          <Label htmlFor="customer" className="text-right text-xs">
             Customer
           </Label>
           <Input
             id="customer"
-            className="col-span-3 h-8"
+            className="col-span-3 h-8 text-xs"
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
             readOnly={!!prefillData?.customer}
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4 mt-4">
-          <Label htmlFor="serviceType" className="text-right">
+        <div className="grid grid-cols-4 items-center gap-4 mt-3">
+          <Label htmlFor="serviceType" className="text-right text-xs">
             Service Type
           </Label>
           <Input
             id="serviceType"
-            className="col-span-3 h-8"
+            className="col-span-3 h-8 text-xs"
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
             readOnly={!!prefillData?.service_type}
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4 mt-4">
-          <Label htmlFor="postingDate" className="text-right">
+        <div className="grid grid-cols-4 items-center gap-4 mt-3">
+          <Label htmlFor="postingDate" className="text-right text-xs">
             Posting Date
           </Label>
-          <Input id="postingDate" type="date" className="col-span-3 h-8" value={postingDate} readOnly />
+          <Input id="postingDate" type="date" className="col-span-3 h-8 text-xs" value={postingDate} readOnly />
         </div>
       </div>
       <div>
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="startDate" className="text-right">
+          <Label htmlFor="startDate" className="text-right text-xs">
             Start Date
           </Label>
           <Input
             id="startDate"
             type="date"
-            className="col-span-3 h-8"
+            className="col-span-3 h-8 text-xs"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4 mt-4">
-          <Label htmlFor="startTime" className="text-right">
+        <div className="grid grid-cols-4 items-center gap-4 mt-3">
+          <Label htmlFor="startTime" className="text-right text-xs">
             Start Time
           </Label>
           <Input
             id="startTime"
             type="time"
-            className="col-span-3 h-8"
+            className="col-span-3 h-8 text-xs"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-4 items-center gap-4 mt-4">
-          <Label htmlFor="finishTime" className="text-right">
+        <div className="grid grid-cols-4 items-center gap-4 mt-3">
+          <Label htmlFor="finishTime" className="text-right text-xs">
             Finish Time
           </Label>
           <Input
             id="finishTime"
             type="time"
-            className="col-span-3 h-8"
+            className="col-span-3 h-8 text-xs"
             value={finishTime}
             onChange={(e) => setFinishTime(e.target.value)}
           />
@@ -540,7 +546,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
               </TableCell>
             </TableRow>
           ))}
-          {/* New item input row with item_code as Select */}
+          {/* New item input row */}
           <TableRow>
             <TableCell>
               <Select
@@ -668,13 +674,30 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[800px]">
+        <DialogContent className="sm:max-w-[800px] p-4">
           <DialogHeader className="flex flex-col">
-            <DialogTitle>Create Appointment</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg">Create Appointment</DialogTitle>
+            <DialogDescription className="text-sm">
               Fill in the details to create a new appointment.
             </DialogDescription>
           </DialogHeader>
+          {/* Error / Success / Validation Messages */}
+          {(errorMessage || successMessage || validationErrors.length > 0) && (
+            <div className="mt-2">
+              {validationErrors.length > 0 && (
+                <div className="bg-red-100 text-red-800 p-2 rounded mb-3 flex flex-col space-y-1 text-xs">
+                  {validationErrors.map((err, idx) => (
+                    <div key={idx} className="flex items-center space-x-1">
+                      <Trash2 size={16} />
+                      <span>{err}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errorMessage && <p className="text-red-600 text-sm">{errorMessage}</p>}
+              {successMessage && <p className="text-green-600 text-sm">{successMessage}</p>}
+            </div>
+          )}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
@@ -685,15 +708,14 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
             <TabsContent value="items">{renderItemsTable()}</TabsContent>
             <TabsContent value="technicians">{renderTechniciansTable()}</TabsContent>
           </Tabs>
-          {errorMessage && <p className="text-red-600 text-sm mt-2">{errorMessage}</p>}
-          {successMessage && <p className="text-green-600 text-sm mt-2">{successMessage}</p>}
-          <DialogFooter className="flex justify-end space-x-2">
-            {/* Reset button positioned left of Submit */}
+          <DialogFooter className="flex justify-end space-x-2 mt-4">
             <Button variant="ghost" size="sm" onClick={resetForm}>
               <RotateCcw className="h-4 w-4" />
-              <span className="hidden sm:inline">Reset</span>
+              <span className="hidden sm:inline text-xs">Reset</span>
             </Button>
-            <Button onClick={handleSubmit} size="sm">Create & Submit</Button>
+            <Button onClick={handleSubmit} size="sm" className="text-xs">
+              Proceed
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

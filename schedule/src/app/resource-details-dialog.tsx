@@ -1,4 +1,3 @@
-// components/ResourceDetailsDialog.tsx
 "use client";
 
 import React from "react";
@@ -9,7 +8,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogClose,
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
@@ -26,29 +24,28 @@ const ResourceDetailsDialog: React.FC<ResourceDetailsDialogProps> = ({
   isOpen,
   onClose,
 }) => {
-  // Helper to render a labeled field
+  // Helper to render a labeled field.
   const renderField = (label: string, value: any) => (
-    <div className="flex">
+    <div className="flex text-xs">
       <span className="font-medium w-32">{label}:</span>
-      <span className="text-sm">{value?.toString() || "-"}</span>
+      <span>{value?.toString() || "-"}</span>
     </div>
   );
 
-  // Render for Technician: show all fields except resourceType, and use better labels
+  // Render details for Technician.
   const renderTechnicianDetails = () => (
-    <div className="space-y-2">
+    <div className="space-y-2 text-xs">
       {renderField("Name", resource.name)}
       {renderField("Full Name", resource.full_name)}
       {renderField("Employee", resource.employee)}
       {renderField("Service Area", resource.service_area)}
       {renderField("Specialization", resource.specialization)}
-      {/* Add any other fields */}
     </div>
   );
 
-  // Render for Order: show selected fields and an Items table
+  // Render details for Order.
   const renderOrderDetails = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 text-xs">
       <div className="space-y-2">
         {renderField("Name", resource.name)}
         {renderField("Posting Date", resource.posting_date)}
@@ -56,116 +53,114 @@ const ResourceDetailsDialog: React.FC<ResourceDetailsDialogProps> = ({
         {renderField("Customer", resource.customer)}
         {renderField("Status", resource.status)}
         {renderField("Priority", resource.priority)}
-        <span className="flex flex-col text-xs text-muted-foreground">
-            {renderField("Address", resource.address_details?.split('\n')[0]) || "-"}
-            {renderField("Email Contact", resource.address_details?.split('\n')[1].split(':')[1]) || "-"}
-            {renderField("Phone Contact", resource.address_details?.split('\n')[2].split(':')[1]) || "-"}
-        </span>
+        <div className="flex flex-col text-xs text-gray-500">
+          {renderField("Address", resource.address_details?.split('\n')[0])}
+          {renderField("Email Contact", resource.address_details?.split('\n')[1]?.split(':')[1])}
+          {renderField("Phone Contact", resource.address_details?.split('\n')[2]?.split(':')[1])}
+        </div>
       </div>
       <div>
-        <h3 className="font-medium mb-2">Items</h3>
+        <h3 className="font-medium mb-2 text-xs">Items</h3>
         {resource.items && resource.items.length > 0 ? (
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-xs">
             <thead>
               <tr className="border-b">
-                <th className="px-2 py-1 text-left">Item Code</th>
-                <th className="px-2 py-1 text-left">Item Name</th>
-                <th className="px-2 py-1 text-left">Qty</th>
+                <th className="px-1 py-1 text-left">Item Code</th>
+                <th className="px-1 py-1 text-left">Item Name</th>
+                <th className="px-1 py-1 text-left">Qty</th>
               </tr>
             </thead>
             <tbody>
               {resource.items.map((item: any, index: number) => (
                 <tr key={index} className="border-b">
-                  <td className="px-2 py-1">{item.item_code}</td>
-                  <td className="px-2 py-1">{item.item_name}</td>
-                  <td className="px-2 py-1">{item.qty}</td>
+                  <td className="px-1 py-1">{item.item_code}</td>
+                  <td className="px-1 py-1">{item.item_name}</td>
+                  <td className="px-1 py-1">{item.qty}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <p className="text-sm text-gray-500">No items found.</p>
+          <p className="text-xs text-gray-500">No items found.</p>
         )}
       </div>
     </div>
   );
 
-  // Render for Appointment: show selected fields and tabs for Items and Service Technicians.
+  // Render details for Appointment in two columns with tabs.
   const renderAppointmentDetails = () => {
-    // Extract start_date, start time, finish time from scheduled_start_datetime and scheduled_finish_datetime.
     const startDate = new Date(resource.scheduled_start_datetime).toLocaleDateString();
     const startTime = new Date(resource.scheduled_start_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const finishTime = new Date(resource.scheduled_finish_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const resource_name = resource.doctype === 'Service Appointment' && resource.appointment 
+      ? resource.appointment 
+      : resource.name;
     return (
-      <div className="space-y-4">
-        <div className="space-y-2">
-          {renderField("Name", resource.name)}
-          {renderField("Posting Date", resource.posting_date)}
-          {renderField("Service Order", resource.service_order)}
-          {renderField("Priority", resource.priority)}
-          {renderField("Customer", resource.customer)}
-          {renderField("Start Date", startDate)}
-          {renderField("Start Time", startTime)}
-          {renderField("Finish Time", finishTime)}
-          {renderField("Status", resource.status)}
+      <div className="space-y-4 text-xs">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            {renderField("Name", resource_name)}
+            {renderField("Posting Date", resource.posting_date)}
+            {renderField("Service Order", resource.service_order)}
+            {renderField("Priority", resource.priority)}
+            {renderField("Customer", resource.customer)}
+          </div>
+          <div className="space-y-1">
+            {renderField("Start Date", startDate)}
+            {renderField("Start Time", startTime)}
+            {renderField("Finish Time", finishTime)}
+            {renderField("Status", resource.status)}
+          </div>
         </div>
-        <Tabs defaultValue="items" className="w-full">
+        <Tabs defaultValue="items" className="w-full text-xs mt-4">
           <TabsList className="flex space-x-2 border-b">
-            <TabsTrigger value="items" className="text-xs">
-              Items
-            </TabsTrigger>
-            <TabsTrigger value="technicians" className="text-xs">
-              Service Technicians
-            </TabsTrigger>
+            <TabsTrigger value="items" className="text-xs">Items</TabsTrigger>
+            <TabsTrigger value="technicians" className="text-xs">Technicians</TabsTrigger>
           </TabsList>
-          <TabsContent value="items">
+          <TabsContent value="items" className="text-xs mt-2">
             {resource.items && resource.items.length > 0 ? (
-              <table className="min-w-full text-sm mt-2">
+              <table className="min-w-full text-xs">
                 <thead>
                   <tr className="border-b">
-                    <th className="px-2 py-1 text-left">Item Code</th>
-                    <th className="px-2 py-1 text-left">Item Name</th>
-                    <th className="px-2 py-1 text-left">Qty</th>
+                    <th className="px-1 py-1 text-left">Item Code</th>
+                    <th className="px-1 py-1 text-left">Item Name</th>
+                    <th className="px-1 py-1 text-left">Qty</th>
                   </tr>
                 </thead>
                 <tbody>
                   {resource.items.map((item: any, index: number) => (
                     <tr key={index} className="border-b">
-                      <td className="px-2 py-1">{item.item_code}</td>
-                      <td className="px-2 py-1">{item.item_name}</td>
-                      <td className="px-2 py-1">{item.qty}</td>
+                      <td className="px-1 py-1">{item.item_code}</td>
+                      <td className="px-1 py-1">{item.item_name}</td>
+                      <td className="px-1 py-1">{item.qty}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p className="text-sm text-gray-500">No items found.</p>
+              <p className="text-xs text-gray-500">No items found.</p>
             )}
           </TabsContent>
-          <TabsContent value="technicians">
+          <TabsContent value="technicians" className="text-xs mt-2">
             {resource.service_technicians && resource.service_technicians.length > 0 ? (
-              <table className="min-w-full text-sm mt-2">
+              <table className="min-w-full text-xs">
                 <thead>
                   <tr className="border-b">
-                    <th className="px-2 py-1 text-left">Technician</th>
-                    <th className="px-2 py-1 text-left">Full Name</th>
-                    {/* <th className="px-2 py-1 text-left">Service Area</th>
-                    <th className="px-2 py-1 text-left">Specialization</th> */}
+                    <th className="px-1 py-1 text-left">Technician</th>
+                    <th className="px-1 py-1 text-left">Full Name</th>
                   </tr>
                 </thead>
                 <tbody>
                   {resource.service_technicians.map((tech: any, index: number) => (
                     <tr key={index} className="border-b">
-                      <td className="px-2 py-1">{tech.service_technician}</td>
-                      <td className="px-2 py-1">{tech.full_name}</td>
-                      {/* <td className="px-2 py-1">{tech.service_area}</td>
-                      <td className="px-2 py-1">{tech.specialization}</td> */}
+                      <td className="px-1 py-1">{tech.service_technician}</td>
+                      <td className="px-1 py-1">{tech.full_name}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             ) : (
-              <p className="text-sm text-gray-500">No service technicians found.</p>
+              <p className="text-xs text-gray-500">No service technicians found.</p>
             )}
           </TabsContent>
         </Tabs>
@@ -173,7 +168,6 @@ const ResourceDetailsDialog: React.FC<ResourceDetailsDialogProps> = ({
     );
   };
 
-  // Choose which details view to render based on resource type
   const renderDetails = () => {
     if (resource.resourceType === "technician") {
       return renderTechnicianDetails();
@@ -182,32 +176,36 @@ const ResourceDetailsDialog: React.FC<ResourceDetailsDialogProps> = ({
     } else if (resource.resourceType === "appointment") {
       return renderAppointmentDetails();
     }
-    return <p>No details available.</p>;
+    return <p className="text-xs">No details available.</p>;
   };
+
+  const resource_name = resource.doctype === 'Service Appointment' && resource.appointment 
+    ? resource.appointment 
+    : resource.name;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-xl p-4">
         <DialogHeader>
-          <DialogTitle>
-            {resource.name}{" "}
+          <DialogTitle className="text-sm">
+            {resource_name}{" "}
             {resource.resourceType === "order" && (
-              <span className="text-sm text-gray-500">Order Details</span>
+              <span className="text-xs text-gray-500">Order Details</span>
             )}
             {resource.resourceType === "appointment" && (
-              <span className="text-sm text-gray-500">Appointment Details</span>
+              <span className="text-xs text-gray-500">Appointment Details</span>
             )}
             {resource.resourceType === "technician" && (
-              <span className="text-sm text-gray-500">Technician Details</span>
+              <span className="text-xs text-gray-500">Technician Details</span>
             )}
           </DialogTitle>
-          <DialogDescription>
-            This Resource Has the following Details
+          <DialogDescription className="text-xs">
+            This resource has the following details:
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">{renderDetails()}</div>
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose} className="text-xs px-2 py-1">Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -4,9 +4,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import { Label } from "../components/ui/label";
 import { Button } from "../components/ui/button";
+// import { Select} from "../components/ui/select";
 import { useState } from "react";
 import { useCalendar } from "../lib/context";
 import { FilterCriteria } from "./schedule-grid";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface FilterDialogProps {
   isOpen: boolean;
@@ -19,7 +21,7 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
 
   const [location, setLocation] = useState("");
   const [appointment, setAppointment] = useState("");
-  const [order, setOrder] = useState("");
+  // const [order, setOrder] = useState("");
   const [technician, setTechnician] = useState("");
 
   // Extract filter options from live resources.
@@ -37,7 +39,7 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
     onApplyFilter({
       location,
       appointment,
-      order,
+      // order,
       technician,
     });
     onClose();
@@ -49,10 +51,11 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
         <DialogHeader>
           <DialogTitle>Filter</DialogTitle>
         </DialogHeader>
+        <DialogDescription className="text-sm text-gray-500">Add filters to filter the Appointments Grid</DialogDescription>
         <div className="grid gap-4 py-4">
           <div className="space-y-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
+              <Label htmlFor="location" className="text-right text-sm">
                 Location
               </Label>
               <select
@@ -70,14 +73,14 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
               </select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="appointment" className="text-right">
+              <Label htmlFor="appointment" className="text-right text-sm">
                 Appointment
               </Label>
               <select
                 id="appointment"
                 value={appointment}
                 onChange={(e) => setAppointment(e.target.value)}
-                className="col-span-3 h-8 border rounded px-2"
+                className="col-span-3 h-8 border rounded px-2 text-sm"
               >
                 <option value="">All</option>
                 {appointmentOptions.map((apt) => (
@@ -90,7 +93,7 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
             <div className="grid grid-cols-4 items-center gap-4">
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="technician" className="text-right">
+              <Label htmlFor="technician" className="text-right text-sm">
                 Technician
               </Label>
               <select
@@ -110,7 +113,7 @@ export function FilterDialog({ isOpen, onClose, onApplyFilter }: FilterDialogPro
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={handleApplyFilter}>Apply Filter</Button>
+          <Button size={'sm'} onClick={handleApplyFilter}>Apply Filter</Button>
         </div>
       </DialogContent>
     </Dialog>

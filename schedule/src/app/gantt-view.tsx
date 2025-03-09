@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Home, LayoutPanelLeft, Calendar as CalendarIcon, X } from "lucide-react";
 import { ResourceList } from "./resource-list";
-import { ScheduleGrid, FilterCriteria } from "./schedule-grid";
+import { EventsGrid } from "./events-grid";
+import { FilterCriteria } from "./schedule-grid";
 import { CalendarProvider } from "../lib/context";
 import CalendarView from "../components/calendar/calendar-view";
 import Sidebar from "../components/calendar/sidebar";
@@ -208,7 +209,7 @@ export default function GanttView() {
 						)}
 						<div className={`flex-1 ${isSidebarOpen ? "" : "ml-0"} transition-all duration-200`}>
 							{viewType === "gantt" ? (
-								<ScheduleGrid selectedDate={selectedDate} filters={filters} />
+								<EventsGrid selectedDate={selectedDate} filters={filters} />
 							) : (
 								<div className="flex-1 flex items-center justify-center text-muted-foreground">
 									<div className="flex flex-col h-screen w-full">

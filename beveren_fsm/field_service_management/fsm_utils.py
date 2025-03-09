@@ -163,10 +163,7 @@ def update_appointment_from_api(
 	appointment = frappe.get_doc("Service Appointment", name)
 	# delete all items from the appointment
 	appointment.service_technicians = []
-	appointment.items = []
-
-	# delete all service_technicians from the appointment
-	
+	appointment.items = []	
 
 	for item in items:
 		appointment.append("items", {
