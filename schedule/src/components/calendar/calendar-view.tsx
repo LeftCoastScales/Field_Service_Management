@@ -160,12 +160,12 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 		const tooltipContent = `
 			<div class="p-2">
 				<div class="font-semibold mb-1">${info.event.title}</div>
-				<div><strong>Customer:</strong> ${info.event.extendedProps.customerName}</div>
-				<div><strong>Address:</strong> ${info.event.extendedProps.address}</div>
-				<div><strong>Service Type:</strong> ${info.event.extendedProps.serviceType}</div>
-				<div><strong>Status:</strong> ${info.event.extendedProps.status}</div>
-				<div><strong>Technicians:</strong> ${techList}</div>
-				<div><strong>Time:</strong> ${info.timeText}</div>
+				<div class='text-sm'><strong>Customer:</strong> ${info.event.extendedProps.customerName}</div>
+				<div class='text-sm'><strong>Address:</strong> ${info.event.extendedProps.address}</div>
+				<div class='text-sm'><strong>Service Type:</strong> ${info.event.extendedProps.serviceType}</div>
+				<div class='text-sm'><strong>Status:</strong> ${info.event.extendedProps.status}</div>
+				<div class='text-sm'><strong>Technicians:</strong> ${techList}</div>
+				<div class='text-sm'><strong>Time:</strong> ${info.timeText}</div>
 			</div>
 		`;
 		

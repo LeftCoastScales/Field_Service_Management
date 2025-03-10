@@ -13,6 +13,7 @@ import {
   PlayCircle,
   CheckCircle,
   Circle,
+  Loader,
 } from "lucide-react";
 import { useCalendar } from "../lib/context";
 import { Technician, Appointment } from "../lib/types";
@@ -92,6 +93,8 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     techId: ""
   });
 
+  const [fetchError, setFetchError] = useState(false);
+
   const HOURS = Array.from({ length: 12 }, (_, i) => i + 7);
   const MINUTES_PER_HOUR = 60;
   const TOTAL_MINUTES = 12 * MINUTES_PER_HOUR;
@@ -147,6 +150,17 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     setAppointments(appointmentResources);
     setGridKey(Date.now());
   };
+
+  useEffect(() => {
+    if (resources.length === 0) {
+      const timer = setTimeout(() => {
+        setFetchError(true);
+      }, 120000);
+      return () => clearTimeout(timer);
+    } else {
+      setFetchError(false);
+    }
+  }, [resources]);
 
   useEffect(() => {
     setMounted(true);
@@ -367,8 +381,8 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
       if (newTechObj) {
         updatedServiceTechs.push({ service_technician: newTechObj.name, full_name: newTechObj.full_name });
       }
-    }
-
+    }    
+    
     updateAppointment({
       name: updatedAppointment.appointment,
       scheduled_start_datetime: updatedAppointment.scheduled_start_datetime,
@@ -492,6 +506,21 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
       newStart: pendingUpdate.newStart,
       newEnd: pendingUpdate.newEnd
     };
+  }
+
+  if (resources.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        {!fetchError ? (
+          <div className="flex flex-col items-center">
+            <Loader className="animate-spin h-10 w-10 text-gray-600" />
+            <div className="mt-4 text-gray-700">Fetching Resources...</div>
+          </div>
+        ) : (
+          <div className="text-red-600 text-lg">Failed to fetch resources</div>
+        )}
+      </div>
+    );
   }
 
   return (

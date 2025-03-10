@@ -9,6 +9,7 @@ import GanttView from "../app/gantt-view";
 import CalendarProvider from "../lib/context";
 
 import toast, { Toaster } from 'react-hot-toast';
+import { any } from "prop-types";
 
 export default function Page() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());

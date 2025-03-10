@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
-import { Search, User, FileText, Calendar, Plus, MoreVertical } from "lucide-react";
+import { Search, User, FileText, Calendar, Plus, MoreVertical, Loader } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import CreateDialog from "./create-dialog";
 import { Resource, Technician, Order, Appointment, AppointmentPrefill } from "../lib/types";
@@ -155,9 +154,12 @@ export function ResourceList() {
 
   // When updating an appointment (only for scheduled appointments)
   const handleUpdateAppointment = (apt: Appointment) => {
-    console.log("Updating appointment:", apt);
+    // console.log("Updating appointment:", apt);
     
     setUpdateDialogData(apt);
+
+    console.log(updateDialogData);
+    
   };
 
   // Generic onChange handler for the update dialog using dot-notation for nested fields.
@@ -190,12 +192,9 @@ export function ResourceList() {
   };
 
   const handleUpdateConfirm = async () => {
+    console.log("Updating appointment:", updateDialogData);
+    
     if (!updateDialogData) return;
-
-    console.log("Updating appointment:", dayjs(updateDialogData.scheduled_start_datetime).format('YYYY-MM-DD HH:mm'));
-    console.log("Updating appointment:", dayjs(updateDialogData.scheduled_finish_datetime).format('YYYY-MM-DD HH:mm'));
-    
-    
     try {
       const result = await updateAppointment({
         name: updateDialogData.name,
@@ -280,9 +279,10 @@ export function ResourceList() {
     if (resource.resourceType === "technician") {
       const tech = resource as Technician;
       return (
-        <div className="flex flex-col text-xs text-muted-foreground">
-          {tech.full_name && <span>{tech.full_name}</span>}
-          {tech.specialization && <span>{tech.service_area}</span>}
+        <div className="flex flex-col">
+          {tech.full_name && <span className="text-sm font-medium ">{tech.full_name}</span>}
+          {tech.name && <span className="text-xs font-medium text-muted-foreground">{tech.name}</span>}
+          {tech.specialization && <span className="text-xs text-muted-foreground">{tech.service_area}</span>}
         </div>
       );
     }
@@ -362,25 +362,34 @@ export function ResourceList() {
 
       {/* Resource List */}
       <ScrollArea
-        className="flex-grow"
+        className="flex-grow min-h-[400px]"
         style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(0, 0, 0, 0.2) transparent" }}
       >
-        <div className="space-y-1 p-2">
-          {filtered_resources.map((resource) => (
-            <div
-              key={resource.name}
-              className="flex items-center justify-between rounded-md px-4 py-1 hover:bg-accent"
-            >
-              <div>
-                <div className="text-sm font-medium">{resource.name}</div>
-                {renderResourceContent(resource)}
+        {resources.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center mt-20">
+            <Loader className="animate-spin h-10 w-10 text-gray-600 text-md" />
+            <div className="mt-4 text-gray-700 text-md">Fetching Resources...</div>
+          </div>
+        ) : (
+          <div className="space-y-1 p-2">
+            {filtered_resources.map((resource) => (
+              <div
+                key={resource.name}
+                className="flex items-center justify-between rounded-md px-4 py-1 hover:bg-accent"
+              >
+                <div>
+                  {resource.resourceType !== "technician" && (
+                    <div className="text-sm font-medium">{resource.name}</div>
+                  )}
+                  {renderResourceContent(resource)}
+                </div>
+                <div>
+                  <ResourceOptions resource={resource} />
+                </div>
               </div>
-              <div>
-                <ResourceOptions resource={resource} />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </ScrollArea>
 
       {/* Footer with view buttons */}

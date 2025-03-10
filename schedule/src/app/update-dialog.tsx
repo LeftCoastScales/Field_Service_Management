@@ -109,8 +109,13 @@ export default function UpdateDialog({
 
   const handleTechnicianSelect = (index: number, techName: string) => {
     const selectedTech = availableTechs.find((t) => t.name === techName);
-    onChange(`service_technicians.${index}.service_technician`, techName);
-    onChange(`service_technicians.${index}.full_name`, selectedTech ? selectedTech.full_name : "");
+    const updatedTechs = [...appointment.service_technicians];
+    updatedTechs[index] = {
+      ...updatedTechs[index],
+      service_technician: techName,
+      full_name: selectedTech?.full_name || "",
+    };
+    onChange("service_technicians", updatedTechs);
   };
 
   // Local state for inline validation errors.
@@ -128,10 +133,7 @@ export default function UpdateDialog({
     const durationResult = validateMinimumDuration(startTimeLocal, finishTimeLocal);
     if (durationResult !== true) errors.push(durationResult);
     const businessResult = validateBusinessHours(startTimeLocal, finishTimeLocal, "07:00", "19:00");
-    if (businessResult !== true) errors.push(businessResult);
-
-    console.log("Validation errors:", startStr, finishStr, errors);
-    
+    if (businessResult !== true) errors.push(businessResult);  
 
     if (errors.length > 0) {
       setValidationErrors(errors);
@@ -139,7 +141,7 @@ export default function UpdateDialog({
     }
     setValidationErrors([]);
     onConfirm();
-  };
+  };  
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

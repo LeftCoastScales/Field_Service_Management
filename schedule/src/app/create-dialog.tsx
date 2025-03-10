@@ -363,8 +363,13 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     }
 
     // Format datetimes.
-    const scheduled_start_datetime = formatDateTime(startDate, startTime);
-    const scheduled_finish_datetime = formatDateTime(startDate, finishTime);
+    const scheduled_start_datetime = dayjs(`${startDate} ${startTime}`).format("YYYY-MM-DDTHH:mm");
+    const scheduled_finish_datetime = dayjs(`${startDate} ${finishTime}`).format("YYYY-MM-DDTHH:mm");
+    // const scheduled_finish_datetime = formatDateTime(startDate, finishTime);
+
+    console.log('scheduled_start_datetime',formatDateTime(startDate, startTime));
+    console.log('scheduled_finish_datetime',formatDateTime(startDate, finishTime));
+    
 
     // Build the payload using only the keys expected by your backend.
     const appointmentPayload = {
