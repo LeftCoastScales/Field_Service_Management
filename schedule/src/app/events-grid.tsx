@@ -34,6 +34,7 @@ import TeamUpdateDialog from "./team-update-dialog";
 import ResourceDetailsDialog from "./resource-details-dialog";
 
 const ResponsiveGridLayout = WidthProvider(Responsive) as unknown as React.FC<any>;
+// const { resources, loading } = useCalendar();
 
 interface FilterCriteria {
   date?: Date;
@@ -65,7 +66,7 @@ interface Layout {
 }
 
 export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridProps) {
-  const { resources } = useCalendar();
+  const { resources, loading } = useCalendar();
   const [mounted, setMounted] = useState(false);
   const [appointments, setAppointments] = useState<AppointmentWithTechnician[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
@@ -238,7 +239,7 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     const formattedEnd = dayjs(fullEndTime).format("HH:mm");
     const techId = technicians[newItem.y]?.name;
     if (techId && !isOverlapping(layout, newItem)) {
-      openEditDialog(appointment, formattedStart, formattedEnd, techId, "drop");
+      openEditDialog(appointment, formattedStart, formattedEnd, techId);
     }
   };
 
@@ -260,7 +261,7 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     const formattedEnd = dayjs(fullEndTime).format("HH:mm");
     const techId = technicians[newItem.y]?.name;
     if (techId && !isOverlapping(layout, newItem)) {
-      openEditDialog(appointment, formattedStart, formattedEnd, techId, "drop");
+      openEditDialog(appointment, formattedStart, formattedEnd, techId);
     }
   };
 
@@ -519,6 +520,14 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
         ) : (
           <div className="text-red-600 text-lg">Failed to fetch resources</div>
         )}
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader className="animate-spin h-8 w-8" />
       </div>
     );
   }

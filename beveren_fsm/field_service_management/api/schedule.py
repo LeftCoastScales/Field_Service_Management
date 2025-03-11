@@ -1,5 +1,6 @@
 import frappe
 import json
+from datetime import datetime
 
 
 @frappe.whitelist()
@@ -14,7 +15,7 @@ def create_appointment_from_api(
 		changed_status=None,
 	):
 	appointment = frappe.new_doc("Service Appointment")
-	appointment.posting_date = posting_date
+	appointment.posting_date = posting_date if posting_date else datetime.now().date()
 	appointment.service_order = service_order
 	appointment.customer = customer
 	appointment.scheduled_start_datetime = scheduled_start_datetime
@@ -43,9 +44,6 @@ def create_appointment_from_api(
 			# "service_area": service_technician["service_area"],
 			# "specialization": service_technician["specialization"]
 		})
-
-	# if changed_status == 'Dispatched':
-	# 	appointment.status = 'Dispatched'
 
 	appointment.insert()
 	appointment.submit()

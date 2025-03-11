@@ -69,6 +69,7 @@ const searchResources = (
 
 export function ResourceList() {
   const { resources } = useCalendar();
+  const { refreshResources } = useCalendar();
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewType, setViewType] = useState<ViewType>("appointments");
@@ -209,6 +210,7 @@ export function ResourceList() {
       });
       // Display a success toast with the returned appointment
       toast.success(`Appointment ${result} Updated Successfully!`);
+      refreshResources();
     } catch (error: any) {
       console.error("Error updating appointment:", error);
       // Show an error toast with a message (you can improve this message based on error details)

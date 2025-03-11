@@ -56,7 +56,6 @@ export async function createAppointment(
 
         const data = await response.json();
         return data.message;
-        console.log('msageeee',data.message);
         
     } catch (error) {
         console.error("Error Creating Appointment:", error);

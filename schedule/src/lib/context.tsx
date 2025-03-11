@@ -20,6 +20,8 @@ type CalendarContextType = {
   appointments: Appointment[];
   technicians: Technician[];
   orders: Order[];
+  refreshResources: () => Promise<void>;
+  loading: boolean;
   addAppointment: (appointment: Appointment) => void;
   updateAppointment: (id: number, updatedFields: Partial<Appointment>) => void;
   removeAppointment: (id: number) => void;
@@ -41,32 +43,36 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   const [view, setView] = useState<CalendarViewType>("week");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedTechnician, setSelectedTechnician] = useState<Technician | null>(null);
 
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchResources();
+      setResources(data);
+      setAppointments(extractAppointments(data));
+      setTechnicians(extractTechnicians(data));
+      setOrders(extractOrders(data));
+    } catch (error) {
+      console.error("Error fetching resources:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchResources();
-        
-        const ordersData = extractOrders(data);
-        const appointmentsData = extractAppointments(data)
-        const techniciansData = extractTechnicians(data);
-
-        setResources(data);
-        setAppointments(appointmentsData);
-        setTechnicians(techniciansData);
-        setOrders(ordersData);
-      } catch (error) {
-        console.error("Error fetching resources:", error);
-      }
-    };
-
     loadData();
-  }, []);
+  }, [refreshVersion]);
+
+  const refreshResources = async () => {
+    setRefreshVersion((v) => v + 1);
+  };
 
   const addAppointment = (appointment: Appointment) => {
     setAppointments((prev) => [...prev, appointment]);
@@ -85,7 +91,6 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       )
     );
   };
-  
 
   const removeAppointment = (id: number) => {
     setAppointments((prev) => prev.filter((app) => app.id !== id));
@@ -111,6 +116,8 @@ export const CalendarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         appointments,
         technicians,
         orders,
+        refreshResources,
+        loading,
         addAppointment,
         updateAppointment,
         removeAppointment,

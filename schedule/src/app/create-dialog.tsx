@@ -31,7 +31,8 @@ import {
 } from "../components/ui/table";
 import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { useCalendar } from "../lib/context";
-import type { Appointment } from "../lib/types";
+// import type { Appointment } from "../lib/types";
+import { toast } from "react-hot-toast";
 import { fetchItems, createAppointment } from "../lib/appointments-api";
 import dayjs from "dayjs";
 
@@ -83,6 +84,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   const [successMessage, setSuccessMessage] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { refreshResources } = useCalendar();
 
   const { orders, technicians, appointments } = useCalendar();
   const filteredOrders = orders.filter((order) => {
@@ -390,6 +392,8 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
       
       if (result) {
         setSuccessMessage("Appointment created and submitted successfully!");
+        toast.success("Appointment created successfully!");
+        refreshResources();
         setTimeout(() => {
           setSuccessMessage("");
           onClose();
@@ -399,6 +403,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
       }
     } catch (error: any) {
       setErrorMessage(error.message || "An unexpected error occurred.");
+      toast.error("Failed to create appointment.");
     }
   };
 
