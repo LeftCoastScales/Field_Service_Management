@@ -15,6 +15,7 @@ class ServiceAppointment(Document):
 	def validate(self):
 		self.validate_items()
 		self.validate_technicians()
+		self.validate_overlap()
 		self.set_scheduled_status()
 
 	def before_update_after_submit(self):
@@ -27,6 +28,21 @@ class ServiceAppointment(Document):
 	def validate_technicians(self):
 		if not self.get("service_technicians"):
 			frappe.throw(_("Please add at least one technician"))
+	def validate_overlap(self):
+		# Check for any overlapping appointment for any technician
+		filters = {
+			"name": ["!=", self.name],
+			"status": ["not in", ["Closed", "Cancelled"]],
+			"service_technicians": ["in", [d.service_technician for d in self.service_technicians]],
+			"scheduled_start_datetime": ["<", self.scheduled_finish_datetime],
+			"scheduled_finish_datetime": [">", self.scheduled_start_datetime]
+		}
+		overlapping_appointments = frappe.get_all("Service Appointment", filters=filters)
+		if overlapping_appointments:
+			error_message = _("There is an overlap with another appointment")
+			frappe.throw(error_message)
+			return error_message  # Return for consistency
+
 	def set_scheduled_status(self):
 		if self.scheduled_start_datetime and self.scheduled_finish_datetime:
 			if self.get("service_technicians") and len(self.get("service_technicians")) > 0:
