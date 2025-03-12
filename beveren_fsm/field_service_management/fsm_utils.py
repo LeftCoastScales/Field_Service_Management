@@ -131,23 +131,26 @@ def update_target_documents(target_doctype, target_docname, source_items):
 
 
 def update_per_billed_status(doc, method):
-    total_amount = 0.0
-    billed_amount = 0.0
+	total_amount = 0.0
+	billed_amount = 0.0
 
-    ref_doc = frappe.get_doc(doc.custom_reference_service_doctype, doc.custom_reference_service_document)
-    
-    for item in ref_doc.get("items", []):
-        full_amount = item.amount or 0.0
-        total_amount += full_amount
-        
-        invoiced_qty = item.get("invoiced_qty", 0)
-        item_qty = item.qty or 0
-        proportion_invoiced = (invoiced_qty / item_qty) if item_qty else 0
-        
-        billed_amount += full_amount * proportion_invoiced
+	if not (doc.custom_reference_service_doctype or doc.custom_reference_service_document):
+		return
 
-    ref_doc.per_billed = (billed_amount / total_amount) * 100 if total_amount else 0.0
-    ref_doc.save()
+	ref_doc = frappe.get_doc(doc.custom_reference_service_doctype, doc.custom_reference_service_document)
+	
+	for item in ref_doc.get("items", []):
+		full_amount = item.amount or 0.0
+		total_amount += full_amount
+		
+		invoiced_qty = item.get("invoiced_qty", 0)
+		item_qty = item.qty or 0
+		proportion_invoiced = (invoiced_qty / item_qty) if item_qty else 0
+		
+		billed_amount += full_amount * proportion_invoiced
+
+	ref_doc.per_billed = (billed_amount / total_amount) * 100 if total_amount else 0.0
+	ref_doc.save()
 
 
 
