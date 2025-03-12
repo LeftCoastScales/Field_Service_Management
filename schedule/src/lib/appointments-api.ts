@@ -41,6 +41,7 @@ export async function createAppointment(
             {
                 method: "POST",
                 headers: {
+                    "X-Frappe-CSRF-Token": window.csrf_token,
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
@@ -72,6 +73,7 @@ export async function updateAppointment(
             {
                 method: "POST",
                 headers: {
+                    "X-Frappe-CSRF-Token": window.csrf_token,
                     "Content-Type": "application/json",
                     "Accept": "application/json",
                 },
@@ -80,7 +82,7 @@ export async function updateAppointment(
             }
         );
 
-        if (!response.ok) {
+        if (!response.ok) {            
             const errorText = await response.text();
             throw new Error(`Failed to update appointment: ${errorText}`);
         }
