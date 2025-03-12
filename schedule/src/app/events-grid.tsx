@@ -32,9 +32,9 @@ import "tippy.js/themes/light.css";
 import EditAppointment from "./edit-appointment";
 import TeamUpdateDialog from "./team-update-dialog";
 import ResourceDetailsDialog from "./resource-details-dialog";
+import CreateDialog from "./create-dialog";
 
 const ResponsiveGridLayout = WidthProvider(Responsive) as unknown as React.FC<any>;
-// const { resources, loading } = useCalendar();
 
 interface FilterCriteria {
   date?: Date;
@@ -83,7 +83,6 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
   const [showTeamDialog, setShowTeamDialog] = useState(false);
   const [gridKey, setGridKey] = useState<number>(Date.now());
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  // For resource details dialog.
   const [detailsResource, setDetailsResource] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
@@ -96,11 +95,26 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
 
   const [fetchError, setFetchError] = useState(false);
 
+  // Constants for time calculations.
   const HOURS = Array.from({ length: 12 }, (_, i) => i + 7);
   const MINUTES_PER_HOUR = 60;
   const TOTAL_MINUTES = 12 * MINUTES_PER_HOUR;
   const COLS = TOTAL_MINUTES;
   const DAY_START = 7 * MINUTES_PER_HOUR;
+
+  // NEW: State for Create Dialog prefill and visibility.
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createPrefill, setCreatePrefill] = useState<{
+    startDate: string;
+    startTime: string;
+    finishTime: string;
+    defaultTechnician: string;
+  }>({
+    startDate: "",
+    startTime: "",
+    finishTime: "",
+    defaultTechnician: "",
+  });
 
   const resetEditValues = () => {
     setEditValues({
@@ -269,8 +283,7 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     apt: AppointmentWithTechnician,
     newStart: string,
     newEnd: string,
-    techId: string,
-    // action: "drop" | "click" = "drop"
+    techId: string
   ) => {
     setEditValues({
       date: dayjs(selectedDate).format("YYYY-MM-DD"),
@@ -280,9 +293,6 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     });
 
     const isTeamEvent = apt.service_technicians && apt.service_technicians.length > 1;
-    // const timeChanged =
-    //   dayjs(newStart, "HH:mm").format("HH:mm:ss") !== dayjs(apt.scheduled_start_datetime).format("HH:mm:ss") ||
-    //   dayjs(newEnd, "HH:mm").format("HH:mm:ss") !== dayjs(apt.scheduled_finish_datetime).format("HH:mm:ss");
 
     if (isTeamEvent) {
       setPendingUpdate({ appointment: apt, newStart, newEnd, newTechId: techId });
@@ -295,7 +305,6 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
 
   const handleEventClick = (apt: AppointmentWithTechnician) => {
     const status = apt.status.toLowerCase();
-    // Only allow editing if status is "open" or "scheduled".
     if (status === "open" || status === "scheduled") {
       const startTime = dayjs(apt.scheduled_start_datetime).format("HH:mm");
       const endTime = dayjs(apt.scheduled_finish_datetime).format("HH:mm");
@@ -321,7 +330,6 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
         setShowTeamDialog(false);
       }
     } else {
-      // For non-open/scheduled events, show resource details.
       setDetailsResource(apt);
       setDetailsDialogOpen(true);
     }
@@ -532,6 +540,38 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
     );
   }
 
+  // NEW: Grid click handler to trigger the Create Dialog.
+  const handleGridClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Ignore clicks on an existing appointment element.
+    if ((e.target as HTMLElement).closest(`.${styles.appointment}`)) return;
+
+    const gridRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const clickX = e.clientX - gridRect.left;
+    const clickY = e.clientY - gridRect.top;
+
+    // Determine the time column based on container width.
+    const containerWidth = gridRect.width;
+    const colIndex = Math.floor((clickX / containerWidth) * COLS);
+
+    // Determine the technician row using the known row height.
+    const rowIndex = Math.floor(clickY / 80); // rowHeight is 80
+    if (rowIndex < 0 || rowIndex >= technicians.length) return;
+    const tech = technicians[rowIndex];
+
+    const fullStartTime = columnToTime(colIndex);
+    const formattedStartTime = dayjs(fullStartTime).format("HH:mm");
+    const formattedFinishTime = dayjs(fullStartTime).add(1, "hour").format("HH:mm");
+    const startDateStr = dayjs().format("YYYY-MM-DD");
+
+    setCreatePrefill({
+      startDate: startDateStr,
+      startTime: formattedStartTime,
+      finishTime: formattedFinishTime,
+      defaultTechnician: tech.name,
+    });
+    setShowCreateDialog(true);
+  };
+
   return (
     <div className={styles.eventsGridContainer}>
       <div className={styles.header}>
@@ -562,7 +602,7 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
           ))}
         </div>
 
-        <div className={styles.gridWrapper}>
+        <div className={styles.gridWrapper} onClick={handleGridClick}>
           <ResponsiveGridLayout
             key={gridKey}
             className="layout"
@@ -656,6 +696,19 @@ export function EventsGrid({ selectedDate = new Date(), filters }: ScheduleGridP
           resource={detailsResource}
           isOpen={detailsDialogOpen}
           onClose={() => { setDetailsResource(null); setDetailsDialogOpen(false); }}
+        />
+      )}
+
+      {showCreateDialog && (
+        <CreateDialog
+          isOpen={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
+          prefillData={{
+            startDate: createPrefill.startDate,
+            startTime: createPrefill.startTime,
+            finishTime: createPrefill.finishTime,
+            defaultTechnician: createPrefill.defaultTechnician,
+          }}
         />
       )}
     </div>

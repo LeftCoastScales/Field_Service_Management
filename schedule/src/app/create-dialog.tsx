@@ -31,7 +31,6 @@ import {
 } from "../components/ui/table";
 import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { useCalendar } from "../lib/context";
-// import type { Appointment } from "../lib/types";
 import { toast } from "react-hot-toast";
 import { fetchItems, createAppointment } from "../lib/appointments-api";
 import dayjs from "dayjs";
@@ -44,11 +43,16 @@ import {
   validateNonEmptyField,
 } from "../lib/validations";
 
+// Updated AppointmentPrefill to include new fields for pre-filling the create dialog.
 export interface AppointmentPrefill {
   service_order?: string;
   customer?: string;
   service_type?: string;
   items?: Item[];
+  startDate?: string;
+  startTime?: string;
+  finishTime?: string;
+  defaultTechnician?: string;
 }
 
 // Frappe-required metadata interfaces for child tables.
@@ -68,7 +72,6 @@ interface TechnicianItem {
   parentfield: string;
   parenttype: string;
   service_technician: string;
-  id: string;
   full_name?: string;
 }
 
@@ -84,9 +87,8 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   const [successMessage, setSuccessMessage] = useState("");
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { refreshResources } = useCalendar();
+  const { refreshResources, orders, technicians, appointments } = useCalendar();
 
-  const { orders, technicians, appointments } = useCalendar();
   const filteredOrders = orders.filter((order) => {
     const hasNoLinkedAppointment = !appointments.some(app => app.service_order === order.name);
     return hasNoLinkedAppointment && order.docstatus === 1 && order.status === "Open";
@@ -97,9 +99,9 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   const [customer, setCustomer] = useState(prefillData?.customer || "");
   const [serviceType, setServiceType] = useState(prefillData?.service_type || "");
   const [postingDate] = useState(todayStr);
-  const [startDate, setStartDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [finishTime, setFinishTime] = useState("");
+  const [startDate, setStartDate] = useState(prefillData?.startDate || "");
+  const [startTime, setStartTime] = useState(prefillData?.startTime || "");
+  const [finishTime, setFinishTime] = useState(prefillData?.finishTime || "");
   const [changedStatus, setChangedStatus] = useState("Scheduled");
 
   // Items state – each item includes Frappe-required metadata.
@@ -131,17 +133,31 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   // Technicians state – now with 'id' field.
   const [techniciansItems, setTechniciansItems] = useState<TechnicianItem[]>([]);
 
-  // Update local state if prefillData changes.
+  // When prefillData changes, update local state.
   useEffect(() => {
     if (prefillData) {
       if (prefillData.service_order) setServiceOrder(prefillData.service_order);
       if (prefillData.customer) setCustomer(prefillData.customer);
       if (prefillData.service_type) setServiceType(prefillData.service_type);
       if (prefillData.items) setItems(prefillData.items);
+      if (prefillData.startDate) setStartDate(prefillData.startDate);
+      if (prefillData.startTime) setStartTime(prefillData.startTime);
+      if (prefillData.finishTime) setFinishTime(prefillData.finishTime);
+      if (prefillData.defaultTechnician) {
+        const selectedTech = technicians.find(t => t.name === prefillData.defaultTechnician);
+        setTechniciansItems([{
+          doctype: "Service Technician Item",
+          parentfield: "service_technicians",
+          parenttype: "Service Appointment",
+          service_technician: prefillData.defaultTechnician,
+          // id: prefillData.defaultTechnician,
+          full_name: selectedTech ? selectedTech.full_name : "",
+        }]);
+      }
     }
-  }, [prefillData]);
+  }, [prefillData, technicians]);
 
-  // When a service order is selected, prefill customer, service type, and items.
+  // Auto-fill Customer, Service Type, and Items when a Service Order is selected.
   useEffect(() => {
     if (serviceOrder) {
       const order = orders.find((o) => o.name === serviceOrder);
@@ -165,11 +181,37 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     }
   }, [serviceOrder, orders]);
 
-  // Helper: format a date/time string into "YYYY-MM-DD HH:MM:SS" format.
-  const formatDateTime = (date: string, time: string) => {
-    const dt = new Date(`${date}T${time}`);
-    return dt.toISOString().replace("T", " ").split(".")[0];
+  // Reset form fields when dialog is closed.
+  const resetForm = () => {
+    setServiceOrder("");
+    setCustomer("");
+    setServiceType("");
+    setStartDate("");
+    setStartTime("");
+    setFinishTime("");
+    setItems([]);
+    setNewItem({ item_code: "", qty: 1, item_name: "", rate: 0, amount: 0 });
+    setTechniciansItems([]);
+    setErrorMessage("");
+    setSuccessMessage("");
+    setValidationErrors([]);
   };
+
+  useEffect(() => {
+    if (!isOpen) resetForm();
+  }, [isOpen]);
+
+  const appointmentSummary = {
+    "Service Order": serviceOrder,
+    Customer: customer,
+    "Service Type": serviceType,
+    "Posting Date": postingDate,
+    "Start Date": startDate,
+    "Start Time": startTime,
+    "Finish Time": finishTime,
+  };
+
+  // Helper functions for managing items and technicians.
 
   // Add a new item row.
   const addItem = () => {
@@ -192,6 +234,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     setErrorMessage("");
   };
 
+  // Remove an item by index.
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
@@ -206,11 +249,11 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
         parenttype: "Service Appointment",
         full_name: "",
         service_technician: "",
-        id: "",
       },
     ]);
   };
 
+  // Remove a technician by index.
   const removeTechnician = (index: number) => {
     setTechniciansItems(techniciansItems.filter((_, i) => i !== index));
   };
@@ -220,45 +263,13 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     const selectedTech = technicians.find((t) => t.name === techName);
     const updated = { ...techniciansItems[index] };
     updated.service_technician = techName;
-    updated.id = selectedTech ? selectedTech.name : "";
+    // updated.id = selectedTech ? selectedTech.name : "";
     updated.full_name = selectedTech ? selectedTech.full_name : "";
     const newTechs = [...techniciansItems];
     newTechs[index] = updated;
     setTechniciansItems(newTechs);
   };
 
-  // Reset form fields.
-  const resetForm = () => {
-    setServiceOrder("");
-    setCustomer("");
-    setServiceType("");
-    setStartDate("");
-    setStartTime("");
-    setFinishTime("");
-    setItems([]);
-    setNewItem({ item_code: "", qty: 1, item_name: "", rate: 0, amount: 0 });
-    setTechniciansItems([]);
-    setErrorMessage("");
-    setSuccessMessage("");
-    setValidationErrors([]);
-  };
-
-  useEffect(() => {
-    if (!isOpen) resetForm();
-  }, [isOpen]);
-
-  // Build appointment summary for confirmation.
-  const appointmentSummary = {
-    "Service Order": serviceOrder,
-    Customer: customer,
-    "Service Type": serviceType,
-    "Posting Date": postingDate,
-    "Start Date": startDate,
-    "Start Time": startTime,
-    "Finish Time": finishTime,
-  };
-
-  // Confirmation dialog with tabbed view for Items and Technicians.
   const ConfirmationDialog = () => (
     <Dialog open={confirmOpen} onOpenChange={(open) => !open && setConfirmOpen(false)}>
       <DialogContent className="sm:max-w-[400px] p-4">
@@ -276,7 +287,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
             </div>
           ))}
         </div>
-        {/* Tabbed view for Items and Service Technicians */}
         <div className="mt-3">
           <Tabs defaultValue="items" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -342,14 +352,10 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     </Dialog>
   );
 
-  // Submit the appointment using the createAppointment API.
-  // The function now accepts a parameter for changed_status.
   const confirmAndSubmit = async (changed_status: any) => {
-    // Clear previous validations.
     setValidationErrors([]);
     let errors: string[] = [];
 
-    // Run validations.
     const timeRangeResult = validateTimeRange(startTime, finishTime);
     if (timeRangeResult !== true) errors.push(timeRangeResult as string);
     const durationResult = validateMinimumDuration(startTime, finishTime, 60);
@@ -364,24 +370,20 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
       return;
     }
 
-    // Format datetimes.
     const scheduled_start_datetime = dayjs(`${startDate} ${startTime}`).format("YYYY-MM-DDTHH:mm");
     const scheduled_finish_datetime = dayjs(`${startDate} ${finishTime}`).format("YYYY-MM-DDTHH:mm");
-    // const scheduled_finish_datetime = formatDateTime(startDate, finishTime);
 
-    console.log('scheduled_start_datetime',formatDateTime(startDate, startTime));
-    console.log('scheduled_finish_datetime',formatDateTime(startDate, finishTime));
-    
+    console.log('scheduled_start_datetime', scheduled_start_datetime);
+    console.log('scheduled_finish_datetime', scheduled_finish_datetime);
 
-    // Build the payload using only the keys expected by your backend.
     const appointmentPayload = {
       posting_date: postingDate,
       service_order: serviceOrder, 
-      customer:customer,
+      customer: customer,
       scheduled_start_datetime: scheduled_start_datetime,
-      scheduled_finish_datetime:scheduled_finish_datetime,
+      scheduled_finish_datetime: scheduled_finish_datetime,
       service_technicians: techniciansItems,
-      items:items,
+      items: items,
       changed_status: changed_status,
     };
     console.log(appointmentPayload);
@@ -408,7 +410,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
   };
 
   const handleSubmit = () => {
-    // Basic field validations.
     if (!serviceOrder) {
       setErrorMessage("Service Order is required.");
       return;
@@ -434,7 +435,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     setConfirmOpen(true);
   };
 
-  // Render Overview tab fields.
   const renderOverviewFields = () => (
     <div className="grid grid-cols-2 gap-4 py-4">
       <div>
@@ -527,7 +527,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     </div>
   );
 
-  // Render Items tab.
   const renderItemsTable = () => (
     <div className="py-4">
       <Table>
@@ -631,7 +630,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     </div>
   );
 
-  // Render Technicians tab.
   const renderTechniciansTable = () => (
     <div className="py-4">
       <Table>
@@ -691,7 +689,6 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
               Fill in the details to create a new appointment.
             </DialogDescription>
           </DialogHeader>
-          {/* Error / Success / Validation Messages */}
           {(errorMessage || successMessage || validationErrors.length > 0) && (
             <div className="mt-2">
               {validationErrors.length > 0 && (
