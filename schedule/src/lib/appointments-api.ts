@@ -52,7 +52,7 @@ export async function createAppointment(
 
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Failed to create Appointment: ${errorText}`);
+            throw new Error(`Failed to Create Appointment: ${errorText}`);
         }
 
         const data = await response.json();
