@@ -29,19 +29,31 @@ class ServiceAppointment(Document):
 		if not self.get("service_technicians"):
 			frappe.throw(_("Please add at least one technician"))
 	def validate_overlap(self):
-		# Check for any overlapping appointment for any technician
-		filters = {
-			"name": ["!=", self.name],
-			"status": ["not in", ["Closed", "Cancelled"]],
-			"service_technicians": ["in", [d.service_technician for d in self.service_technicians]],
-			"scheduled_start_datetime": ["<", self.scheduled_finish_datetime],
-			"scheduled_finish_datetime": [">", self.scheduled_start_datetime]
-		}
-		overlapping_appointments = frappe.get_all("Service Appointment", filters=filters)
-		if overlapping_appointments:
-			error_message = _("There is an overlap with another appointment")
-			frappe.throw(error_message)
-			return error_message  # Return for consistency
+			# Collect all parent Service Appointments tied to the same technicians
+			child_parents = frappe.get_all(
+				"Service Technician Item",
+				filters={"service_technician": ["in", [d.service_technician for d in self.service_technicians]]},
+				pluck="parent",
+			)
+
+			filters = {
+				"name": ["!=", self.name],
+				"name": ["in", child_parents],
+				"status": ["not in", ["Closed", "Cancelled"]],
+				"scheduled_start_datetime": ["<", self.scheduled_finish_datetime],
+				"scheduled_finish_datetime": [">", self.scheduled_start_datetime]
+			}
+
+			overlapping_appointments = frappe.get_all("Service Appointment", filters=filters)
+			overlapping_appointments = [
+				d.name for d in overlapping_appointments if d.name != self.name
+			]
+			if overlapping_appointments:
+				print('\n\n\n OVERLAP ERROR\n\n', overlapping_appointments, '\n\n')
+				error_message = _("There is an overlap with another appointment")
+				print('\n\n\n OVERLAP ERROR\n\n', error_message, '\n\n')
+				frappe.throw(error_message)
+				return error_message  # Return for consistency
 
 	def set_scheduled_status(self):
 		if self.scheduled_start_datetime and self.scheduled_finish_datetime:
