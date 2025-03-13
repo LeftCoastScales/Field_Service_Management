@@ -1,14 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Technician } from "../lib/types";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
+import dayjs from "dayjs";
+import {
+  validateTimeRange,
+  validateMinimumDuration,
+  validateBusinessHours,
+} from "../lib/validations";
 
 interface EditValues {
   date: string;
   start: string;
   end: string;
   techId: string;
+}
+
+export interface DialogMessage {
+  type: "success" | "error";
+  text: string;
 }
 
 interface EditAppointmentProps {
@@ -19,6 +30,7 @@ interface EditAppointmentProps {
   onConfirm: () => void;
   techReadOnly?: boolean;
   errorMessages?: string[];
+  dialogMessage?: DialogMessage | null;
 }
 
 const EditAppointment: React.FC<EditAppointmentProps> = ({
@@ -29,14 +41,51 @@ const EditAppointment: React.FC<EditAppointmentProps> = ({
   onConfirm,
   techReadOnly = false,
   errorMessages = [],
+  dialogMessage = null,
 }) => {
+  // Local state for validation errors.
+  const [localValidationErrors, setLocalValidationErrors] = useState<string[]>([]);
+
+  const handleConfirm = () => {
+    const errors: string[] = [];
+    // Assume editValues.start and editValues.end are in "HH:mm" format.
+    const timeRangeResult = validateTimeRange(editValues.start, editValues.end);
+    if (timeRangeResult !== true) errors.push(timeRangeResult);
+    const durationResult = validateMinimumDuration(editValues.start, editValues.end);
+    if (durationResult !== true) errors.push(durationResult);
+    const businessResult = validateBusinessHours(editValues.start, editValues.end, "07:00", "19:00");
+    if (businessResult !== true) errors.push(businessResult);
+
+    if (errors.length > 0) {
+      setLocalValidationErrors(errors);
+      return;
+    }
+    setLocalValidationErrors([]);
+    onConfirm();
+  };
+
+  // Merge any error messages passed in props with our local validation errors.
+  const mergedErrors = [...errorMessages, ...localValidationErrors];
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-4 w-72 shadow-lg">
         <h4 className="text-sm font-semibold mb-3">Edit Appointment</h4>
-        {errorMessages.length > 0 && (
+        {dialogMessage && dialogMessage.type === "success" && (
+          <div className="bg-green-100 text-green-800 p-2 rounded mb-3 flex items-center space-x-1 text-xs">
+            <CheckCircle size={16} />
+            <span>{dialogMessage.text}</span>
+          </div>
+        )}
+        {dialogMessage && dialogMessage.type === "error" && (
+          <div className="bg-red-100 text-red-800 p-2 rounded mb-3 flex items-center space-x-1 text-xs">
+            <AlertTriangle size={16} />
+            <span>{dialogMessage.text}</span>
+          </div>
+        )}
+        {mergedErrors.length > 0 && (
           <div className="bg-red-100 text-red-800 p-2 rounded mb-3 flex flex-col space-y-1 text-xs">
-            {errorMessages.map((err, idx) => (
+            {mergedErrors.map((err, idx) => (
               <div key={idx} className="flex items-center space-x-1">
                 <AlertTriangle size={16} />
                 <span>{err}</span>
@@ -90,7 +139,7 @@ const EditAppointment: React.FC<EditAppointmentProps> = ({
           <Button variant="secondary" onClick={onCancel} className="text-xs px-3">
             Cancel
           </Button>
-          <Button onClick={onConfirm} className="text-xs px-3">
+          <Button onClick={handleConfirm} className="text-xs px-3">
             Confirm
           </Button>
         </div>
