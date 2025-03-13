@@ -1,4 +1,3 @@
-// app/calendar-view.tsx
 "use client";
 
 import { useCalendar } from "../../lib/context";
@@ -13,9 +12,11 @@ import { Button } from "../../components/ui/button";
 import { updateAppointment } from "../../lib/appointments-api";
 import { toast } from "react-hot-toast";
 
-// Import tippy for modern tooltips.
-import tippy from 'tippy.js';
-import 'tippy.js/dist/tippy.css';
+// Import dialogs from the app folder.
+import TeamUpdateDialog from "../../app/team-update-dialog";
+import CreateDialog from "../../app/create-dialog";
+// EditAppointment remains in components.
+import EditAppointment from "../../app/edit-appointment";
 
 export interface FilterCriteria {
 	date?: Date;
@@ -30,44 +31,54 @@ interface CalendarViewProps {
 	filters?: FilterCriteria;
 }
 
-// Type for pending update from a calendar interaction.
-interface PendingUpdate {
-	event: any; // The FullCalendar event instance.
-	revert: () => void;
-}
-
 export default function CalendarView({ selectedDate, filters }: CalendarViewProps) {
-	const { appointments, view, currentDate, searchTerm, selectedTechnician } = useCalendar();
+	// Destructure appointments and resources along with other context values.
+	const { appointments, resources, view, currentDate, searchTerm, selectedTechnician } = useCalendar();
 	const calendarRef = useRef<FullCalendar>(null);
-	const [pendingUpdate, setPendingUpdate] = useState<PendingUpdate | null>(null);
 
-	// Filter appointments based on search, filter criteria and docstatus.
+	// Compute the full list of technicians from resources.
+	const technicians = useMemo(() => {
+		return resources.filter((r) => r.resourceType === "technician");
+	}, [resources]);
+
+	// State for update dialogs.
+	const [updateDialogData, setUpdateDialogData] = useState<any>(null);
+	const [isTeamUpdate, setIsTeamUpdate] = useState(false);
+	// Store the revert callback if update via drag/drop or resize is pending.
+	const [calendarPendingRevert, setCalendarPendingRevert] = useState<(() => void) | null>(null);
+	const [editValues, setEditValues] = useState({ date: "", start: "", end: "", techId: "" });
+	const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+	// State for create dialog.
+	const [showCreateDialog, setShowCreateDialog] = useState(false);
+	const [createPrefill, setCreatePrefill] = useState({
+		startDate: "",
+		startTime: "",
+		finishTime: "",
+		defaultTechnician: "",
+	});
+
+	// Filter appointments based on search criteria, filters, and docstatus.
 	const filteredAppointments = useMemo(() => {
 		return appointments.filter((app) => {
-			// Only include appointments with docstatus === 1
 			if (app.docstatus !== 1) return false;
-
 			const matchesSearch =
 				app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				(app.location && app.location.toLowerCase().includes(searchTerm.toLowerCase()));
-
 			const matchesTechnician =
 				!selectedTechnician ||
 				(app.service_technicians &&
 					app.service_technicians.some((st) => st.service_technician === selectedTechnician.name));
-
 			const matchesFilters = filters
 				? (!filters.location || app.location === filters.location) &&
 				  (!filters.appointment || app.name === filters.appointment) &&
 				  (!filters.technician || app.technician === filters.technician)
 				: true;
-
 			return matchesSearch && matchesTechnician && matchesFilters;
 		});
 	}, [appointments, searchTerm, selectedTechnician, filters]);
 
-	// Create FullCalendar events using the ISO datetime values from the appointment.
-	// Include technicians in extendedProps.
+	// Map appointments to FullCalendar events.
 	const events = useMemo(() => {
 		return filteredAppointments.map((appointment) => ({
 			id: appointment.name.toString(),
@@ -103,7 +114,7 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 	}, []);
 
 	useEffect(() => {
-		// After render, update the FullCalendar view and date.
+		// Update FullCalendar view and date after render.
 		setTimeout(() => {
 			if (calendarRef.current) {
 				const calendarApi = calendarRef.current.getApi();
@@ -115,69 +126,152 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 		}, 0);
 	}, [view, currentDate, selectedDate]);
 
-	const handleConfirmUpdate = async () => {
-		if (!pendingUpdate) return;
-		// Look up the original appointment from context to preserve other fields.
-		const original = appointments.find((app) => app.name === pendingUpdate.event.id);
-		try {
-			const result = await updateAppointment({
-				name: pendingUpdate.event.id,
-				scheduled_start_datetime: dayjs(pendingUpdate.event.start).format("YYYY-MM-DD HH:mm:ss"),
-				scheduled_finish_datetime: dayjs(pendingUpdate.event.end).format("YYYY-MM-DD HH:mm:ss"),
-				service_technicians: original?.service_technicians || [],
-				items: original?.items || [],
-			});
-			toast.success(`Appointment ${result} Updated Successfully!`);
-		} catch (error) {
-			console.error("Error updating appointment:", error);
-			pendingUpdate.revert();
-			toast.error("Failed to update appointment");
-		} finally {
-			setPendingUpdate(null);
+	// Helper: Determine the correct technician ID for single-tech appointments.
+	const getTechId = (original: any) => {
+		if (original.technicianId) return original.technicianId;
+		if (original.service_technicians && original.service_technicians.length === 1) {
+			return original.service_technicians[0].service_technician;
 		}
+		return selectedTechnician ? selectedTechnician.name : "";
 	};
 
-	const handleCancelUpdate = () => {
-		if (pendingUpdate) {
-			pendingUpdate.revert();
-		}
-		setPendingUpdate(null);
-	};
-
-	// Use eventDidMount to attach a tooltip to each event element.
-	const eventDidMount = (info: any) => {
-		// Ensure extendedProps.status exists before creating a tooltip.
-		if (!info.event || !info.event.extendedProps || !info.event.extendedProps.status) {
+	// Handle updates from event drop/resize.
+	const handleEventUpdate = (info: any) => {
+		if (info.event.extendedProps.status?.toLowerCase() !== "scheduled") {
+			info.revert();
 			return;
 		}
-		
-		// Build tooltip content.
-		const technicians = info.event.extendedProps.technicians;
-		const techList =
-			Array.isArray(technicians) && technicians.length > 0
-				? technicians.map((tech: any) => tech.full_name).join(", ")
-				: "None";
-		const tooltipContent = `
-			<div class="p-2">
-				<div class="font-semibold mb-1">${info.event.title}</div>
-				<div class='text-sm'><strong>Customer:</strong> ${info.event.extendedProps.customerName}</div>
-				<div class='text-sm'><strong>Address:</strong> ${info.event.extendedProps.address}</div>
-				<div class='text-sm'><strong>Service Type:</strong> ${info.event.extendedProps.serviceType}</div>
-				<div class='text-sm'><strong>Status:</strong> ${info.event.extendedProps.status}</div>
-				<div class='text-sm'><strong>Technicians:</strong> ${techList}</div>
-				<div class='text-sm'><strong>Time:</strong> ${info.timeText}</div>
-			</div>
-		`;
-		
-		// Initialize tippy on the event element.
-		tippy(info.el, {
-			content: tooltipContent,
-			allowHTML: true,
-			theme: "light",
-			trigger: "click",
-			placement: "top",
+		const appointmentId = info.event.id;
+		const original = appointments.find((app) => app.name.toString() === appointmentId);
+		if (!original) {
+			info.revert();
+			return;
+		}
+		const newStart = info.event.start;
+		const newEnd = info.event.end;
+		const isTeamEvent = original.service_technicians && original.service_technicians.length > 1;
+		const techId = getTechId(original);
+		const updatedAppointment = {
+			...original,
+			scheduled_start_datetime: dayjs(newStart).format("YYYY-MM-DD HH:mm:ss"),
+			scheduled_finish_datetime: dayjs(newEnd).format("YYYY-MM-DD HH:mm:ss"),
+			reschedule: true,
+		};
+		setUpdateDialogData(updatedAppointment);
+		setIsTeamUpdate(isTeamEvent);
+		setCalendarPendingRevert(() => info.revert);
+		setEditValues({
+			date: dayjs(newStart).format("YYYY-MM-DD"),
+			start: dayjs(newStart).format("HH:mm"),
+			end: dayjs(newEnd).format("HH:mm"),
+			techId: techId,
 		});
 	};
+
+	// Handle event click to trigger update dialog.
+	const handleEventClick = (info: any) => {
+		const status = info.event.extendedProps.status?.toLowerCase();
+		if (status === "open" || status === "scheduled") {
+			const appointmentId = info.event.id;
+			const original = appointments.find((app) => app.name.toString() === appointmentId);
+			if (!original) return;
+			const start = info.event.start;
+			const end = info.event.end;
+			const isTeamEvent = original.service_technicians && original.service_technicians.length > 1;
+			const techId = getTechId(original);
+			const updatedAppointment = {
+				...original,
+				scheduled_start_datetime: dayjs(start).format("YYYY-MM-DD HH:mm:ss"),
+				scheduled_finish_datetime: dayjs(end).format("YYYY-MM-DD HH:mm:ss"),
+			};
+			setUpdateDialogData(updatedAppointment);
+			setIsTeamUpdate(isTeamEvent);
+			setEditValues({
+				date: dayjs(start).format("YYYY-MM-DD"),
+				start: dayjs(start).format("HH:mm"),
+				end: dayjs(end).format("HH:mm"),
+				techId: techId,
+			});
+		} else {
+			// Optionally, show details for non-updatable events.
+		}
+	};
+
+	// Handle selecting a time slot to create an appointment.
+	const handleSelect = (selectInfo: any) => {
+		const start = selectInfo.start;
+		const end = selectInfo.end;
+		setCreatePrefill({
+			startDate: dayjs(start).format("YYYY-MM-DD"),
+			startTime: dayjs(start).format("HH:mm"),
+			finishTime: dayjs(end).format("HH:mm"),
+			defaultTechnician: "",
+		});
+		setShowCreateDialog(true);
+		let calendarApi = selectInfo.view.calendar;
+		calendarApi.unselect();
+	};
+
+	const handleEditChange = (field: string, value: string) => {
+		setEditValues({ ...editValues, [field]: value });
+	};
+
+	const confirmUpdate = async () => {
+		if (!updateDialogData) return;
+		const newStartCombined = dayjs(`${editValues.date} ${editValues.start}`, "YYYY-MM-DD HH:mm").format(
+			"YYYY-MM-DD HH:mm:ss"
+		);
+		const newEndCombined = dayjs(`${editValues.date} ${editValues.end}`, "YYYY-MM-DD HH:mm").format(
+			"YYYY-MM-DD HH:mm:ss"
+		);
+		const updatedAppointment = {
+			...updateDialogData,
+			scheduled_start_datetime: newStartCombined,
+			scheduled_finish_datetime: newEndCombined,
+			reschedule: true,
+		};
+		try {
+			const result = await updateAppointment({
+				name: updatedAppointment.name,
+				scheduled_start_datetime: newStartCombined,
+				scheduled_finish_datetime: newEndCombined,
+				service_technicians: updatedAppointment.service_technicians,
+				items: updatedAppointment.items,
+				reschedule: true,
+				edit_technician_list: true,
+			});
+			toast.success(`Appointment ${result} Updated Successfully!`);
+		} catch (error: any) {
+			console.error("Error updating appointment:", error);
+			if (calendarPendingRevert) {
+				calendarPendingRevert();
+			}
+			toast.error("Failed to update appointment");
+		} finally {
+			setUpdateDialogData(null);
+			setCalendarPendingRevert(null);
+		}
+	};
+
+	const cancelUpdate = () => {
+		if (calendarPendingRevert) {
+			calendarPendingRevert();
+		}
+		setUpdateDialogData(null);
+		setCalendarPendingRevert(null);
+	};
+
+	// Compute team dialog properties more robustly.
+	let teamDialogProps = null;
+	if (updateDialogData && isTeamUpdate) {
+		// Use the technician from appointment data or edit values as fallback.
+		const oldTech = updateDialogData.technicianId || editValues.techId;
+		const newTech = editValues.techId || oldTech;
+		const otherAssignedTechs = updateDialogData.service_technicians
+			? updateDialogData.service_technicians.filter((st: any) => st.service_technician !== oldTech)
+			: [];
+		teamDialogProps = { oldTech, newTech, otherAssignedTechs };
+	}
 
 	const calendarOptions = useMemo(
 		() => ({
@@ -200,22 +294,42 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 				omitZeroMinute: false,
 				meridiem: "short",
 			},
-			// Instead of directly updating, we set pending update on drop/resize.
+			select: handleSelect,
+			eventClick: handleEventClick,
 			eventDrop: (info: any) => {
-				if (info.event.extendedProps.status?.toLowerCase() !== "scheduled") {
-					info.revert();
-					return;
-				}
-				setPendingUpdate({ event: info.event, revert: info.revert });
+				handleEventUpdate(info);
 			},
 			eventResize: (info: any) => {
-				if (info.event.extendedProps.status?.toLowerCase() !== "scheduled") {
-					info.revert();
-					return;
-				}
-				setPendingUpdate({ event: info.event, revert: info.revert });
+				handleEventUpdate(info);
 			},
-			eventDidMount, // Attach tooltip after event is rendered.
+			eventDidMount: (info: any) => {
+				if (!info.event || !info.event.extendedProps || !info.event.extendedProps.status) return;
+				const technicians = info.event.extendedProps.technicians;
+				const techList =
+					Array.isArray(technicians) && technicians.length > 0
+						? technicians.map((tech: any) => tech.full_name).join(", ")
+						: "None";
+				const tooltipContent = `
+					<div class="p-2">
+						<div class="font-semibold mb-1">${info.event.title}</div>
+						<div class="text-sm"><strong>Customer:</strong> ${info.event.extendedProps.customerName}</div>
+						<div class="text-sm"><strong>Address:</strong> ${info.event.extendedProps.address}</div>
+						<div class="text-sm"><strong>Service Type:</strong> ${info.event.extendedProps.serviceType}</div>
+						<div class="text-sm"><strong>Status:</strong> ${info.event.extendedProps.status}</div>
+						<div class="text-sm"><strong>Technicians:</strong> ${techList}</div>
+						<div class="text-sm"><strong>Time:</strong> ${info.timeText}</div>
+					</div>
+				`;
+				import("tippy.js").then((tippyModule) => {
+					tippyModule.default(info.el, {
+						content: tooltipContent,
+						allowHTML: true,
+						theme: "light",
+						placement: "top",
+					});
+				});
+			},
+			// Restore custom event content rendering.
 			eventContent: (eventInfo: any) => (
 				<div
 					className={`p-1 rounded-md text-xs ${getStatusColor(
@@ -233,62 +347,53 @@ export default function CalendarView({ selectedDate, filters }: CalendarViewProp
 			dayHeaderClassNames: "text-xs font-medium text-gray-500",
 			viewClassNames: "h-full",
 		}),
-		[events, getStatusColor]
+		[events, getStatusColor, selectedDate]
 	);
 
 	return (
 		<div className="flex-1 w-full h-full">
 			<FullCalendar ref={calendarRef} {...calendarOptions} />
-			{pendingUpdate && (
-				<ConfirmUpdateDialog
-					pendingUpdate={pendingUpdate}
-					onConfirm={handleConfirmUpdate}
-					onCancel={handleCancelUpdate}
+			{/* Render update dialogs conditionally */}
+			{updateDialogData && (
+				<>
+					{isTeamUpdate && teamDialogProps ? (
+						<TeamUpdateDialog
+							oldTech={teamDialogProps.oldTech}
+							newTech={teamDialogProps.newTech}
+							newStart={editValues.start}
+							newEnd={editValues.end}
+							otherAssignedTechs={teamDialogProps.otherAssignedTechs}
+							onTimeChange={handleEditChange}
+							onConfirm={confirmUpdate}
+							onCancel={cancelUpdate}
+							errorMessages={validationErrors}
+						/>
+					) : (
+						<EditAppointment
+							editValues={editValues}
+							handleChange={handleEditChange}
+							// Pass the full technicians list from context so that the correct technician (matching editValues.techId) is selected.
+							technicians={technicians}
+							onCancel={cancelUpdate}
+							onConfirm={confirmUpdate}
+							techReadOnly={false}
+							errorMessages={validationErrors}
+						/>
+					)}
+				</>
+			)}
+			{showCreateDialog && (
+				<CreateDialog
+					isOpen={showCreateDialog}
+					onClose={() => setShowCreateDialog(false)}
+					prefillData={{
+						startDate: createPrefill.startDate,
+						startTime: createPrefill.startTime,
+						finishTime: createPrefill.finishTime,
+						defaultTechnician: createPrefill.defaultTechnician,
+					}}
 				/>
 			)}
 		</div>
-	);
-}
-
-// A simple confirmation dialog for updating an appointment.
-function ConfirmUpdateDialog({
-	pendingUpdate,
-	onConfirm,
-	onCancel,
-}: {
-	pendingUpdate: PendingUpdate;
-	onConfirm: () => void;
-	onCancel: () => void;
-}) {
-	return (
-		<Dialog open={true} onOpenChange={(open) => { if (!open) onCancel(); }}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Confirm Update</DialogTitle>
-					<DialogDescription>
-						Please confirm the updated appointment details.
-					</DialogDescription>
-				</DialogHeader>
-				<div className="space-y-2 text-sm">
-					<p>
-						<strong>Appointment:</strong> {pendingUpdate.event.title}
-					</p>
-					<p>
-						<strong>Start:</strong>{" "}
-						{dayjs(pendingUpdate.event.start).format("YYYY-MM-DD HH:mm")}
-					</p>
-					<p>
-						<strong>End:</strong>{" "}
-						{dayjs(pendingUpdate.event.end).format("YYYY-MM-DD HH:mm")}
-					</p>
-				</div>
-				<div className="flex justify-end mt-4 space-x-2">
-					<Button variant="ghost" onClick={onCancel}>
-						Cancel
-					</Button>
-					<Button onClick={onConfirm}>Confirm Update</Button>
-				</div>
-			</DialogContent>
-		</Dialog>
 	);
 }
