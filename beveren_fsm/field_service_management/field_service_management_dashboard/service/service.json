@@ -1,0 +1,42 @@
+{
+ "cards": [
+  {
+   "card": "Open Service Orders"
+  },
+  {
+   "card": "Open Service Requests"
+  },
+  {
+   "card": "Scheduled Service Appointments"
+  },
+  {
+   "card": "Non Billed Appointments"
+  }
+ ],
+ "charts": [
+  {
+   "chart": "Service Order by Status",
+   "width": "Half"
+  },
+  {
+   "chart": "Service Requests by Status",
+   "width": "Half"
+  },
+  {
+   "chart": "Service Appointment By Status",
+   "width": "Full"
+  }
+ ],
+ "creation": "2025-03-13 19:08:25.370204",
+ "dashboard_name": "Service",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "modified": "2025-03-13 19:40:24.916458",
+ "modified_by": "Administrator",
+ "module": "Field Service Management",
+ "name": "Service",
+ "owner": "Administrator"
+}

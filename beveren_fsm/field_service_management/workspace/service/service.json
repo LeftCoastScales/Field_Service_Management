@@ -7,14 +7,10 @@
   {
    "chart_name": "Service Appointment By Status",
    "label": "Service Appointment By Status"
-  },
-  {
-   "chart_name": "Service Requests by Status",
-   "label": "Service Requests by Status"
   }
  ],
- "content": "[{\"id\":\"OM5Asnk3Yb\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Requests\",\"col\":4}},{\"id\":\"15UfPq6SKv\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Orders\",\"col\":4}},{\"id\":\"w7mtVc_wCw\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Scheduled Appointments\",\"col\":4}},{\"id\":\"fl3xb8L-7m\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Requests by Status\",\"col\":6}},{\"id\":\"bjmOVGdrIM\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Appointment By Status\",\"col\":6}},{\"id\":\"oaawrUz3_E\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Order by Status\",\"col\":12}},{\"id\":\"MvJuMndtJP\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Jwk7FRQ6i2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":12}},{\"id\":\"_U1ndekMHI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Technician\",\"col\":3}},{\"id\":\"dFa0pdrg3n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Appointment\",\"col\":3}},{\"id\":\"4WNmCS56qX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Request\",\"col\":3}},{\"id\":\"m4X3-WrFBc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Order\",\"col\":3}},{\"id\":\"77jTiJazgQ\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"lUgGa4xkW8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Scheduling\",\"col\":3}},{\"id\":\"SgonBq3pM5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Field Service Management Settings\",\"col\":3}}]",
- "creation": "2025-02-24 18:51:45.423307",
+ "content": "[{\"id\":\"OM5Asnk3Yb\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Requests\",\"col\":4}},{\"id\":\"15UfPq6SKv\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Open Orders\",\"col\":4}},{\"id\":\"w7mtVc_wCw\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Scheduled Appointments\",\"col\":4}},{\"id\":\"bjmOVGdrIM\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Appointment By Status\",\"col\":6}},{\"id\":\"oaawrUz3_E\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Service Order by Status\",\"col\":6}},{\"id\":\"MvJuMndtJP\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Jwk7FRQ6i2\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Your Shortcuts</span>\",\"col\":12}},{\"id\":\"_U1ndekMHI\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Technician\",\"col\":3}},{\"id\":\"4WNmCS56qX\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Request\",\"col\":3}},{\"id\":\"m4X3-WrFBc\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Order\",\"col\":3}},{\"id\":\"dFa0pdrg3n\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Service Appointment\",\"col\":3}},{\"id\":\"jdLCPep_4b\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"XUted4g7r-\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"PIjeAP5Lu1\",\"type\":\"card\",\"data\":{\"card_name\":\"Other Masters\",\"col\":4}}]",
+ "creation": "2025-03-04 12:44:19.754540",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -25,8 +21,48 @@
  "indicator_color": "",
  "is_hidden": 0,
  "label": "Service",
- "links": [],
- "modified": "2025-02-25 02:56:18.237598",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Other Masters",
+   "link_count": 3,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service Area",
+   "link_count": 0,
+   "link_to": "Service Area",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Service Specialization",
+   "link_count": 0,
+   "link_to": "Service Specialization",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Field Service Management Settings",
+   "link_count": 0,
+   "link_to": "Field Service Management Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2025-03-13 19:37:18.037439",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service",
@@ -49,17 +85,10 @@
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 2.0,
+ "sequence_id": 14.0,
  "shortcuts": [
   {
    "color": "Grey",
-   "doc_view": "List",
-   "label": "Service Scheduling",
-   "link_to": "dispatch",
-   "type": "Page"
-  },
-  {
-   "color": "Blue",
    "doc_view": "List",
    "label": "Service Technician",
    "link_to": "Service Technician",
@@ -69,20 +98,12 @@
   {
    "color": "Grey",
    "doc_view": "List",
-   "label": "Field Service Management Settings",
-   "link_to": "Field Service Management Settings",
-   "type": "DocType"
+   "label": "Dashboard",
+   "link_to": "Service",
+   "type": "Dashboard"
   },
   {
-   "color": "Green",
-   "doc_view": "List",
-   "label": "Service Appointment",
-   "link_to": "Service Appointment",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Green",
+   "color": "Grey",
    "doc_view": "List",
    "label": "Service Request",
    "link_to": "Service Request",
@@ -90,10 +111,18 @@
    "type": "DocType"
   },
   {
-   "color": "Green",
+   "color": "Grey",
    "doc_view": "List",
    "label": "Service Order",
    "link_to": "Service Order",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Service Appointment",
+   "link_to": "Service Appointment",
    "stats_filter": "[]",
    "type": "DocType"
   }
