@@ -163,6 +163,25 @@ export function ResourceList() {
     
   };
 
+  const hasOverlap = (updatedAppointment:any, allAppointments:any) => {
+    const technicianId = updatedAppointment.service_technicians[0]?.service_technician;
+    const start = dayjs(updatedAppointment.scheduled_start_datetime);
+    const end = dayjs(updatedAppointment.scheduled_finish_datetime);
+  
+    return allAppointments.some((apt:any) => {
+      if (apt.name === updatedAppointment.name) return false; // skip the same appointment
+  
+      const aptStart = dayjs(apt.scheduled_start_datetime);
+      const aptEnd = dayjs(apt.scheduled_finish_datetime);
+  
+      const isSameTechnician = apt.service_technicians.some(
+        (tech:any) => tech.service_technician === technicianId
+      );
+  
+      return isSameTechnician && start.isBefore(aptEnd) && end.isAfter(aptStart);
+    });
+  };
+
   // Generic onChange handler for the update dialog using dot-notation for nested fields.
   const handleUpdateDialogChange = (field: string, value: any) => {
     if (!updateDialogData) return;
@@ -193,9 +212,27 @@ export function ResourceList() {
   };
 
   const handleUpdateConfirm = async () => {
-    console.log("Updating appointment:", updateDialogData);
-    
+    // console.log("Updating appointment:", updateDialogData);
+
     if (!updateDialogData) return;
+
+    const appointments = filtered_resources.filter(
+      (resource) => resource.resourceType === "appointment"
+    ) as Appointment[];
+
+    const overlapExists = hasOverlap(updateDialogData, appointments);
+    if (overlapExists) {
+      toast.error("Time Overlap! The technician already has an appointment during the selected time.", {
+        style: {
+          background: "#fef2f2",
+          color: "#991b1b",
+          fontWeight: "bold",
+        },
+      });
+      return;
+    }
+    
+    
     try {
       const result = await updateAppointment({
         name: updateDialogData.name,

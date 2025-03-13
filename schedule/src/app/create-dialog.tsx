@@ -31,7 +31,6 @@ import {
 } from "../components/ui/table";
 import { Plus, Trash2, RotateCcw } from "lucide-react";
 import { useCalendar } from "../lib/context";
-import { toast } from "react-hot-toast";
 import { fetchItems, createAppointment } from "../lib/appointments-api";
 import dayjs from "dayjs";
 
@@ -121,7 +120,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
       .catch((err) => console.error("Error fetching items", err));
   }, []);
 
-  // Auto-compute amount when quantity or rate changes.
+  // Auto-compute amount when qty or rate changes.
   useEffect(() => {
     const computedAmount = Number(newItem.rate) * Number(newItem.qty);
     if (computedAmount !== newItem.amount) {
@@ -176,7 +175,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     }
   }, [serviceOrder, orders]);
 
-  // Reset form fields when dialog is closed.
+  // Reset form fields when dialog closes.
   const resetForm = () => {
     setServiceOrder("");
     setCustomer("");
@@ -312,6 +311,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
           <Input
             id="startTime"
             type="time"
+            step="600"
             className="col-span-3 h-8 text-xs"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
@@ -322,6 +322,7 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
           <Input
             id="finishTime"
             type="time"
+            step="600"
             className="col-span-3 h-8 text-xs"
             value={finishTime}
             onChange={(e) => setFinishTime(e.target.value)}
@@ -513,6 +514,25 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     confirmAndSubmit(changed_status);
   };
 
+  const hasOverlap = (updatedAppointment, allAppointments) => {
+    const technicianId = updatedAppointment.service_technicians[0]?.service_technician;
+    const start = dayjs(updatedAppointment.scheduled_start_datetime);
+    const end = dayjs(updatedAppointment.scheduled_finish_datetime);
+  
+    return allAppointments.some((apt) => {
+      if (apt.name === updatedAppointment.name) return false; // skip the same appointment
+  
+      const aptStart = dayjs(apt.scheduled_start_datetime);
+      const aptEnd = dayjs(apt.scheduled_finish_datetime);
+  
+      const isSameTechnician = apt.service_technicians.some(
+        (tech) => tech.service_technician === technicianId
+      );
+  
+      return isSameTechnician && start.isBefore(aptEnd) && end.isAfter(aptStart);
+    });
+  };
+
   const confirmAndSubmit = async (changed_status: string) => {
     let errors: string[] = [];
     const timeRangeResult = validateTimeRange(startTime, finishTime);
@@ -547,23 +567,36 @@ export function CreateDialog({ isOpen, onClose, prefillData }: AddDialogProps) {
     };
     console.log(appointmentPayload);
 
+    const overlapExists = hasOverlap(appointmentPayload, appointments);
+
+    if (overlapExists) {
+      setErrorMessage("Time Overlap! The technician already has an appointment during the selected time.");
+      // toast.error("This technician already has an appointment during the selected time.", {
+      //   style: {
+      //     background: "#fef2f2",
+      //     color: "#991b1b",
+      //     fontWeight: "bold",
+      //   },
+      // });
+      return;
+    }
+
+
     try {
       const result = await createAppointment(appointmentPayload);
       console.log(result);
       if (result) {
         setSuccessMessage("Appointment created and submitted successfully!");
-        toast.success("Appointment created successfully!");
         refreshResources();
         setTimeout(() => {
           setSuccessMessage("");
           onClose();
-        }, 1500);
+        }, 2000);
       } else {
         setErrorMessage(result.message || "Error creating appointment.");
       }
     } catch (error: any) {
       setErrorMessage(error.message || "An unexpected error occurred.");
-      toast.error("Failed to create appointment.");
     }
   };
 

@@ -19,6 +19,7 @@ class ServiceAppointment(Document):
 		self.set_scheduled_status()
 
 	def before_update_after_submit(self):
+		self.validate_overlap()
 		self.update_service_order_status()
 	def on_cancel(self):
 		self.cancel_linked_order()
