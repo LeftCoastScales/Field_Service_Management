@@ -1,0 +1,17 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2025-03-13 20:46:06.195548",
+  "name": "Service Manager",
+  "role_profile": "Service Manager",
+  "roles": [
+   {
+    "parent": "Service Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Service Manager"
+   }
+  ]
+ }
+]
