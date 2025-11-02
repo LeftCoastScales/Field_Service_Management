@@ -2,15 +2,17 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Appointment } from "../../pages/schedule/types";
 import { fetchTechnicians } from "../../hooks/use-appointments";
 import { format, startOfDay } from "date-fns";
+import { cn } from "../../lib/utils";
 
 interface GanttViewProps {
   appointments: Appointment[];
   selectedDate: Date;
   onAppointmentClick?: (appointment: Appointment) => void;
+  technicianSearch?: string;
 }
 
 interface Technician {
@@ -18,16 +20,21 @@ interface Technician {
   full_name: string;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const HOUR_HEIGHT = 60; // pixels per hour
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
+const DEFAULT_START_HOUR = 6; // 6am
+const DEFAULT_END_HOUR = 18; // 6pm
+const TECHNICIAN_ROW_HEIGHT = 60; // Fixed height per technician row (compact, shows 2 arrows worth)
 
 export function GanttView({
   appointments,
   selectedDate,
   onAppointmentClick,
+  technicianSearch = "",
 }: GanttViewProps) {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
+  const [visibleStartHour, setVisibleStartHour] = useState(DEFAULT_START_HOUR);
+  const [visibleEndHour, setVisibleEndHour] = useState(DEFAULT_END_HOUR);
 
   useEffect(() => {
     loadTechnicians();
@@ -44,14 +51,39 @@ export function GanttView({
     }
   };
 
+  // Filter technicians by search
+  const filteredTechnicians = useMemo(() => {
+    if (!technicianSearch.trim()) return technicians;
+    const searchLower = technicianSearch.toLowerCase();
+    return technicians.filter(
+      (tech) =>
+        tech.full_name.toLowerCase().includes(searchLower) ||
+        tech.name.toLowerCase().includes(searchLower)
+    );
+  }, [technicians, technicianSearch]);
+
+  // Filter appointments for the selected date
+  const appointmentsForSelectedDate = useMemo(() => {
+    const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+
+    return appointments.filter((apt) => {
+      if (!apt.scheduled_start_datetime) return false;
+
+      const appointmentDate = new Date(apt.scheduled_start_datetime);
+      const appointmentDateStr = format(appointmentDate, "yyyy-MM-dd");
+
+      return appointmentDateStr === selectedDateStr;
+    });
+  }, [appointments, selectedDate]);
+
   // Get technicians that have appointments for this date
   const techniciansWithAppointments = useMemo(() => {
     const techMap = new Map<string, Technician>();
-    
-    appointments.forEach((apt) => {
+
+    appointmentsForSelectedDate.forEach((apt) => {
       apt.service_technicians?.forEach((tech) => {
         if (!techMap.has(tech.service_technician)) {
-          const techData = technicians.find((t) => t.name === tech.service_technician);
+          const techData = filteredTechnicians.find((t) => t.name === tech.service_technician);
           if (techData) {
             techMap.set(tech.service_technician, techData);
           }
@@ -59,18 +91,18 @@ export function GanttView({
       });
     });
 
-    // Also include all technicians even if they don't have appointments
-    technicians.forEach((tech) => {
+    // Include filtered technicians even if they don't have appointments
+    filteredTechnicians.forEach((tech) => {
       if (!techMap.has(tech.name)) {
         techMap.set(tech.name, tech);
       }
     });
 
     return Array.from(techMap.values());
-  }, [appointments, technicians]);
+  }, [appointmentsForSelectedDate, filteredTechnicians]);
 
   const getAppointmentsForTechnician = (technicianName: string) => {
-    return appointments.filter(
+    return appointmentsForSelectedDate.filter(
       (apt) =>
         apt.service_technicians?.some(
           (tech) => tech.service_technician === technicianName
@@ -78,63 +110,66 @@ export function GanttView({
     );
   };
 
-  const getAppointmentPosition = (appointment: Appointment) => {
-    if (!appointment.scheduled_start_datetime || !appointment.scheduled_finish_datetime) {
-      return { top: 0, height: 0, left: 0 };
+
+  const visibleHours = ALL_HOURS.slice(visibleStartHour, visibleEndHour + 1);
+  const visibleHoursCount = visibleEndHour - visibleStartHour + 1;
+
+  const canScrollLeft = visibleStartHour > 0;
+  const canScrollRight = visibleEndHour < 23;
+
+  const scrollLeft = () => {
+    if (canScrollLeft) {
+      const newStart = Math.max(0, visibleStartHour - 3);
+      const hoursToShow = visibleEndHour - newStart + 1;
+      if (hoursToShow > 12) {
+        setVisibleStartHour(newStart);
+        setVisibleEndHour(newStart + 11);
+      } else {
+        setVisibleStartHour(newStart);
+      }
     }
-
-    const start = new Date(appointment.scheduled_start_datetime);
-    const end = new Date(appointment.scheduled_finish_datetime);
-    const dayStart = startOfDay(selectedDate);
-
-    // Calculate position relative to day start
-    const startMinutes = (start.getTime() - dayStart.getTime()) / (1000 * 60);
-    const endMinutes = (end.getTime() - dayStart.getTime()) / (1000 * 60);
-    const duration = endMinutes - startMinutes;
-
-    const top = (startMinutes / 60) * HOUR_HEIGHT;
-    const height = (duration / 60) * HOUR_HEIGHT;
-    const left = 0;
-
-    return { top, height, left };
   };
 
-  const dateStr = format(selectedDate, "EEEE, MMMM d, yyyy");
+  const scrollRight = () => {
+    if (canScrollRight) {
+      const newEnd = Math.min(23, visibleEndHour + 3);
+      const hoursToShow = newEnd - visibleStartHour + 1;
+      if (hoursToShow > 12) {
+        setVisibleStartHour(newEnd - 11);
+        setVisibleEndHour(newEnd);
+      } else {
+        setVisibleEndHour(newEnd);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-background">
       {/* Gantt Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
+
         <div className="flex h-full">
-          {/* Technician Names Column */}
-          <div className="w-48 border-r border-border bg-card sticky left-0 z-10">
-            <div className="sticky top-0 bg-card border-b border-border px-3 py-2 font-semibold text-sm">
+          {/* Technician Names Column - Narrow */}
+          <div className="w-32 border-r border-border bg-card sticky left-0 z-10">
+            <div className="sticky top-0 bg-card border-b border-border px-2 py-2 font-semibold text-xs h-[40px] flex items-center">
               Technicians
             </div>
-            <div className="divide-y divide-border">
+            <div>
               {loading ? (
-                <div className="p-4 text-sm text-muted-foreground">Loading...</div>
+                <div className="p-2 text-xs text-muted-foreground">Loading...</div>
               ) : techniciansWithAppointments.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground">
-                  No technicians
+                <div className="p-2 text-xs text-muted-foreground">
+                  {technicianSearch ? "No technicians found" : "No technicians"}
                 </div>
               ) : (
-                techniciansWithAppointments.map((tech) => {
-                  const techAppointments = getAppointmentsForTechnician(tech.name);
-                  const rowHeight = 24 * HOUR_HEIGHT; // 24 hours
+                techniciansWithAppointments.map((tech, idx) => {
                   return (
                     <div
                       key={tech.name}
-                      className="px-3 py-2 border-r border-border"
-                      style={{ minHeight: `${rowHeight}px` }}
+                      className={`px-2 py-2 border-r border-border ${idx === 0 ? 'border-t-0' : 'border-t border-border'} border-b-2 border-border`}
+                      style={{ height: `${TECHNICIAN_ROW_HEIGHT}px` }}
                     >
-                      <div className="font-medium text-sm">{tech.full_name}</div>
-                      {techAppointments.length > 0 && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {techAppointments.length} appointment
-                          {techAppointments.length !== 1 ? "s" : ""}
-                        </div>
-                      )}
+                      <div className="font-medium text-xs leading-tight">{tech.full_name}</div>
                     </div>
                   );
                 })
@@ -144,89 +179,177 @@ export function GanttView({
 
           {/* Timeline Grid */}
           <div className="flex-1 relative">
-            {/* Time Column Headers */}
-            <div className="sticky top-0 bg-card border-b border-border z-20 flex">
-              {HOURS.map((hour) => (
-                <div
-                  key={hour}
-                  className="flex-1 border-r border-border px-2 py-2 text-center text-xs font-medium"
-                  style={{ minWidth: "80px" }}
+            {/* Time Column Headers with Scroll Arrows */}
+            <div className="sticky top-0 bg-card border-b border-border z-20 flex relative items-center h-[40px]">
+              {/* Left Arrow Button */}
+              {canScrollLeft && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-1 top-1/2 -translate-y-1/2 z-30 bg-background shadow-md hover:shadow-lg h-7 w-7"
+                  onClick={scrollLeft}
                 >
-                  {hour.toString().padStart(2, "0")}:00
-                </div>
-              ))}
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Time Labels */}
+              <div className={cn("flex flex-1", canScrollLeft && "ml-10", canScrollRight && "mr-10")}>
+                {visibleHours.map((hour) => (
+                  <div
+                    key={hour}
+                    className="flex-1 border-r border-border px-2 py-2 text-center text-xs font-medium"
+                    style={{ minWidth: "80px" }}
+                  >
+                    {hour.toString().padStart(2, "0")}:00
+                  </div>
+                ))}
+              </div>
+
+              {/* Right Arrow Button */}
+              {canScrollRight && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 z-30 bg-background shadow-md hover:shadow-lg h-7 w-7"
+                  onClick={scrollRight}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
             {/* Technician Rows with Appointments */}
             <div className="relative">
               {techniciansWithAppointments.map((tech) => {
                 const techAppointments = getAppointmentsForTechnician(tech.name);
-                const rowHeight = 24 * HOUR_HEIGHT;
 
                 return (
                   <div
                     key={tech.name}
-                    className="relative border-b border-border"
-                    style={{ minHeight: `${rowHeight}px` }}
+                    className="relative border-b-2 border-border"
+                    style={{ height: `${TECHNICIAN_ROW_HEIGHT}px` }}
                   >
-                    {/* Hour Grid Lines */}
+                    {/* Hour Grid Lines - Scaled to fit row height */}
                     <div className="absolute inset-0">
-                      {HOURS.map((hour) => (
-                        <div
-                          key={hour}
-                          className="absolute border-t border-border"
-                          style={{ top: `${hour * HOUR_HEIGHT}px`, width: "100%" }}
-                        />
-                      ))}
+                      {visibleHours.map((hour, idx) => {
+                        // Scale hour positions to fit within technician row height
+                        const scaledTop = (idx / visibleHoursCount) * TECHNICIAN_ROW_HEIGHT;
+                        return (
+                          <div
+                            key={hour}
+                            className="absolute border-t border-border/30"
+                            style={{
+                              top: `${scaledTop}px`,
+                              width: "100%"
+                            }}
+                          />
+                        );
+                      })}
                     </div>
 
                     {/* Appointments */}
                     {techAppointments.map((appointment) => {
-                      const pos = getAppointmentPosition(appointment);
+                      if (!appointment.scheduled_start_datetime || !appointment.scheduled_finish_datetime) {
+                        return null;
+                      }
+
+                      // Check if appointment is in visible range
+                      const appointmentStartHour = new Date(appointment.scheduled_start_datetime).getHours();
+                      const appointmentEndHour = new Date(appointment.scheduled_finish_datetime).getHours();
+
+                      // Skip if appointment is completely outside visible range
+                      if (
+                        (appointmentEndHour < visibleStartHour) ||
+                        (appointmentStartHour > visibleEndHour)
+                      ) {
+                        return null;
+                      }
+
                       const statusColors: Record<string, string> = {
-                        Open: "bg-blue-500",
-                        Scheduled: "bg-blue-500",
-                        Dispatched: "bg-orange-500",
-                        "In Progress": "bg-orange-500",
-                        Completed: "bg-green-500",
-                        Cancelled: "bg-gray-400",
+                        Open: "bg-primary/70",
+                        Scheduled: "bg-primary/70",
+                        Dispatched: "bg-purple-500/70",
+                        "In Progress": "bg-orange-500/70",
+                        Completed: "bg-green-500/70",
+                        Cancelled: "bg-gray-400/70",
                       };
 
                       const statusColor =
                         statusColors[appointment.status] || "bg-gray-500";
 
-                      const startTime = appointment.scheduled_start_datetime
-                        ? format(
-                            new Date(appointment.scheduled_start_datetime),
-                            "HH:mm"
-                          )
-                        : "";
-                      const endTime = appointment.scheduled_finish_datetime
-                        ? format(
-                            new Date(appointment.scheduled_finish_datetime),
-                            "HH:mm"
-                          )
-                        : "";
+                      const startTime = format(
+                        new Date(appointment.scheduled_start_datetime),
+                        "HH:mm"
+                      );
+                      const endTime = format(
+                        new Date(appointment.scheduled_finish_datetime),
+                        "HH:mm"
+                      );
+
+                      // Calculate position relative to visible hours
+                      const dayStart = startOfDay(selectedDate);
+                      const appointmentStart = new Date(appointment.scheduled_start_datetime);
+                      const appointmentEnd = new Date(appointment.scheduled_finish_datetime);
+
+                      const startMinutes = (appointmentStart.getTime() - dayStart.getTime()) / (1000 * 60);
+                      const endMinutes = (appointmentEnd.getTime() - dayStart.getTime()) / (1000 * 60);
+
+                      // Adjust for visible hours offset - calculate position relative to visible start
+                      const visibleStartMinutes = visibleStartHour * 60;
+
+                      // Calculate position relative to visible start (can be negative if before visible range)
+                      const adjustedStartMinutes = startMinutes - visibleStartMinutes;
+                      // Use actual end time relative to visible start - can extend beyond visible range
+                      const adjustedEndMinutes = endMinutes - visibleStartMinutes;
+
+                      // Vertical position - center the appointment bar in the technician row
+                      const top = (TECHNICIAN_ROW_HEIGHT - 40) / 2; // Center 40px bar in 60px row
+
+                      // Fixed small height - independent of time duration
+                      const height = 40; // Fixed height in pixels (2 units)
+
+                      // Calculate horizontal position and width using absolute pixel values
+                      // Each hour is 80px wide, so we calculate based on that
+                      const hourColumnWidth = 80;
+
+                      // Calculate left position in pixels (relative to visible start)
+                      // If start is before visible range, left will be negative (will be clipped naturally)
+                      const leftPx = (adjustedStartMinutes / 60) * hourColumnWidth;
+
+                      // Calculate width in pixels based on actual duration
+                      // This allows the bar to extend beyond visible range
+                      const durationHours = (adjustedEndMinutes - adjustedStartMinutes) / 60;
+                      const widthPx = Math.max(durationHours * hourColumnWidth, 80); // Min 80px
+
+                      const left = `${leftPx}px`;
+                      const width = `${widthPx}px`;
 
                       return (
                         <div
                           key={appointment.name}
-                          className={`absolute ${statusColor} text-white text-xs rounded px-2 py-1 cursor-pointer hover:opacity-90 transition-opacity border border-white/20 shadow-sm`}
+                          className={`absolute ${statusColor} text-white text-xs rounded px-2 py-0.5 cursor-pointer hover:opacity-90 hover:shadow-md transition-all border border-white/20 shadow-sm overflow-hidden`}
                           style={{
-                            top: `${pos.top}px`,
-                            height: `${Math.max(pos.height, 30)}px`,
-                            left: `${pos.left}px`,
-                            minWidth: "120px",
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            left: left,
+                            width: width,
+                            minWidth: "80px",
                           }}
-                          title={`${appointment.name} (${startTime} - ${endTime})`}
+                          title={`${appointment.service_type || appointment.service_order || appointment.name} (${startTime} - ${endTime})`}
                           onClick={() => onAppointmentClick?.(appointment)}
                         >
-                          <div className="font-medium truncate">
-                            {appointment.service_order || appointment.name}
+                          <div className="font-medium truncate text-[11px] leading-tight">
+                            {appointment.service_type || appointment.service_order || appointment.name}
                           </div>
-                          <div className="text-xs opacity-90">
+                          <div className="text-[10px] opacity-90 mt-0.5">
                             {startTime} - {endTime}
                           </div>
+                          {appointment.customer && (
+                            <div className="text-[10px] opacity-75 truncate mt-0.5">
+                              {appointment.customer}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
