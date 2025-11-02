@@ -37,18 +37,18 @@ frappe.ui.form.on("Service Order", {
 		frm.trigger('disable_creating_appointment')
 		frm.trigger('disable_items_edit')
 
-		if(frm.doc.status == 'Open' && !frm.doc.__islocal){
-			frm.add_custom_button(
-				__("Hold"),
-				() => frappe.msgprint('Coming Soon!'),
-				__("Status")
-			);
-			frm.add_custom_button(
-				__("Complete"),
-				() => frappe.msgprint('Coming Soon!'),
-				__("Status")
-			);
-		}
+		// if(frm.doc.status == 'Open' && !frm.doc.__islocal){
+		// 	frm.add_custom_button(
+		// 		__("Hold"),
+		// 		() => frappe.msgprint('Coming Soon!'),
+		// 		__("Status")
+		// 	);
+		// 	frm.add_custom_button(
+		// 		__("Complete"),
+		// 		() => frappe.msgprint('Coming Soon!'),
+		// 		__("Status")
+		// 	);
+		// }
 		if (frm.doc.docstatus === 1 && !frm.is_dirty()){
 			if(!['Scheduled', 'Dispatched', 'In Progress', 'Completed', 'Review'].includes(frm.doc.status)){
 				frm.add_custom_button(__("Service Appointment"), () => {
