@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Users, X, RefreshCw } from "lucide-react";
+import { Users, X } from "lucide-react";
 import { bulkAssignTechnicians, bulkRemoveTechnicians, fetchTechnicians } from "../../hooks/use-appointments";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { ScrollArea } from "../ui/scroll-area";
 import { useToast } from "../ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 interface MassActionsDropdownProps {
   selectedAppointmentIds: string[];
@@ -34,8 +35,10 @@ export function MassActionsDropdown({
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [selectedTechnicians, setSelectedTechnicians] = useState<Set<string>>(new Set());
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [technicians, setTechnicians] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadTechnicians = async () => {
@@ -43,7 +46,7 @@ export function MassActionsDropdown({
       setLoading(true);
       const data = await fetchTechnicians();
       setTechnicians(data);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load technicians",
@@ -56,10 +59,12 @@ export function MassActionsDropdown({
 
   const handleAssignClick = () => {
     loadTechnicians();
+    setAssignError(null);
     setAssignDialogOpen(true);
   };
 
   const handleAssign = async () => {
+    setAssignError(null);
     if (selectedTechnicians.size === 0) {
       toast({
         title: "Error",
@@ -81,12 +86,9 @@ export function MassActionsDropdown({
       setAssignDialogOpen(false);
       setSelectedTechnicians(new Set());
       onComplete();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to assign technicians",
-        variant: "destructive",
-      });
+    } catch (e) {
+      const message = (e as Error).message || "Failed to assign technicians";
+      setAssignError(message);
     }
   };
 
@@ -99,7 +101,7 @@ export function MassActionsDropdown({
       });
       setRemoveDialogOpen(false);
       onComplete();
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to remove technicians",
@@ -137,6 +139,12 @@ export function MassActionsDropdown({
               Select technicians to assign to {selectedAppointmentIds.length} appointment(s)
             </DialogDescription>
           </DialogHeader>
+          {assignError && (
+            <Alert variant="destructive">
+              <AlertTitle>Assignment Failed</AlertTitle>
+              <AlertDescription>{assignError}</AlertDescription>
+            </Alert>
+          )}
           <ScrollArea className="max-h-[300px]">
             <div className="space-y-2 p-2">
               {loading ? (
