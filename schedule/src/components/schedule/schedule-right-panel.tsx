@@ -28,6 +28,7 @@ interface ScheduleRightPanelProps {
   selectedAppointment: Appointment | null;
   onAppointmentSelect: (appointment: Appointment | null) => void;
   onRefresh: () => void;
+  statusFilter?: string;
 }
 
 export function ScheduleRightPanel({
@@ -38,7 +39,7 @@ export function ScheduleRightPanel({
   onViewTypeChange,
   selectedAppointment,
   onAppointmentSelect,
-
+  statusFilter,
 }: ScheduleRightPanelProps) {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [technicianSearch, setTechnicianSearch] = useState("");
@@ -229,6 +230,9 @@ export function ScheduleRightPanel({
             appointments={appointments}
             selectedDate={selectedDate}
             onAppointmentClick={onAppointmentSelect}
+            statusFilter={statusFilter}
+            technicianSearch={technicianSearch}
+            searchQuery={mapSearchQuery}
           />
         )}
         {viewType === "grid" && (
