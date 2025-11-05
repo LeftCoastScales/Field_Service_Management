@@ -44,6 +44,7 @@ export function ScheduleRightPanel({
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [technicianSearch, setTechnicianSearch] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(selectedDate);
+  const [mapSearchQuery, setMapSearchQuery] = useState("");
 
 
   const formatDateDisplay = (date: Date): string => {
@@ -151,67 +152,82 @@ export function ScheduleRightPanel({
               </>
             ) : (
               <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDateNavigation("prev")}
+            >
+              ←
+            </Button>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => handleDateNavigation("prev")}
+                  className={cn(
+                    "w-auto min-w-[140px] justify-start text-left font-normal px-3",
+                    !selectedDate && "text-muted-foreground"
+                  )}
                 >
-                  ←
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDate ? (
+                    <span>{formatDateDisplay(selectedDate)}</span>
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
-                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-auto min-w-[140px] justify-start text-left font-normal px-3",
-                        !selectedDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? (
-                        <span>{formatDateDisplay(selectedDate)}</span>
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          onDateChange(date);
-                          setDatePickerOpen(false);
-                        }
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDateNavigation("next")}
-                >
-                  →
-                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => {
+                    if (date) {
+                      onDateChange(date);
+                      setDatePickerOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDateNavigation("next")}
+            >
+              →
+            </Button>
               </>
             )}
           </div>
 
-          {/* Technician Search - Far Right (hidden in calendar view) */}
-          {viewType !== "calendar" && (
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search technicians..."
-                value={technicianSearch}
-                onChange={(e) => setTechnicianSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          )}
+          {/* Right side controls */}
+          <div className="flex items-center gap-3">
+            {/* Map Search - Only show in maps view */}
+            {viewType === "maps" && (
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search appointments or addresses..."
+                  value={mapSearchQuery}
+                  onChange={(e) => setMapSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            )}
+            {/* Technician Search - Hidden in calendar and maps view */}
+            {viewType !== "calendar" && viewType !== "maps" && (
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search technicians..."
+              value={technicianSearch}
+              onChange={(e) => setTechnicianSearch(e.target.value)}
+              className="pl-9"
+            />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
