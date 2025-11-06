@@ -2,13 +2,36 @@
 
 import { ScheduleLeftPanel } from "../../components/schedule/schedule-left-panel";
 import { ScheduleRightPanel } from "../../components/schedule/schedule-right-panel";
+import { TechniciansView } from "../../components/schedule/technicians-view";
+import { SettingsView } from "../../components/schedule/settings-view";
 import { SidebarMenu } from "../../components/layout/sidebar-menu";
 import { useScheduleStore } from "../../store";
 import { fetchAppointmentsWithFilter } from "../../hooks/use-appointments";
 import { Toaster } from "../../components/ui/sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function SchedulePage() {
+  const [direction, setDirection] = useState<'ltr' | 'rtl'>('ltr');
+
+  // Check document direction on mount and when it changes
+  useEffect(() => {
+    const updateDirection = () => {
+      const dir = document.documentElement.dir || 'ltr';
+      setDirection(dir as 'ltr' | 'rtl');
+    };
+
+    updateDirection();
+
+    // Watch for changes to document direction
+    const observer = new MutationObserver(updateDirection);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['dir'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const {
     appointments,
     loading,
@@ -18,6 +41,8 @@ export default function SchedulePage() {
     statusFilter,
     viewType,
     selectedAppointment,
+    leftPanelView,
+    settingsView,
     setAppointments,
     setLoading,
     setSelectedAppointments,
@@ -26,6 +51,8 @@ export default function SchedulePage() {
     setStatusFilter,
     setViewType,
     setSelectedAppointment,
+    setLeftPanelView,
+    setSettingsView,
     toggleAppointmentSelection,
     selectAllAppointments,
     clearSelectedAppointments,
@@ -75,41 +102,69 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-screen w-full bg-background overflow-hidden" dir={direction}>
       {/* Left Sidebar Menu */}
-      <SidebarMenu />
+      <SidebarMenu
+        onTechniciansClick={() => {
+          setLeftPanelView("technicians");
+          setSettingsView(false);
+        }}
+        onScheduleClick={() => {
+          setLeftPanelView("appointments");
+          setSettingsView(false);
+        }}
+        onSettingsClick={() => {
+          setSettingsView(true);
+        }}
+      />
 
-      {/* Left Panel - 20% */}
-      <div className="w-[20%] border-r border-border flex flex-col">
-        <ScheduleLeftPanel
-          appointments={appointments}
-          loading={loading}
-          selectedAppointments={selectedAppointments}
-          statusFilter={statusFilter}
-          appointmentDateRange={appointmentDateRange}
-          onStatusFilterChange={setStatusFilter}
-          onDateRangeChange={setAppointmentDateRange}
-          onAppointmentSelect={handleAppointmentSelect}
-          onSelectAll={handleSelectAll}
-          onAppointmentClick={setSelectedAppointment}
-          onMassActionComplete={handleMassActionComplete}
-        />
-      </div>
+      {settingsView ? (
+        /* Settings View - Full Width */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <SettingsView onBack={() => setSettingsView(false)} />
+        </div>
+      ) : (
+        <>
+          {/* Left Panel - 20% */}
+          <div className="w-[20%] border-r border-border flex flex-col">
+            {leftPanelView === "appointments" ? (
+              <ScheduleLeftPanel
+                appointments={appointments}
+                loading={loading}
+                selectedAppointments={selectedAppointments}
+                statusFilter={statusFilter}
+                appointmentDateRange={appointmentDateRange}
+                onStatusFilterChange={setStatusFilter}
+                onDateRangeChange={setAppointmentDateRange}
+                onAppointmentSelect={handleAppointmentSelect}
+                onSelectAll={handleSelectAll}
+                onAppointmentClick={setSelectedAppointment}
+                onMassActionComplete={handleMassActionComplete}
+              />
+            ) : (
+              <TechniciansView
+                appointments={appointments}
+                onAppointmentClick={setSelectedAppointment}
+              />
+            )}
+          </div>
 
-      {/* Right Panel - 75% */}
-      <div className="flex-1 flex flex-col">
-        <ScheduleRightPanel
-          appointments={appointments}
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          viewType={viewType}
-          onViewTypeChange={setViewType}
-          selectedAppointment={selectedAppointment}
-          onAppointmentSelect={setSelectedAppointment}
-          onRefresh={loadAppointments}
-          statusFilter={statusFilter}
-        />
-      </div>
+          {/* Right Panel - 75% */}
+          <div className="flex-1 flex flex-col">
+            <ScheduleRightPanel
+              appointments={appointments}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              viewType={viewType}
+              onViewTypeChange={setViewType}
+              selectedAppointment={selectedAppointment}
+              onAppointmentSelect={setSelectedAppointment}
+              onRefresh={loadAppointments}
+              statusFilter={statusFilter}
+            />
+          </div>
+        </>
+      )}
 
       <Toaster />
     </div>

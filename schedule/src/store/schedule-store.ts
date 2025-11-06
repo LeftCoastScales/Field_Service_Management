@@ -23,6 +23,8 @@ interface ScheduleState {
   appointmentDateRange: { startDate: Date | null; endDate: Date | null }; // For left panel appointments list
   statusFilter: string;
   viewType: "gantt" | "grid" | "maps" | "calendar";
+  leftPanelView: "appointments" | "technicians"; // New: track left panel view mode
+  settingsView: boolean; // Track if settings view is open
 
   // Actions
   setAppointments: (appointments: Appointment[]) => void;
@@ -36,6 +38,8 @@ interface ScheduleState {
   setAppointmentDateRange: (range: { startDate: Date | null; endDate: Date | null }) => void;
   setStatusFilter: (filter: string) => void;
   setViewType: (view: "gantt" | "grid" | "maps" | "calendar") => void;
+  setLeftPanelView: (view: "appointments" | "technicians") => void;
+  setSettingsView: (open: boolean) => void;
 
   // Helper getters
   isAppointmentSelected: (appointmentId: string) => boolean;
@@ -54,6 +58,8 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
   },
   statusFilter: "all",
   viewType: getInitialViewType(),
+  leftPanelView: "appointments", // Default to appointments view
+  settingsView: false, // Settings view closed by default
 
   // Actions
   setAppointments: (appointments) => set({ appointments }),
@@ -86,6 +92,8 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       localStorage.setItem("schedule-view-type", view);
     }
   },
+  setLeftPanelView: (view) => set({ leftPanelView: view }),
+  setSettingsView: (open) => set({ settingsView: open }),
 
   // Helper getters
   isAppointmentSelected: (appointmentId) => {

@@ -517,18 +517,18 @@ export function GanttView({
 
       {/* Create Appointment Dialog */}
       {createOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-auto">
-          <div className="bg-white rounded-md shadow-2xl w-full max-w-5xl p-5 border border-border relative">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-auto animate-in fade-in duration-500">
+          <div className="bg-background rounded-md shadow-2xl w-full max-w-5xl p-5 border border-border relative mt-20 animate-slide-down-slow">
             <div className="absolute inset-y-0 left-0 w-[6px] bg-gradient-to-b from-primary/90 to-primary/20 rounded-l" />
             <div className="absolute inset-x-0 top-0 h-[6px] bg-gradient-to-r from-primary/90 to-primary/20 rounded-t" />
             <div className="flex items-center justify-between mb-3">
-              <div className="text-base font-semibold">Create Appointment</div>
-              <button className="text-sm" onClick={() => setCreateOpen(false)}>Close</button>
+              <div className="text-base font-semibold text-foreground">Create Appointment</div>
+              <button className="text-sm text-foreground hover:text-muted-foreground" onClick={() => setCreateOpen(false)}>Close</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-1">
                 <label className="text-xs text-muted-foreground">Service Order</label>
-                <select className="w-full border rounded px-2 py-1 text-sm" value={createServiceOrder} onChange={(e) => setCreateServiceOrder(e.target.value)}>
+                <select className="w-full border border-input rounded px-2 py-1 text-sm bg-background text-foreground" value={createServiceOrder} onChange={(e) => setCreateServiceOrder(e.target.value)}>
                   <option value="">Select Service Order</option>
                   {optionsServiceOrders.map((so) => (
                     <option key={so.name} value={so.name}>{so.name}{so.customer ? ` - ${so.customer}` : ''}</option>
@@ -537,13 +537,13 @@ export function GanttView({
               </div>
               <div className="sm:col-span-1">
                 <label className="text-xs text-muted-foreground">Customer</label>
-                <div className="w-full border rounded px-2 py-1 text-sm bg-muted/50">
+                <div className="w-full border border-input rounded px-2 py-1 text-sm bg-muted/50 text-foreground">
                   {createCustomer || "(auto from Service Order)"}
                 </div>
               </div>
               <div className="sm:col-span-2">
                 <label className="text-xs text-muted-foreground">Service Type</label>
-                <select className="w-full border rounded px-2 py-1 text-sm" value={createServiceType} onChange={(e) => setCreateServiceType(e.target.value)}>
+                <select className="w-full border border-input rounded px-2 py-1 text-sm bg-background text-foreground" value={createServiceType} onChange={(e) => setCreateServiceType(e.target.value)}>
                   <option value="">Select Service Type</option>
                   {optionsServiceTypes.map((st) => (
                     <option key={st.name} value={st.name}>{st.name}</option>
@@ -552,17 +552,17 @@ export function GanttView({
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Scheduled Start</label>
-                <input type="datetime-local" className="w-full border rounded px-2 py-1 text-sm" value={createStart ? `${createStart.getFullYear()}-${String(createStart.getMonth()+1).padStart(2,'0')}-${String(createStart.getDate()).padStart(2,'0')}T${String(createStart.getHours()).padStart(2,'0')}:${String(createStart.getMinutes()).padStart(2,'0')}` : ""} onChange={(e) => setCreateStart(new Date(e.target.value))} />
+                <input type="datetime-local" className="w-full border border-input rounded px-2 py-1 text-sm bg-background text-foreground" value={createStart ? `${createStart.getFullYear()}-${String(createStart.getMonth()+1).padStart(2,'0')}-${String(createStart.getDate()).padStart(2,'0')}T${String(createStart.getHours()).padStart(2,'0')}:${String(createStart.getMinutes()).padStart(2,'0')}` : ""} onChange={(e) => setCreateStart(new Date(e.target.value))} />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground">Scheduled Finish</label>
-                <input type="datetime-local" className="w-full border rounded px-2 py-1 text-sm" value={createFinish ? `${createFinish.getFullYear()}-${String(createFinish.getMonth()+1).padStart(2,'0')}-${String(createFinish.getDate()).padStart(2,'0')}T${String(createFinish.getHours()).padStart(2,'0')}:${String(createFinish.getMinutes()).padStart(2,'0')}` : ""} onChange={(e) => setCreateFinish(new Date(e.target.value))} />
+                <input type="datetime-local" className="w-full border border-input rounded px-2 py-1 text-sm bg-background text-foreground" value={createFinish ? `${createFinish.getFullYear()}-${String(createFinish.getMonth()+1).padStart(2,'0')}-${String(createFinish.getDate()).padStart(2,'0')}T${String(createFinish.getHours()).padStart(2,'0')}:${String(createFinish.getMinutes()).padStart(2,'0')}` : ""} onChange={(e) => setCreateFinish(new Date(e.target.value))} />
               </div>
               <div className="sm:col-span-1">
                 <label className="text-xs text-muted-foreground">Technicians</label>
-                <div className="border rounded p-2 max-h-40 overflow-auto space-y-1">
+                <div className="border border-input rounded p-2 max-h-40 overflow-auto space-y-1 bg-background">
                   {technicians.map((t) => (
-                    <label key={t.name} className="flex items-center gap-2 text-sm">
+                    <label key={t.name} className="flex items-center gap-2 text-sm text-foreground">
                       <input type="checkbox" checked={createTechnicianIds.includes(t.name)} onChange={(e) => {
                         setCreateTechnicianIds((prev) => e.target.checked ? Array.from(new Set([...prev, t.name])) : prev.filter((id) => id !== t.name));
                       }} />
@@ -574,7 +574,7 @@ export function GanttView({
               <div className="sm:col-span-1">
                 <label className="text-xs text-muted-foreground">Items</label>
                 <div className="flex items-center gap-2 mb-2">
-                  <select className="flex-1 border rounded px-2 py-1 text-sm" onChange={(e) => {
+                  <select className="flex-1 border border-input rounded px-2 py-1 text-sm bg-background text-foreground" onChange={(e) => {
                     const code = e.target.value;
                     if (!code) return;
                     const exists = createItems.find((r) => r.item_code === code);
@@ -589,7 +589,7 @@ export function GanttView({
                     ))}
                   </select>
                 </div>
-                <div className="border rounded">
+                <div className="border border-input rounded">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -613,20 +613,20 @@ export function GanttView({
                             <TableRow key={row.item_code}>
                               <TableCell className="text-sm">{meta?.item_name || row.item_code}</TableCell>
                               <TableCell>
-                                <input type="number" className="w-20 border rounded px-1 py-0.5 text-sm" value={row.qty} onChange={(e) => {
+                                <input type="number" className="w-20 border border-input rounded px-1 py-0.5 text-sm bg-background text-foreground" value={row.qty} onChange={(e) => {
                                   const v = Number(e.target.value)||0;
                                   setCreateItems((prev) => prev.map((r) => r.item_code === row.item_code ? { ...r, qty: v } : r));
                                 }} />
                               </TableCell>
                               <TableCell>
-                                <input type="number" className="w-24 border rounded px-1 py-0.5 text-sm" value={row.rate} onChange={(e) => {
+                                <input type="number" className="w-24 border border-input rounded px-1 py-0.5 text-sm bg-background text-foreground" value={row.rate} onChange={(e) => {
                                   const v = Number(e.target.value)||0;
                                   setCreateItems((prev) => prev.map((r) => r.item_code === row.item_code ? { ...r, rate: v } : r));
                                 }} />
                               </TableCell>
                               <TableCell className="text-sm">{amount.toFixed(2)}</TableCell>
                               <TableCell>
-                                <button className="text-xs text-red-600" onClick={() => setCreateItems((prev) => prev.filter((r) => r.item_code !== row.item_code))}>Remove</button>
+                                <button className="text-xs text-destructive hover:text-destructive/80" onClick={() => setCreateItems((prev) => prev.filter((r) => r.item_code !== row.item_code))}>Remove</button>
                               </TableCell>
                             </TableRow>
                           );
@@ -638,8 +638,8 @@ export function GanttView({
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button className="px-3 py-1 text-sm border rounded" onClick={() => setCreateOpen(false)}>Cancel</button>
-              <button className="px-3 py-1 text-sm bg-primary text-white rounded" disabled={createLoading} onClick={async () => {
+              <button className="px-3 py-1 text-sm border border-input rounded bg-background text-foreground hover:bg-muted" onClick={() => setCreateOpen(false)}>Cancel</button>
+              <button className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90" disabled={createLoading} onClick={async () => {
                 try {
                   setCreateLoading(true);
                   if (!createStart || !createFinish) throw new Error('Start and finish are required');

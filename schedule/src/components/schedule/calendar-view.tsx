@@ -98,7 +98,7 @@ export function CalendarView({
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar Grid */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-border shadow-sm p-4">
+          <div className="bg-card rounded-lg border border-border shadow-sm p-4">
             {/* Weekday Headers */}
             <div className="grid grid-cols-7 gap-1 mb-2">
               {WEEKDAYS.map((day) => (
@@ -194,7 +194,7 @@ export function CalendarView({
 
         {/* Appointments List for Selected Date */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-border shadow-sm p-4 h-full flex flex-col">
+          <div className="bg-card rounded-lg border border-border shadow-sm p-4 h-full flex flex-col">
             <h3 className="text-lg font-semibold mb-4">
               {format(selectedDate, "EEEE, MMMM d")}
             </h3>

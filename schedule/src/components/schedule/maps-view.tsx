@@ -28,20 +28,16 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; dot: string; h
 
 // Get coordinates from appointment location data
 const getCoordinates = (appointment: Appointment): [number, number] | null => {
-	console.log("[Location Debug] getCoordinates called for appointment:", appointment.name, "location:", appointment.location);
 	// If location is an object with lat/lng, use it
 	if (appointment.location && typeof appointment.location === "object" && "lat" in appointment.location && "lng" in appointment.location) {
 		const coords: [number, number] = [appointment.location.lat, appointment.location.lng];
-		console.log("[Location Debug] Found coordinates:", coords);
 		// Validate coordinates are valid numbers
 		if (isNaN(coords[0]) || isNaN(coords[1]) || coords[0] === 0 || coords[1] === 0) {
-			console.log("[Location Debug] Invalid coordinates (0 or NaN):", coords);
 			return null;
 		}
 		return coords;
 	}
 	// Fallback to random coordinates if no location data
-	console.log("[Location Debug] No valid coordinates found for appointment:", appointment.name, "location type:", typeof appointment.location);
 	return null;
 };
 
@@ -57,6 +53,7 @@ const parseLocalDateTime = (value: string): Date => {
 
 // Fix Leaflet default icon issue
 if (typeof window !== "undefined") {
+
   delete (L.Icon.Default.prototype as any)._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -198,13 +195,6 @@ export function MapsView({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
-    console.log("[Location Debug] Filtered appointments count:", filteredAppointments.length);
-    console.log("[Location Debug] Filtered appointments:", filteredAppointments.map(apt => ({
-      name: apt.name,
-      service_order: apt.service_order,
-      location: apt.location,
-      service_area: apt.service_area
-    })));
 
     // Add markers for filtered appointments
     filteredAppointments.forEach((appointment) => {
@@ -212,11 +202,9 @@ export function MapsView({
 
       // Skip appointments without valid location data
       if (!coordinates) {
-        console.log("[Location Debug] Skipping appointment without coordinates:", appointment.name);
         return;
       }
 
-      console.log("[Location Debug] Adding marker for appointment:", appointment.name, "at coordinates:", coordinates);
 
       const colors = STATUS_COLORS[appointment.status] || STATUS_COLORS.Open;
 

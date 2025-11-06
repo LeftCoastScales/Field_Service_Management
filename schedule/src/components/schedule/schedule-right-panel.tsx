@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../ui/popover";
-import { CalendarIcon, BarChart3, Map, Calendar as CalendarIcon2, Search } from "lucide-react";
+import { CalendarIcon, BarChart3, Map, Calendar as CalendarIcon2, Search, Sun, Moon } from "lucide-react";
 import { format, isToday, addMonths, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import { cn } from "../../lib/utils";
 import { Appointment } from "../../pages/schedule/types";
@@ -47,6 +47,14 @@ export function ScheduleRightPanel({
   const [calendarMonth, setCalendarMonth] = useState(selectedDate);
   const [mapSearchQuery, setMapSearchQuery] = useState("");
   const [mapDurationFilter, setMapDurationFilter] = useState<"thisWeek" | "thisMonth" | "thisYear" | "">("thisWeek");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+      if (savedTheme) return savedTheme;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+  });
 
   // Auto-clear duration filter when a specific date is selected (not today)
   // Only clear if duration filter is currently set (not already empty)
@@ -55,6 +63,23 @@ export function ScheduleRightPanel({
       setMapDurationFilter("");
     }
   }, [selectedDate, viewType]);
+
+  // Apply theme to document
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
 
 
   const formatDateDisplay = (date: Date): string => {
@@ -94,42 +119,56 @@ export function ScheduleRightPanel({
     <div className="flex flex-col h-full">
       {/* Section 1: View Type Switcher (Top) */}
       <div className="border-b border-border p-4 bg-gradient-to-b from-primary/60 via-primary/45 to-primary/30">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewType === "gantt" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onViewTypeChange("gantt")}
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Gantt
+            </Button>
+            <Button
+              variant={viewType === "maps" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onViewTypeChange("maps")}
+              className="gap-2"
+            >
+              <Map className="h-4 w-4" />
+              Maps
+            </Button>
+            <Button
+              variant={viewType === "calendar" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onViewTypeChange("calendar")}
+              className="gap-2"
+            >
+              <CalendarIcon2 className="h-4 w-4" />
+              Calendar
+            </Button>
+            <Button
+              variant={viewType === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => onViewTypeChange("grid")}
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Grid
+            </Button>
+          </div>
           <Button
-            variant={viewType === "gantt" ? "default" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => onViewTypeChange("gantt")}
+            onClick={toggleTheme}
             className="gap-2"
           >
-            <BarChart3 className="h-4 w-4" />
-            Gantt
-          </Button>
-          <Button
-            variant={viewType === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onViewTypeChange("grid")}
-            className="gap-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            Grid
-          </Button>
-          <Button
-            variant={viewType === "maps" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onViewTypeChange("maps")}
-            className="gap-2"
-          >
-            <Map className="h-4 w-4" />
-            Maps
-          </Button>
-          <Button
-            variant={viewType === "calendar" ? "default" : "outline"}
-            size="sm"
-            onClick={() => onViewTypeChange("calendar")}
-            className="gap-2"
-          >
-            <CalendarIcon2 className="h-4 w-4" />
-            Calendar
+            {theme === "light" ? (
+              <Moon className="h-4 w-4" />
+            ) : (
+              <Sun className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

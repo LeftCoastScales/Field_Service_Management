@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Calendar, Users, Settings, BarChart3 } from "lucide-react";
+import { Home, Users, Settings } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useState } from "react";
 
@@ -8,18 +8,23 @@ interface MenuItem {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   active?: boolean;
+  onClick?: () => void;
 }
 
-const menuItems: MenuItem[] = [
-  { icon: Home, label: "Home", active: true },
-  { icon: Calendar, label: "Schedule" },
-  { icon: BarChart3, label: "Reports" },
-  { icon: Users, label: "Technicians" },
-  { icon: Settings, label: "Settings" },
-];
+interface SidebarMenuProps {
+  onTechniciansClick?: () => void;
+  onScheduleClick?: () => void;
+  onSettingsClick?: () => void;
+}
 
-export function SidebarMenu() {
+export function SidebarMenu({ onTechniciansClick, onScheduleClick, onSettingsClick }: SidebarMenuProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const menuItems: MenuItem[] = [
+    { icon: Home, label: "Home", active: true, onClick: onScheduleClick },
+    { icon: Users, label: "Technicians", onClick: onTechniciansClick },
+    { icon: Settings, label: "Settings", onClick: onSettingsClick },
+  ];
 
   return (
     <div className="h-full w-16 border-r border-border flex flex-col items-center py-4 gap-2 group/sidebar bg-gradient-to-b from-primary/60 via-primary/45 to-primary/30">
@@ -41,6 +46,7 @@ export function SidebarMenu() {
                   ? "bg-primary text-white shadow-md"
                   : "hover:bg-primary/20 text-muted-foreground hover:text-foreground hover:bg-primary/30"
               )}
+              onClick={item.onClick}
             >
               <Icon className="h-5 w-5" />
             </button>
