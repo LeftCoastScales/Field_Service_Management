@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useEffect, useRef } from "react";
-import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { format, parse, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { MapPin } from "lucide-react";
 import { Appointment } from "../../pages/schedule/types";
 import L from "leaflet";
@@ -14,7 +14,7 @@ interface MapsViewProps {
   statusFilter?: string;
   technicianSearch?: string;
   searchQuery?: string;
-  durationFilter?: "today" | "thisWeek" | "thisMonth";
+  durationFilter?: "thisWeek" | "thisMonth" | "thisYear";
 }
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; dot: string; hex: string; bgHex: string; borderHex: string }> = {
@@ -26,26 +26,23 @@ const STATUS_COLORS: Record<string, { bg: string; border: string; dot: string; h
   Cancelled: { bg: "bg-gray-100", border: "border-gray-300", dot: "bg-gray-400", hex: "#9ca3af", bgHex: "#f3f4f6", borderHex: "#d1d5db" },
 };
 
-// Generate random coordinates for appointments (for demo purposes)
-// In production, this would use actual address geocoding
-const generateRandomCoordinates = (appointmentId: string): [number, number] => {
-  // Use appointment ID as seed for consistent random location
-  const seed = appointmentId.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const random = (seed: number) => {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  };
-
-  // Random coordinates around a central point (e.g., a city center)
-  // Adjust these center coordinates to your service area
-  const centerLat = 40.7128; // Example: New York City
-  const centerLng = -74.0060;
-  const radius = 0.5; // ~50km radius
-
-  const lat = centerLat + (random(seed) - 0.5) * radius;
-  const lng = centerLng + (random(seed + 1000) - 0.5) * radius;
-
-  return [lat, lng];
+// Get coordinates from appointment location data
+const getCoordinates = (appointment: Appointment): [number, number] | null => {
+	console.log("[Location Debug] getCoordinates called for appointment:", appointment.name, "location:", appointment.location);
+	// If location is an object with lat/lng, use it
+	if (appointment.location && typeof appointment.location === "object" && "lat" in appointment.location && "lng" in appointment.location) {
+		const coords: [number, number] = [appointment.location.lat, appointment.location.lng];
+		console.log("[Location Debug] Found coordinates:", coords);
+		// Validate coordinates are valid numbers
+		if (isNaN(coords[0]) || isNaN(coords[1]) || coords[0] === 0 || coords[1] === 0) {
+			console.log("[Location Debug] Invalid coordinates (0 or NaN):", coords);
+			return null;
+		}
+		return coords;
+	}
+	// Fallback to random coordinates if no location data
+	console.log("[Location Debug] No valid coordinates found for appointment:", appointment.name, "location type:", typeof appointment.location);
+	return null;
 };
 
 // Parse local datetime helper function
@@ -81,15 +78,19 @@ export function MapsView({
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
 
-  // Calculate date range based on duration filter
+  // Calculate date range based on duration filter or selected date
   const dateRange = useMemo(() => {
+    // If no duration filter, use selected date (single day)
+    if (!durationFilter) {
+      return {
+        start: startOfDay(selectedDate),
+        end: endOfDay(selectedDate),
+      };
+    }
+
+    // Otherwise use duration filter
     const today = new Date();
     switch (durationFilter) {
-      case "today":
-        return {
-          start: startOfDay(today),
-          end: endOfDay(today),
-        };
       case "thisWeek":
         return {
           start: startOfWeek(today, { weekStartsOn: 1 }), // Monday
@@ -100,13 +101,18 @@ export function MapsView({
           start: startOfMonth(today),
           end: endOfMonth(today),
         };
+      case "thisYear":
+        return {
+          start: startOfYear(today),
+          end: endOfYear(today),
+        };
       default:
         return {
-          start: startOfWeek(today, { weekStartsOn: 1 }),
-          end: endOfWeek(today, { weekStartsOn: 1 }),
+          start: startOfDay(selectedDate),
+          end: endOfDay(selectedDate),
         };
     }
-  }, [durationFilter]);
+  }, [durationFilter, selectedDate]);
 
   // Filter appointments based on props
   const filteredAppointments = useMemo(() => {
@@ -141,12 +147,19 @@ export function MapsView({
       // Search query filter (appointments/addresses)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
+        // Handle location - can be string or object
+        const locationStr = typeof apt.location === "string"
+          ? apt.location
+          : (apt.location && typeof apt.location === "object" && apt.location.service_area)
+            ? apt.location.service_area
+            : "";
         const matches =
           apt.name?.toLowerCase().includes(query) ||
           apt.service_order?.toLowerCase().includes(query) ||
           apt.customer?.toLowerCase().includes(query) ||
           apt.service_type?.toLowerCase().includes(query) ||
-          apt.location?.toLowerCase().includes(query);
+          apt.service_area?.toLowerCase().includes(query) ||
+          locationStr.toLowerCase().includes(query);
         if (!matches) return false;
       }
 
@@ -185,9 +198,26 @@ export function MapsView({
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
+    console.log("[Location Debug] Filtered appointments count:", filteredAppointments.length);
+    console.log("[Location Debug] Filtered appointments:", filteredAppointments.map(apt => ({
+      name: apt.name,
+      service_order: apt.service_order,
+      location: apt.location,
+      service_area: apt.service_area
+    })));
+
     // Add markers for filtered appointments
     filteredAppointments.forEach((appointment) => {
-      const coordinates = generateRandomCoordinates(appointment.name);
+      const coordinates = getCoordinates(appointment);
+
+      // Skip appointments without valid location data
+      if (!coordinates) {
+        console.log("[Location Debug] Skipping appointment without coordinates:", appointment.name);
+        return;
+      }
+
+      console.log("[Location Debug] Adding marker for appointment:", appointment.name, "at coordinates:", coordinates);
+
       const colors = STATUS_COLORS[appointment.status] || STATUS_COLORS.Open;
 
       // Create custom icon with status color
@@ -209,7 +239,11 @@ export function MapsView({
         ? appointment.service_technicians.map(t => t.full_name || t.service_technician).join(", ")
         : "No technicians assigned";
 
-      const locationName = appointment.location || appointment.customer || "Location not specified";
+      const locationName = (typeof appointment.location === "object" && appointment.location?.service_area)
+        || (typeof appointment.location === "string" ? appointment.location : null)
+        || appointment.service_area
+        || appointment.customer
+        || "Location not specified";
 
       const popupContent = `
         <div style="min-width: 250px;">
@@ -243,10 +277,19 @@ export function MapsView({
       markersRef.current.push(marker);
     });
 
-    // Fit map to show all markers
+    // Fit map to show all markers (only if we have markers)
     if (markersRef.current.length > 0) {
       const group = new L.FeatureGroup(markersRef.current);
       map.fitBounds(group.getBounds().pad(0.1));
+    } else {
+      // If no markers, center on a default location (or first appointment's location if available)
+      const firstWithLocation = filteredAppointments.find(apt => getCoordinates(apt));
+      if (firstWithLocation) {
+        const coords = getCoordinates(firstWithLocation);
+        if (coords) {
+          map.setView(coords, 11);
+        }
+      }
     }
   }, [filteredAppointments, onAppointmentClick]);
 
