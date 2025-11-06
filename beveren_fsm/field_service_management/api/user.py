@@ -22,7 +22,6 @@ def get_current_user():
 	try:
 		user_doc = frappe.get_doc("User", user)
 
-		# Get company from user defaults
 		company = frappe.defaults.get_user_default("Company") or ""
 
 		return {
