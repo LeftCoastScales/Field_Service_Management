@@ -44,9 +44,10 @@ export function ScheduleRightPanel({
 }: ScheduleRightPanelProps) {
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [technicianSearch, setTechnicianSearch] = useState("");
+  const [gridSearch, setGridSearch] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(selectedDate);
   const [mapSearchQuery, setMapSearchQuery] = useState("");
-  const [mapDurationFilter, setMapDurationFilter] = useState<"thisWeek" | "thisMonth" | "thisYear" | "">("thisWeek");
+  const [mapDurationFilter, setMapDurationFilter] = useState<"date" | "today" | "thisWeek" | "thisMonth" | "thisYear">("thisWeek");
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window !== "undefined") {
       const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -55,14 +56,6 @@ export function ScheduleRightPanel({
     }
     return "light";
   });
-
-  // Auto-clear duration filter when a specific date is selected (not today)
-  // Only clear if duration filter is currently set (not already empty)
-  useEffect(() => {
-    if (viewType === "maps" && !isToday(selectedDate) && mapDurationFilter) {
-      setMapDurationFilter("");
-    }
-  }, [selectedDate, viewType]);
 
   // Apply theme to document
   useEffect(() => {
@@ -114,6 +107,8 @@ export function ScheduleRightPanel({
     }
     onDateChange(newDate);
   };
+
+  const shouldShowDateControls = viewType !== "maps" || mapDurationFilter === "date";
 
   return (
     <div className="flex flex-col h-full">
@@ -177,101 +172,112 @@ export function ScheduleRightPanel({
       <div className="border-b border-border p-4 bg-card">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {viewType === "calendar" ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
-                  className="h-8 w-8 p-0"
-                >
-                  ←
-                </Button>
-                <h2 className="text-xl font-semibold min-w-[140px]">
-                  {format(calendarMonth, "MMMM yyyy")}
-                </h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-                  className="h-8 w-8 p-0"
-                >
-                  →
-                </Button>
-              </>
-            ) : (
-              <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDateNavigation("prev")}
-            >
-              ←
-            </Button>
-            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-auto min-w-[140px] justify-start text-left font-normal px-3",
-                    !selectedDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {selectedDate ? (
-                    <span>{formatDateDisplay(selectedDate)}</span>
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    if (date) {
-                      onDateChange(date);
-                      setDatePickerOpen(false);
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDateNavigation("next")}
-            >
-              →
-            </Button>
-              </>
-            )}
-          </div>
-
-          {/* Right side controls */}
-          <div className="flex items-center gap-3">
-            {/* Map Duration Filter - Only show in maps view */}
             {viewType === "maps" && (
-              <Select value={mapDurationFilter || "date"} onValueChange={(value: "thisWeek" | "thisMonth" | "thisYear" | "date") => {
-                if (value === "date") {
-                  setMapDurationFilter("");
-                } else {
+              <Select
+                value={mapDurationFilter}
+                onValueChange={(
+                  value:
+                    | "date"
+                    | "today"
+                    | "thisWeek"
+                    | "thisMonth"
+                    | "thisYear"
+                ) => {
                   setMapDurationFilter(value);
-                }
-              }}>
+                }}
+              >
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Selected Date" />
+                  <SelectValue placeholder="Select Date" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="date">Selected Date</SelectItem>
+                  <SelectItem value="date">Select Date</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
                   <SelectItem value="thisWeek">This Week</SelectItem>
                   <SelectItem value="thisMonth">This Month</SelectItem>
                   <SelectItem value="thisYear">This Year</SelectItem>
                 </SelectContent>
               </Select>
             )}
+            {shouldShowDateControls &&
+              (viewType === "calendar" ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCalendarMonth(subMonths(calendarMonth, 1))
+                    }
+                    className="h-8 w-8 p-0"
+                  >
+                    ←
+                  </Button>
+                  <h2 className="text-xl font-semibold min-w-[140px]">
+                    {format(calendarMonth, "MMMM yyyy")}
+                  </h2>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCalendarMonth(addMonths(calendarMonth, 1))
+                    }
+                    className="h-8 w-8 p-0"
+                  >
+                    →
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDateNavigation("prev")}
+                  >
+                    ←
+                  </Button>
+                  <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-auto min-w-[140px] justify-start text-left font-normal px-3",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? (
+                          <span>{formatDateDisplay(selectedDate)}</span>
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            onDateChange(date);
+                            setDatePickerOpen(false);
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDateNavigation("next")}
+                  >
+                    →
+                  </Button>
+                </>
+              ))}
+          </div>
+
+          {/* Right side controls */}
+          <div className="flex items-center gap-3">
             {/* Map Search - Only show in maps view */}
             {viewType === "maps" && (
               <div className="relative w-64">
@@ -284,8 +290,21 @@ export function ScheduleRightPanel({
                 />
               </div>
             )}
-            {/* Technician Search - Hidden in calendar and maps view */}
-            {viewType !== "calendar" && viewType !== "maps" && (
+            {/* Grid appointment search (includes technicians) */}
+            {viewType === "grid" ? (
+              <div className="relative w-72">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search appointments, customers, or technicians..."
+                  value={gridSearch}
+                  onChange={(e) => setGridSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            ) : (
+              /* Technician search for gantt view */
+              viewType !== "calendar" &&
+              viewType !== "maps" && (
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -295,6 +314,7 @@ export function ScheduleRightPanel({
                   className="pl-9"
                 />
               </div>
+              )
             )}
           </div>
         </div>
@@ -318,7 +338,7 @@ export function ScheduleRightPanel({
             statusFilter={statusFilter}
             technicianSearch={technicianSearch}
             searchQuery={mapSearchQuery}
-            durationFilter={mapDurationFilter || undefined}
+            durationFilter={mapDurationFilter}
           />
         )}
         {viewType === "grid" && (
@@ -326,6 +346,7 @@ export function ScheduleRightPanel({
             appointments={appointments}
             selectedDate={selectedDate}
             onAppointmentClick={onAppointmentSelect}
+            searchQuery={gridSearch}
           />
         )}
         {viewType === "calendar" && (
