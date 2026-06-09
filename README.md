@@ -194,7 +194,7 @@ cd apps/beveren_fsm
 pre-commit install
 ```
 
-## Support
+## Support ##
 
 For questions or support, please reach out:
 
