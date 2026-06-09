@@ -25,6 +25,7 @@ fixtures = [
 	# Export your custom "Service Type" doctype
 	"Service Type",
 	"Product Location",
+	"LCS Service Agreement",
 	# Export the "Service" Workspace only
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 	# Export specific Custom Fields related to Service Order links
@@ -225,7 +226,10 @@ scheduler_events = {
 	# "daily": [
 	# 	"beveren_fsm.tasks.daily"
 	# ],
-	"daily": ["beveren_fsm.field_service_management.doctype.service_request.service_request.update_status"]
+	"daily": [
+		"beveren_fsm.field_service_management.doctype.service_request.service_request.update_status",
+		"beveren_fsm.field_service_management.doctype.lcs_service_agreement.lcs_service_agreement.auto_create_service_orders",
+		]
 	# 	"hourly": [
 	# 		"beveren_fsm.tasks.hourly"
 	# 	],
