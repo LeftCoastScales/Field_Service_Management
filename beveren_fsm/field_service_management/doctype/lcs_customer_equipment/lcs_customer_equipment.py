@@ -7,6 +7,7 @@ class LCSCustomerEquipment(Document):
 
     def validate(self):
         self._compute_calibration_due_date()
+        self._validate_model_belongs_to_manufacturer()
         self._validate_serial_unique_per_manufacturer()
         self._validate_paired_component()
 
@@ -27,6 +28,25 @@ class LCSCustomerEquipment(Document):
             self.calibration_due_date = None
 
     # ------------------------------------------------------------------
+    # Model must belong to selected manufacturer
+    # ------------------------------------------------------------------
+
+    def _validate_model_belongs_to_manufacturer(self):
+        if not self.scale_model or not self.manufacturer:
+            return
+
+        model_manufacturer = frappe.db.get_value(
+            "LCS Scale Model", self.scale_model, "manufacturer"
+        )
+        if model_manufacturer != self.manufacturer:
+            frappe.throw(
+                frappe._(
+                    "Model {0} belongs to {1}, not {2}. "
+                    "Please select a model from the correct manufacturer."
+                ).format(self.scale_model, model_manufacturer, self.manufacturer)
+            )
+
+    # ------------------------------------------------------------------
     # Serial number uniqueness per manufacturer
     # ------------------------------------------------------------------
 
@@ -43,7 +63,6 @@ class LCSCustomerEquipment(Document):
             },
             "name",
         )
-
         if duplicate:
             frappe.throw(
                 frappe._(
@@ -60,21 +79,18 @@ class LCSCustomerEquipment(Document):
         if not self.paired_component:
             return
 
-        # Can't pair with yourself
         if self.paired_component == self.name:
             frappe.throw(frappe._("A piece of equipment cannot be paired with itself."))
 
-        # Paired component must be the complementary type
+        if self.equipment_type == "Unit":
+            frappe.throw(
+                frappe._("Equipment type 'Unit' cannot have a paired component.")
+            )
+
         paired_type = frappe.db.get_value(
             "LCS Customer Equipment", self.paired_component, "equipment_type"
         )
         valid_pairs = {"Display": "Base", "Base": "Display"}
-
-        if self.equipment_type not in valid_pairs:
-            # Units should not have a paired component
-            frappe.throw(
-                frappe._("Equipment type 'Unit' cannot have a paired component.")
-            )
 
         if paired_type != valid_pairs.get(self.equipment_type):
             frappe.throw(

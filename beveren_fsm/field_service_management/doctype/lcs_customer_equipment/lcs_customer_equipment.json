@@ -6,7 +6,7 @@
   "autoname": "naming_series:",
   "is_submittable": 0,
   "track_changes": 1,
-  "description": "Scale registry per customer. Equipment identification is free-text; calibration certificates live in SmarterCerts.",
+  "description": "Scale registry per customer.",
   "fields": [
     {
       "fieldname": "customer",
@@ -37,22 +37,38 @@
       "in_standard_filter": 1
     },
     {
-      "fieldname": "equipment_details_section",
-      "label": "Equipment Details",
+      "fieldname": "equipment_section",
+      "label": "Equipment",
       "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "equipment_type",
+      "label": "Equipment Type",
+      "fieldtype": "Select",
+      "options": "Unit\nDisplay\nBase",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "description": "Unit = single combined scale. Display or Base = one half of a two-component system."
     },
     {
       "fieldname": "manufacturer",
       "label": "Manufacturer",
-      "fieldtype": "Data",
+      "fieldtype": "Link",
+      "options": "Manufacturer",
+      "reqd": 1,
       "in_list_view": 1,
-      "in_standard_filter": 1
+      "in_standard_filter": 1,
+      "search_index": 1
     },
     {
-      "fieldname": "model_number",
-      "label": "Model Number",
-      "fieldtype": "Data",
-      "in_list_view": 1
+      "fieldname": "scale_model",
+      "label": "Model",
+      "fieldtype": "Link",
+      "options": "LCS Scale Model",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Filtered to models belonging to the selected manufacturer"
     },
     {
       "fieldname": "serial_number",
@@ -68,8 +84,45 @@
     {
       "fieldname": "capacity",
       "label": "Capacity",
-      "fieldtype": "Data",
-      "description": "e.g. 500 lb x 0.1 lb"
+      "fieldtype": "Float",
+      "description": "Auto-filled from model; override if needed"
+    },
+    {
+      "fieldname": "capacity_unit",
+      "label": "Capacity Unit",
+      "fieldtype": "Select",
+      "options": "\nlb\nkg\ng\noz\nt"
+    },
+    {
+      "fieldname": "resolution",
+      "label": "Resolution",
+      "fieldtype": "Float",
+      "description": "Auto-filled from model; override if needed"
+    },
+    {
+      "fieldname": "resolution_unit",
+      "label": "Resolution Unit",
+      "fieldtype": "Select",
+      "options": "\nlb\nkg\ng\noz"
+    },
+    {
+      "fieldname": "paired_component_section",
+      "label": "Paired Component",
+      "fieldtype": "Section Break",
+      "depends_on": "eval:in_list(['Display','Base'], doc.equipment_type)"
+    },
+    {
+      "fieldname": "paired_component",
+      "label": "Paired Component",
+      "fieldtype": "Link",
+      "options": "LCS Customer Equipment",
+      "depends_on": "eval:in_list(['Display','Base'], doc.equipment_type)",
+      "description": "Link the paired Display or Base for this component"
+    },
+    {
+      "fieldname": "location_section",
+      "label": "Location",
+      "fieldtype": "Section Break"
     },
     {
       "fieldname": "location_description",
