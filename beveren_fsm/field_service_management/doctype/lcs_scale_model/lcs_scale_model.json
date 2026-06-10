@@ -7,6 +7,8 @@
   "istable": 0,
   "track_changes": 1,
   "description": "Scale model registry. Each record belongs to one manufacturer.",
+  "title_field": "model_number",
+  "show_title_field_in_link": 1,
   "fields": [
     {
       "fieldname": "manufacturer",
