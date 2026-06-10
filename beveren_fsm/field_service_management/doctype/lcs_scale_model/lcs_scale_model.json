@@ -1,0 +1,51 @@
+{
+  "name": "LCS Scale Model",
+  "doctype": "DocType",
+  "module": "Field Service Management",
+  "istable": 1,
+  "editable_grid": 1,
+  "track_changes": 0,
+  "fields": [
+    {
+      "fieldname": "model_number",
+      "label": "Model Number",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "equipment_type",
+      "label": "Equipment Type",
+      "fieldtype": "Select",
+      "options": "Unit\nDisplay\nBase",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "capacity",
+      "label": "Capacity",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "capacity_unit",
+      "label": "Capacity Unit",
+      "fieldtype": "Select",
+      "options": "\nlb\nkg\ng\noz\nt",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "resolution",
+      "label": "Resolution",
+      "fieldtype": "Float",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "resolution_unit",
+      "label": "Resolution Unit",
+      "fieldtype": "Select",
+      "options": "\nlb\nkg\ng\noz"
+    }
+  ],
+  "permissions": []
+}

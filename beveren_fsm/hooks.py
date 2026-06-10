@@ -27,6 +27,7 @@ fixtures = [
 	"Product Location",
 	"LCS Service Agreement",
 	"LCS Customer Equipment",
+	"LCS Scale Model",
 	# Export the "Service" Workspace only
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 	# Export specific Custom Fields related to Service Order links
