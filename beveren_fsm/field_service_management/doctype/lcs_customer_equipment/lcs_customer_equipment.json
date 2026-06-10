@@ -6,7 +6,7 @@
   "autoname": "naming_series:",
   "is_submittable": 0,
   "track_changes": 1,
-  "description": "Scale registry per customer. ERPNext-side record linking to SmarterCerts for calibration certificates.",
+  "description": "Scale registry per customer. Equipment identification is free-text; calibration certificates live in SmarterCerts.",
   "fields": [
     {
       "fieldname": "customer",
@@ -23,7 +23,8 @@
       "label": "Service Address",
       "fieldtype": "Link",
       "options": "Address",
-      "in_list_view": 1
+      "in_list_view": 1,
+      "description": "Filtered to addresses linked to the selected customer"
     },
     {
       "fieldname": "status",
@@ -41,18 +42,22 @@
       "fieldtype": "Section Break"
     },
     {
-      "fieldname": "item_code",
-      "label": "Item (Scale Model)",
-      "fieldtype": "Link",
-      "options": "Item",
+      "fieldname": "manufacturer",
+      "label": "Manufacturer",
+      "fieldtype": "Data",
       "in_list_view": 1,
-      "search_index": 1
+      "in_standard_filter": 1
     },
     {
-      "fieldname": "serial_no",
-      "label": "Serial No",
-      "fieldtype": "Link",
-      "options": "Serial No",
+      "fieldname": "model_number",
+      "label": "Model Number",
+      "fieldtype": "Data",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "serial_number",
+      "label": "Serial Number",
+      "fieldtype": "Data",
       "in_list_view": 1,
       "search_index": 1
     },
@@ -61,26 +66,10 @@
       "fieldtype": "Column Break"
     },
     {
-      "fieldname": "manufacturer",
-      "label": "Manufacturer",
-      "fieldtype": "Data",
-      "in_standard_filter": 1
-    },
-    {
-      "fieldname": "model_number",
-      "label": "Model Number",
-      "fieldtype": "Data"
-    },
-    {
       "fieldname": "capacity",
       "label": "Capacity",
       "fieldtype": "Data",
       "description": "e.g. 500 lb x 0.1 lb"
-    },
-    {
-      "fieldname": "location_section",
-      "label": "Location",
-      "fieldtype": "Section Break"
     },
     {
       "fieldname": "location_description",
