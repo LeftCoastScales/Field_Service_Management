@@ -9,6 +9,13 @@
   "description": "Scale registry per customer.",
   "fields": [
     {
+    "fieldname": "naming_series",
+    "label": "Series",
+    "fieldtype": "Select",
+    "options": "CEQ-.YYYY.-",
+    "reqd": 1
+    },
+    {
       "fieldname": "customer",
       "label": "Customer",
       "fieldtype": "Link",
