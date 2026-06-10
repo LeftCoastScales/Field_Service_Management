@@ -7,8 +7,6 @@
   "istable": 0,
   "track_changes": 1,
   "description": "Scale model registry. Each record belongs to one manufacturer.",
-  "title_field": "model_number",
-  "show_title_field_in_link": 1,
   "fields": [
     {
       "fieldname": "manufacturer",
@@ -68,7 +66,8 @@
       "fieldname": "resolution_unit",
       "label": "Resolution Unit",
       "fieldtype": "Select",
-      "options": "\nlb\nkg\ng\noz"
+      "options": "\nlb\nkg\ng\noz",
+      "read_only": 1
     }
   ],
   "permissions": [
