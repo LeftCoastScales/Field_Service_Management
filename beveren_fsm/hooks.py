@@ -59,9 +59,7 @@ fixtures = [
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/beveren_fsm/css/beveren_fsm.css"
-# app_include_js = "/assets/beveren_fsm/js/beveren_fsm.js"
-
+app_include_css = "/assets/beveren_fsm/css/lcs_theme.css"# app_include_js = "/assets/beveren_fsm/js/beveren_fsm.js"
 # include js, css files in header of web template
 # web_include_css = "/assets/beveren_fsm/css/beveren_fsm.css"
 # web_include_js = "/assets/beveren_fsm/js/beveren_fsm.js"
