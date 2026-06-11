@@ -375,3 +375,21 @@ input[type="checkbox"]:checked {
     print-color-adjust: exact;
   }
 }
+/* High-specificity overrides to beat frappe_desk_theme */
+html body header.navbar,
+html body .navbar {
+  background-color: #002050 !important;
+  border-bottom: 3px solid #900010 !important;
+}
+
+html body header.navbar .nav-link,
+html body .navbar .nav-link,
+html body .navbar .navbar-brand,
+html body .navbar .dropdown-toggle {
+  color: #ffffff !important;
+}
+
+html body .navbar .nav-link:hover {
+  color: #D6E4F7 !important;
+  background-color: rgba(255,255,255,0.1) !important;
+}
