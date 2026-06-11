@@ -10,106 +10,143 @@
  *   Navy Alt   #1A3A7A
  *   Blue       #2E74B5
  *   Light Blue #D6E4F7
+ *
+ * NOTE: Uses html { } selector (beats :root specificity) and direct
+ * element overrides to win cascade against desk.bundle.css.
  */
 
-/* ───────────────────────────────────────────────
-   1. GLOBAL CSS VARIABLE OVERRIDES
-   These apply regardless of light/dark theme.
-   They map LCS colors onto Frappe's own CSS vars.
-─────────────────────────────────────────────── */
-:root {
-  --primary-color:       #002050;
-  --primary:             #002050;
-  --btn-primary-bg:      #002050;
-  --btn-primary-border:  #1A3A7A;
+/* ═══════════════════════════════════════════════════════
+   1. ROOT VARIABLE OVERRIDES
+   Use html selector — higher specificity than :root,
+   beats desk.bundle.css which uses :root.
+═══════════════════════════════════════════════════════ */
+html {
+  /* Core primary — Frappe wires --brand-color to this */
+  --primary:              #002050;
+  --primary-color:        #002050;
+  --brand-color:          #002050;
 
-  /* Frappe v16 token names */
-  --blue-500:            #002050;
-  --blue-600:            #001840;
-  --blue-400:            #1A3A7A;
-  --blue-300:            #2E74B5;
-  --blue-100:            #D6E4F7;
-  --blue-50:             #EBF2FC;
+  /* Button colors */
+  --btn-primary-bg:       #002050;
+  --btn-primary-border:   #1A3A7A;
 
-  --red-500:             #900010;
-  --red-400:             #B00015;
-  --red-300:             #CC001A;
+  /* Blue scale — overrides Frappe's bootstrap blue */
+  --blue:                 #2E74B5;
+  --blue-500:             #002050;
+  --blue-600:             #001840;
+  --blue-400:             #1A3A7A;
+  --blue-300:             #2E74B5;
+  --blue-100:             #D6E4F7;
+  --blue-50:              #EBF2FC;
 
-  --yellow-500:          #C8A020;
-  --yellow-400:          #D4AF37;
+  /* Red scale — Crimson */
+  --red:                  #900010;
+  --red-500:              #900010;
+  --red-400:              #B00015;
+  --danger:               #900010;
 
-  --sidebar-select-color:       #D6E4F7;
-  --sidebar-select-color-hover: #002050;
+  /* Yellow scale — Gold */
+  --yellow:               #C8A020;
+  --yellow-500:           #C8A020;
+  --warning:              #C8A020;
+
+  /* Sidebar */
+  --sidebar-hover-color:  #D6E4F7;
+  --sidebar-active-color: #D6E4F7;
+  --sidebar-border-color: #D6E4F7;
+  --sidebar-select-color: #D6E4F7;
+
+  /* Link colors */
+  --link-color:           #2E74B5;
 }
 
-/* ───────────────────────────────────────────────
+/* Also override the data-theme=light block that Frappe generates */
+html[data-theme="light"] {
+  --primary:              #002050;
+  --primary-color:        #002050;
+  --brand-color:          #002050;
+  --btn-primary-bg:       #002050;
+  --blue:                 #2E74B5;
+  --danger:               #900010;
+  --sidebar-hover-color:  #D6E4F7;
+  --sidebar-active-color: #D6E4F7;
+}
+
+html[data-theme="dark"] {
+  --primary:              #2E74B5;
+  --primary-color:        #2E74B5;
+  --brand-color:          #2E74B5;
+  --btn-primary-bg:       #1A3A7A;
+  --sidebar-hover-color:  #1A3A7A;
+  --sidebar-active-color: #1A3A7A;
+}
+
+
+/* ═══════════════════════════════════════════════════════
    2. NAVBAR
-─────────────────────────────────────────────── */
-.navbar,
-header.navbar {
+   Frappe v16 navbar: header.navbar or .navbar
+═══════════════════════════════════════════════════════ */
+header.navbar,
+.navbar {
   background-color: #002050 !important;
   border-bottom: 3px solid #900010 !important;
 }
 
-/* Navbar text, icons */
+/* All navbar text/icons white */
+header.navbar .nav-link,
+header.navbar .navbar-nav > li > a,
+header.navbar .dropdown-toggle,
 .navbar .nav-link,
-.navbar .navbar-brand,
-.navbar .dropdown-toggle,
 .navbar .navbar-nav > li > a,
-header.navbar .navbar-nav > li > a {
+.navbar .navbar-brand,
+.navbar .dropdown-toggle {
   color: #ffffff !important;
 }
 
-.navbar .nav-link:hover,
-.navbar .navbar-nav > li > a:hover {
+header.navbar .nav-link:hover,
+.navbar .nav-link:hover {
   color: #D6E4F7 !important;
+  background-color: rgba(255,255,255,0.1) !important;
 }
 
-/* Navbar search bar */
-.navbar .form-control.search-bar,
-.navbar-search .search-bar {
+/* Navbar search input */
+.navbar .search-bar,
+.navbar .form-control,
+.awesomplete input {
   background-color: #1A3A7A !important;
   border-color: #2E74B5 !important;
   color: #ffffff !important;
 }
 
-.navbar .form-control.search-bar::placeholder {
+.navbar .search-bar::placeholder,
+.awesomplete input::placeholder {
   color: #90AED4 !important;
 }
 
-/* App logo area */
-.navbar-brand img,
-.navbar .logo img {
-  filter: brightness(0) invert(1);
+/* Navbar dropdown menus */
+.navbar .dropdown-menu {
+  background-color: #002050 !important;
+  border-color: #1A3A7A !important;
 }
 
-/* ───────────────────────────────────────────────
-   3. SIDEBAR / MODULE NAVIGATION
-─────────────────────────────────────────────── */
-.layout-side-section,
-.desk-sidebar,
-.list-sidebar {
-  background-color: #f4f7fc !important;
-  border-right: 1px solid #D6E4F7 !important;
+.navbar .dropdown-menu .dropdown-item {
+  color: #ffffff !important;
 }
 
-.sidebar-item.selected,
-.sidebar-item:hover,
-.list-sidebar .list-sidebar-button:hover {
-  background-color: #D6E4F7 !important;
-  color: #002050 !important;
-  border-left: 3px solid #002050;
+.navbar .dropdown-menu .dropdown-item:hover {
+  background-color: #1A3A7A !important;
 }
 
-.sidebar-item.selected a,
-.list-sidebar .list-sidebar-button.active {
-  color: #002050 !important;
-  font-weight: 600;
+/* Hamburger / toggler icon */
+.navbar-toggler-icon {
+  filter: invert(1);
 }
 
-/* ───────────────────────────────────────────────
-   4. PRIMARY BUTTONS
-─────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════
+   3. PRIMARY BUTTONS
+   Frappe v16 default primary is near-black #171717
+═══════════════════════════════════════════════════════ */
 .btn-primary {
   background-color: #002050 !important;
   border-color:     #002050 !important;
@@ -125,6 +162,7 @@ header.navbar .navbar-nav > li > a {
 
 .btn-primary:active {
   background-color: #001840 !important;
+  border-color:     #001840 !important;
 }
 
 /* Secondary / default buttons */
@@ -140,10 +178,11 @@ header.navbar .navbar-nav > li > a {
   color: #002050 !important;
 }
 
-/* Danger buttons (use Crimson) */
+/* Danger buttons */
 .btn-danger {
   background-color: #900010 !important;
   border-color:     #900010 !important;
+  color: #ffffff !important;
 }
 
 .btn-danger:hover {
@@ -151,20 +190,53 @@ header.navbar .navbar-nav > li > a {
   border-color:     #B00015 !important;
 }
 
-/* ───────────────────────────────────────────────
-   5. FORM / DOCTYPE HEADER
-─────────────────────────────────────────────── */
-.form-header-title,
-.page-title .title-text {
+
+/* ═══════════════════════════════════════════════════════
+   4. SIDEBAR
+   Real v16 vars from DevTools:
+   --sidebar-hover-color, --sidebar-active-color,
+   --sidebar-border-color
+═══════════════════════════════════════════════════════ */
+.layout-side-section,
+.desk-sidebar,
+.list-sidebar {
+  border-right: 1px solid #D6E4F7 !important;
+}
+
+/* Sidebar item hover */
+.sidebar-item:hover,
+.list-sidebar .list-sidebar-button:hover,
+.desk-sidebar .sidebar-item:hover {
+  background-color: #D6E4F7 !important;
   color: #002050 !important;
 }
 
-/* Workflow / status indicator bar */
-.form-workflow-title {
-  color: #2E74B5 !important;
+/* Sidebar item active/selected */
+.sidebar-item.selected,
+.sidebar-item.active,
+.list-sidebar .list-sidebar-button.active,
+.desk-sidebar .sidebar-item.active {
+  background-color: #D6E4F7 !important;
+  color: #002050 !important;
+  border-left: 3px solid #002050 !important;
+  font-weight: 600;
 }
 
-/* Section headings inside forms */
+/* Sidebar card buttons (from DevTools image 3) */
+.sidebar-card-button {
+  outline-color: #002050 !important;
+  color: #002050 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   5. FORM HEADERS & SECTION HEADINGS
+═══════════════════════════════════════════════════════ */
+.page-title .title-text,
+.form-header-title {
+  color: #002050 !important;
+}
+
 .section-head,
 .form-section .section-head {
   color: #004080 !important;
@@ -172,72 +244,32 @@ header.navbar .navbar-nav > li > a {
   font-weight: 600;
 }
 
-/* ───────────────────────────────────────────────
-   6. INDICATORS / BADGES / STATUS PILLS
-─────────────────────────────────────────────── */
-.indicator-pill.blue,
-.indicator.blue {
-  background-color: #D6E4F7 !important;
-  color: #002050 !important;
-}
-
-.indicator-pill.green,
-.indicator.green {
-  /* keep green readable — just tweak border */
-  border: 1px solid #28a745;
-}
-
-.indicator-pill.red,
-.indicator.red {
-  background-color: #f8d7da !important;
-  color: #900010 !important;
-}
-
-.indicator-pill.orange,
-.indicator.orange {
-  background-color: #fff3cd !important;
-  color: #C8A020 !important;
-}
-
-/* ───────────────────────────────────────────────
-   7. LIST VIEW TOOLBAR & FILTER BAR
-─────────────────────────────────────────────── */
-.page-head,
-.list-page-head {
+/* Page head bar bottom border */
+.page-head {
   border-bottom: 2px solid #002050 !important;
 }
 
-/* Column header sort active */
-.list-row-head .list-header-subject:hover,
-th.sortable:hover {
-  color: #002050 !important;
-}
 
-/* Checkbox accent */
-input[type="checkbox"]:checked {
-  accent-color: #002050;
-}
-
-/* ───────────────────────────────────────────────
-   8. TABS (form & list)
-─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   6. FORM TABS
+═══════════════════════════════════════════════════════ */
 .form-tabs .nav-link.active,
-.tab-content .nav-item.active > a {
+.form-tabs-list .nav-link.active {
   color: #002050 !important;
-  border-bottom-color: #002050 !important;
+  border-bottom: 2px solid #002050 !important;
   font-weight: 600;
 }
 
-.form-tabs .nav-link:hover {
+.form-tabs .nav-link:hover,
+.form-tabs-list .nav-link:hover {
   color: #1A3A7A !important;
 }
 
-/* ───────────────────────────────────────────────
-   9. LINKS / ANCHORS
-─────────────────────────────────────────────── */
-a,
-.form-link-title,
-.doctype-or-field a {
+
+/* ═══════════════════════════════════════════════════════
+   7. LINKS
+═══════════════════════════════════════════════════════ */
+a {
   color: #2E74B5 !important;
 }
 
@@ -245,39 +277,63 @@ a:hover {
   color: #002050 !important;
 }
 
-/* ───────────────────────────────────────────────
-   10. MODAL DIALOGS
-─────────────────────────────────────────────── */
+/* Exception: navbar links already handled above */
+header.navbar a,
+.navbar a {
+  color: #ffffff !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   8. MODAL HEADERS
+═══════════════════════════════════════════════════════ */
 .modal-header {
   background-color: #002050 !important;
-  color: #ffffff !important;
   border-bottom: 2px solid #900010 !important;
 }
 
 .modal-header .modal-title,
-.modal-header .close {
+.modal-header h5,
+.modal-header .close,
+.modal-header button {
   color: #ffffff !important;
 }
 
-/* ───────────────────────────────────────────────
-   11. DASHBOARD / CARDS
-─────────────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════
+   9. INDICATORS / BADGES / STATUS PILLS
+═══════════════════════════════════════════════════════ */
+.indicator-pill.blue,
+.indicator.blue {
+  background-color: #D6E4F7 !important;
+  color: #002050 !important;
+}
+
+.indicator-pill.red,
+.indicator.red {
+  background-color: #fde8ea !important;
+  color: #900010 !important;
+}
+
+.indicator-pill.orange,
+.indicator.orange {
+  background-color: #fff3cd !important;
+  color: #8a6d00 !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   10. DASHBOARD NUMBER CARDS & MODULE CARDS
+═══════════════════════════════════════════════════════ */
 .widget.number-widget-box {
   border-top: 3px solid #002050 !important;
 }
 
-.widget.number-widget-box .widget-head .widget-title {
+.widget.number-widget-box .widget-title {
   color: #002050 !important;
   font-weight: 600;
 }
 
-.widget-body .number {
-  color: #002050 !important;
-}
-
-/* ───────────────────────────────────────────────
-   12. DESK HOME — MODULE CARDS
-─────────────────────────────────────────────── */
 .desk-module-card,
 .modules-section .widget {
   border-top: 3px solid #002050 !important;
@@ -289,46 +345,28 @@ a:hover {
   box-shadow: 0 4px 12px rgba(0, 32, 80, 0.18) !important;
 }
 
-/* ───────────────────────────────────────────────
-   13. FRAPPE v16 LIGHT THEME VARIANT
-   Targets [data-theme="light"] which is default.
-─────────────────────────────────────────────── */
-[data-theme="light"] {
-  --primary:             #002050;
-  --primary-color:       #002050;
-  --btn-primary-bg:      #002050;
+
+/* ═══════════════════════════════════════════════════════
+   11. INPUT FOCUS RINGS
+═══════════════════════════════════════════════════════ */
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #2E74B5 !important;
+  box-shadow: 0 0 0 3px rgba(46, 116, 181, 0.25) !important;
+  outline: none !important;
 }
 
-/* ───────────────────────────────────────────────
-   14. FRAPPE v16 DARK THEME VARIANT
-─────────────────────────────────────────────── */
-[data-theme="dark"] {
-  --primary:             #2E74B5;
-  --primary-color:       #2E74B5;
-  --btn-primary-bg:      #1A3A7A;
-
-  --sidebar-select-color: #1A3A7A;
+/* Checkbox accent */
+input[type="checkbox"]:checked {
+  accent-color: #002050;
 }
 
-[data-theme="dark"] .navbar,
-[data-theme="dark"] header.navbar {
-  background-color: #001030 !important;
-  border-bottom: 3px solid #900010 !important;
-}
 
-[data-theme="dark"] .btn-primary {
-  background-color: #1A3A7A !important;
-  border-color:     #2E74B5 !important;
-}
-
-[data-theme="dark"] .modal-header {
-  background-color: #001030 !important;
-}
-
-/* ───────────────────────────────────────────────
-   15. PRINT FORMAT OVERRIDES
-   Keeps print output brand-consistent.
-─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   12. PRINT FORMAT
+═══════════════════════════════════════════════════════ */
 @media print {
   .print-format table thead {
     background-color: #002050 !important;
