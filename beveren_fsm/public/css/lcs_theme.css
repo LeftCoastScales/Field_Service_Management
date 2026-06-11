@@ -401,3 +401,11 @@ input[type="checkbox"]:checked {
     print-color-adjust: exact;
   }
 }
+  /* ═══════════════════════════════════════════════════════
+   13. SIDEBAR OVERRIDE — beats frappe_desk_theme specificity
+═══════════════════════════════════════════════════════ */
+html body .body-sidebar .body-sidebar-cards,
+html body .body-sidebar .body-sidebar-bottom,
+html body .body-sidebar .standard-items-sections {
+  background-color: #002050 !important;
+}
