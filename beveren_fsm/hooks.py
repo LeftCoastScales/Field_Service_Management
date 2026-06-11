@@ -59,7 +59,9 @@ fixtures = [
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = "/assets/beveren_fsm/css/lcs_theme.css"# app_include_js = "/assets/beveren_fsm/js/beveren_fsm.js"
+app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
+# app_include_js = ["/assets/beveren_fsm/js/beveren_fsm.js"]
+
 # include js, css files in header of web template
 # web_include_css = "/assets/beveren_fsm/css/beveren_fsm.css"
 # web_include_js = "/assets/beveren_fsm/js/beveren_fsm.js"
@@ -171,13 +173,6 @@ app_include_css = "/assets/beveren_fsm/css/lcs_theme.css"# app_include_js = "/as
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
 doc_events = {
 	"Sales Invoice": {
 		"on_submit": [
@@ -220,26 +215,11 @@ doc_events = {
 # ---------------
 
 scheduler_events = {
-	# 	"all": [
-	# 		"beveren_fsm.tasks.all"
-	# 	],
-	# "daily": [
-	# 	"beveren_fsm.tasks.daily"
-	# ],
 	"daily": [
 		"beveren_fsm.field_service_management.doctype.service_request.service_request.update_status",
 		"beveren_fsm.field_service_management.doctype.lcs_service_agreement.lcs_service_agreement.auto_create_service_orders",
 		"beveren_fsm.field_service_management.doctype.lcs_customer_equipment.lcs_customer_equipment.flag_overdue_equipment",
 	],
-	# 	"hourly": [
-	# 		"beveren_fsm.tasks.hourly"
-	# 	],
-	# 	"weekly": [
-	# 		"beveren_fsm.tasks.weekly"
-	# 	],
-	# 	"monthly": [
-	# 		"beveren_fsm.tasks.monthly"
-	# 	],
 }
 
 # Testing
