@@ -63,12 +63,139 @@ html[data-theme="dark"] {
   --primary:              #2E74B5;
   --primary-color:        #2E74B5;
   --brand-color:          #2E74B5;
-  --btn-primary-bg:       #1A3A7A;
+  --btn-primary-bg:       #2E74B5;
+  --btn-primary-border:   #1A3A7A;
   --sidebar-bg:           #001840;
   --sidebar-hover-color:  #1A3A7A;
   --sidebar-active-color: #1A3A7A;
   --sidebar-text-color:   #D6E4F7;
 }
+
+/* Dark mode — sidebar stays navy */
+html[data-theme="dark"] .body-sidebar-container,
+html[data-theme="dark"] .body-sidebar,
+html[data-theme="dark"] .body-sidebar-cards,
+html[data-theme="dark"] .body-sidebar-bottom,
+html[data-theme="dark"] .standard-items-sections,
+html[data-theme="dark"] .sidebar-header,
+html[data-theme="dark"] .body-sidebar .body-sidebar-cards,
+html[data-theme="dark"] .body-sidebar .body-sidebar-bottom,
+html[data-theme="dark"] .body-sidebar .standard-items-sections,
+html[data-theme="dark"] html body .body-sidebar .body-sidebar-cards,
+html[data-theme="dark"] html body .body-sidebar .body-sidebar-bottom,
+html[data-theme="dark"] html body .body-sidebar .standard-items-sections {
+  background-color: #001840 !important;
+}
+
+/* Dark mode — navbar stays navy */
+html[data-theme="dark"] header.navbar,
+html[data-theme="dark"] .navbar {
+  background-color: #002050 !important;
+  border-bottom: 3px solid #900010 !important;
+}
+
+/* Dark mode — primary buttons use Steel Blue */
+html[data-theme="dark"] .btn-primary {
+  background-color: #2E74B5 !important;
+  border-color: #1A3A7A !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .btn-primary:hover {
+  background-color: #1A3A7A !important;
+  border-color: #002050 !important;
+}
+
+/* Dark mode — secondary buttons */
+html[data-theme="dark"] .btn-default,
+html[data-theme="dark"] .btn-secondary {
+  border-color: #2E74B5 !important;
+  color: #D6E4F7 !important;
+}
+
+html[data-theme="dark"] .btn-default:hover,
+html[data-theme="dark"] .btn-secondary:hover {
+  background-color: #1A3A7A !important;
+  color: #ffffff !important;
+}
+
+/* Dark mode — section headings */
+html[data-theme="dark"] .section-head,
+html[data-theme="dark"] .form-section .section-head {
+  color: #D6E4F7 !important;
+  border-bottom: 2px solid #1A3A7A !important;
+}
+
+/* Dark mode — form title */
+html[data-theme="dark"] .page-title .title-text,
+html[data-theme="dark"] .form-header-title {
+  color: #D6E4F7 !important;
+}
+
+/* Dark mode — active form tab */
+html[data-theme="dark"] .form-tabs .nav-link.active,
+html[data-theme="dark"] .form-tabs-list .nav-link.active {
+  color: #D6E4F7 !important;
+  border-bottom: 2px solid #2E74B5 !important;
+}
+
+html[data-theme="dark"] .form-tabs .nav-link:hover,
+html[data-theme="dark"] .form-tabs-list .nav-link:hover {
+  color: #90AED4 !important;
+}
+
+/* Dark mode — links */
+html[data-theme="dark"] a {
+  color: #90AED4 !important;
+}
+
+html[data-theme="dark"] header.navbar a,
+html[data-theme="dark"] .navbar a {
+  color: #ffffff !important;
+}
+
+/* Dark mode — modal headers */
+html[data-theme="dark"] .modal-header {
+  background-color: #001840 !important;
+  border-bottom: 2px solid #900010 !important;
+}
+
+/* Dark mode — sidebar item links */
+html[data-theme="dark"] .item-anchor {
+  color: #D6E4F7 !important;
+}
+
+html[data-theme="dark"] .item-anchor:hover {
+  background-color: #1A3A7A !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .standard-sidebar-item.selected .item-anchor,
+html[data-theme="dark"] .standard-sidebar-item.active .item-anchor {
+  background-color: #004080 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .sidebar-item-label,
+html[data-theme="dark"] .item-anchor svg {
+  color: #D6E4F7 !important;
+  fill: #D6E4F7 !important;
+}
+
+/* Dark mode — page head border */
+html[data-theme="dark"] .page-head {
+  border-bottom: 2px solid #1A3A7A !important;
+}
+
+/* Dark mode — input focus */
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
+  border-color: #2E74B5 !important;
+  box-shadow: 0 0 0 3px rgba(46, 116, 181, 0.35) !important;
+}
+
 
 
 /* ═══════════════════════════════════════════════════════
