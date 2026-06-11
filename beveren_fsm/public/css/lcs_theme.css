@@ -10,27 +10,19 @@
  *   Navy Alt   #1A3A7A
  *   Blue       #2E74B5
  *   Light Blue #D6E4F7
- *
- * NOTE: Uses html { } selector (beats :root specificity) and direct
- * element overrides to win cascade against desk.bundle.css.
  */
 
 /* ═══════════════════════════════════════════════════════
    1. ROOT VARIABLE OVERRIDES
-   Use html selector — higher specificity than :root,
-   beats desk.bundle.css which uses :root.
+   html beats :root specificity against desk.bundle.css
+   --sidebar-bg overrides frappe_desk_theme directly
 ═══════════════════════════════════════════════════════ */
 html {
-  /* Core primary — Frappe wires --brand-color to this */
   --primary:              #002050;
   --primary-color:        #002050;
   --brand-color:          #002050;
-
-  /* Button colors */
   --btn-primary-bg:       #002050;
   --btn-primary-border:   #1A3A7A;
-
-  /* Blue scale — overrides Frappe's bootstrap blue */
   --blue:                 #2E74B5;
   --blue-500:             #002050;
   --blue-600:             #001840;
@@ -38,29 +30,22 @@ html {
   --blue-300:             #2E74B5;
   --blue-100:             #D6E4F7;
   --blue-50:              #EBF2FC;
-
-  /* Red scale — Crimson */
   --red:                  #900010;
   --red-500:              #900010;
   --red-400:              #B00015;
   --danger:               #900010;
-
-  /* Yellow scale — Gold */
   --yellow:               #C8A020;
   --yellow-500:           #C8A020;
   --warning:              #C8A020;
-
-  /* Sidebar */
+  --sidebar-bg:           #002050;
   --sidebar-hover-color:  #D6E4F7;
   --sidebar-active-color: #D6E4F7;
-  --sidebar-border-color: #D6E4F7;
+  --sidebar-border-color: #1A3A7A;
   --sidebar-select-color: #D6E4F7;
-
-  /* Link colors */
+  --sidebar-text-color:   #D6E4F7;
   --link-color:           #2E74B5;
 }
 
-/* Also override the data-theme=light block that Frappe generates */
 html[data-theme="light"] {
   --primary:              #002050;
   --primary-color:        #002050;
@@ -68,8 +53,10 @@ html[data-theme="light"] {
   --btn-primary-bg:       #002050;
   --blue:                 #2E74B5;
   --danger:               #900010;
+  --sidebar-bg:           #002050;
   --sidebar-hover-color:  #D6E4F7;
   --sidebar-active-color: #D6E4F7;
+  --sidebar-text-color:   #D6E4F7;
 }
 
 html[data-theme="dark"] {
@@ -77,14 +64,15 @@ html[data-theme="dark"] {
   --primary-color:        #2E74B5;
   --brand-color:          #2E74B5;
   --btn-primary-bg:       #1A3A7A;
+  --sidebar-bg:           #001840;
   --sidebar-hover-color:  #1A3A7A;
   --sidebar-active-color: #1A3A7A;
+  --sidebar-text-color:   #D6E4F7;
 }
 
 
 /* ═══════════════════════════════════════════════════════
-   2. NAVBAR
-   Frappe v16 navbar: header.navbar or .navbar
+   2. NAVBAR (app launcher top bar)
 ═══════════════════════════════════════════════════════ */
 header.navbar,
 .navbar {
@@ -92,7 +80,6 @@ header.navbar,
   border-bottom: 3px solid #900010 !important;
 }
 
-/* All navbar text/icons white */
 header.navbar .nav-link,
 header.navbar .navbar-nav > li > a,
 header.navbar .dropdown-toggle,
@@ -109,7 +96,6 @@ header.navbar .nav-link:hover,
   background-color: rgba(255,255,255,0.1) !important;
 }
 
-/* Navbar search input */
 .navbar .search-bar,
 .navbar .form-control,
 .awesomplete input {
@@ -123,7 +109,6 @@ header.navbar .nav-link:hover,
   color: #90AED4 !important;
 }
 
-/* Navbar dropdown menus */
 .navbar .dropdown-menu {
   background-color: #002050 !important;
   border-color: #1A3A7A !important;
@@ -137,15 +122,99 @@ header.navbar .nav-link:hover,
   background-color: #1A3A7A !important;
 }
 
-/* Hamburger / toggler icon */
 .navbar-toggler-icon {
   filter: invert(1);
 }
 
+/* High-specificity fallback for navbar */
+html body header.navbar,
+html body .navbar {
+  background-color: #002050 !important;
+  border-bottom: 3px solid #900010 !important;
+}
+
+html body header.navbar .nav-link,
+html body .navbar .nav-link,
+html body .navbar .navbar-brand,
+html body .navbar .dropdown-toggle {
+  color: #ffffff !important;
+}
+
 
 /* ═══════════════════════════════════════════════════════
-   3. PRIMARY BUTTONS
-   Frappe v16 default primary is near-black #171717
+   3. SIDEBAR (Frappe v16 confirmed selectors)
+   frappe_desk_theme uses:
+     .body-sidebar .body-sidebar-cards { background-color: var(--sidebar-bg,#f8f8f8) !important }
+   We beat it by: setting --sidebar-bg AND matching same specificity
+═══════════════════════════════════════════════════════ */
+
+/* Outer containers */
+.body-sidebar-container,
+.body-sidebar {
+  background-color: #002050 !important;
+  border-right: 2px solid #900010 !important;
+}
+
+.sidebar-header {
+  background-color: #002050 !important;
+  border-bottom: 1px solid #1A3A7A !important;
+}
+
+/* Match frappe_desk_theme's exact selectors to override at same specificity */
+.body-sidebar .body-sidebar-cards,
+.body-sidebar .body-sidebar-bottom,
+.body-sidebar .standard-items-sections {
+  background-color: #002050 !important;
+  scrollbar-width: none;
+}
+
+/* Sidebar header text */
+.sidebar-header,
+.sidebar-header a,
+.sidebar-header span,
+.sidebar-header svg,
+.sidebar-header .dropdown-toggle {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Nav item links */
+.item-anchor {
+  color: #D6E4F7 !important;
+  border-radius: 6px !important;
+}
+
+.item-anchor:hover {
+  background-color: #1A3A7A !important;
+  color: #ffffff !important;
+}
+
+.standard-sidebar-item.selected .item-anchor,
+.standard-sidebar-item.active .item-anchor {
+  background-color: #004080 !important;
+  color: #ffffff !important;
+}
+
+/* Labels and icons */
+.sidebar-item-label,
+.item-anchor svg,
+.sidebar-item-icon {
+  color: #D6E4F7 !important;
+  fill: #D6E4F7 !important;
+}
+
+/* Footer user area */
+.body-sidebar-bottom,
+.body-sidebar-bottom *,
+.body-sidebar-bottom a,
+.body-sidebar-bottom span {
+  color: #D6E4F7 !important;
+  border-top: 1px solid #1A3A7A !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   4. PRIMARY BUTTONS
 ═══════════════════════════════════════════════════════ */
 .btn-primary {
   background-color: #002050 !important;
@@ -165,7 +234,6 @@ header.navbar .nav-link:hover,
   border-color:     #001840 !important;
 }
 
-/* Secondary / default buttons */
 .btn-default,
 .btn-secondary {
   border-color: #2E74B5 !important;
@@ -178,7 +246,6 @@ header.navbar .nav-link:hover,
   color: #002050 !important;
 }
 
-/* Danger buttons */
 .btn-danger {
   background-color: #900010 !important;
   border-color:     #900010 !important;
@@ -191,83 +258,6 @@ header.navbar .nav-link:hover,
 }
 
 
-/* ═══════════════════════════════════════════════════════
-   4. SIDEBAR (Frappe v16 — confirmed selectors)
-═══════════════════════════════════════════════════════ */
-
-/* Main sidebar containers */
-.body-sidebar-container,
-.body-sidebar,
-.body-sidebar-cards,
-.body-sidebar-bottom,
-.standard-items-sections,
-.sidebar-header {
-  background-color: #002050 !important;
-}
-
-/* Crimson right border */
-.body-sidebar,
-.body-sidebar-container {
-  border-right: 2px solid #900010 !important;
-}
-
-/* Nuke inherited white/near-white backgrounds */
-.body-sidebar *,
-.body-sidebar-container * {
-  background-color: transparent !important;
-}
-
-/* Re-apply navy to containers (wins after wildcard transparent) */
-.body-sidebar-container,
-.body-sidebar,
-.body-sidebar-cards,
-.body-sidebar-bottom,
-.standard-items-sections,
-.sidebar-header {
-  background-color: #002050 !important;
-}
-
-/* Header text (app name, workspace name, dropdown) */
-.sidebar-header,
-.sidebar-header a,
-.sidebar-header span,
-.sidebar-header svg,
-.sidebar-header .dropdown-toggle {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-}
-
-/* Nav item links */
-.item-anchor {
-  color: #D6E4F7 !important;
-  border-radius: 6px !important;
-}
-.item-anchor:hover {
-  background-color: #1A3A7A !important;
-  color: #ffffff !important;
-}
-.standard-sidebar-item.selected .item-anchor,
-.standard-sidebar-item.active .item-anchor {
-  background-color: #004080 !important;
-  color: #ffffff !important;
-}
-
-/* Labels and icons */
-.sidebar-item-label,
-.item-anchor svg,
-.sidebar-item-icon {
-  color: #D6E4F7 !important;
-  fill: #D6E4F7 !important;
-}
-
-/* Footer (user avatar / name) */
-.body-sidebar-bottom,
-.body-sidebar-bottom *,
-.body-sidebar-bottom a,
-.body-sidebar-bottom span {
-  color: #D6E4F7 !important;
-  border-top: 1px solid #1A3A7A !important;
-}
 /* ═══════════════════════════════════════════════════════
    5. FORM HEADERS & SECTION HEADINGS
 ═══════════════════════════════════════════════════════ */
@@ -283,7 +273,6 @@ header.navbar .nav-link:hover,
   font-weight: 600;
 }
 
-/* Page head bar bottom border */
 .page-head {
   border-bottom: 2px solid #002050 !important;
 }
@@ -316,7 +305,6 @@ a:hover {
   color: #002050 !important;
 }
 
-/* Exception: navbar links already handled above */
 header.navbar a,
 .navbar a {
   color: #ffffff !important;
@@ -397,7 +385,6 @@ textarea:focus {
   outline: none !important;
 }
 
-/* Checkbox accent */
 input[type="checkbox"]:checked {
   accent-color: #002050;
 }
@@ -413,22 +400,4 @@ input[type="checkbox"]:checked {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-}
-/* High-specificity overrides to beat frappe_desk_theme */
-html body header.navbar,
-html body .navbar {
-  background-color: #002050 !important;
-  border-bottom: 3px solid #900010 !important;
-}
-
-html body header.navbar .nav-link,
-html body .navbar .nav-link,
-html body .navbar .navbar-brand,
-html body .navbar .dropdown-toggle {
-  color: #ffffff !important;
-}
-
-html body .navbar .nav-link:hover {
-  color: #D6E4F7 !important;
-  background-color: rgba(255,255,255,0.1) !important;
 }
