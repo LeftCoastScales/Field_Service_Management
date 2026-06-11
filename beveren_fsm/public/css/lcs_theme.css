@@ -192,43 +192,82 @@ header.navbar .nav-link:hover,
 
 
 /* ═══════════════════════════════════════════════════════
-   4. SIDEBAR
-   Real v16 vars from DevTools:
-   --sidebar-hover-color, --sidebar-active-color,
-   --sidebar-border-color
+   4. SIDEBAR (Frappe v16 — confirmed selectors)
 ═══════════════════════════════════════════════════════ */
-.layout-side-section,
-.desk-sidebar,
-.list-sidebar {
-  border-right: 1px solid #D6E4F7 !important;
+
+/* Main sidebar containers */
+.body-sidebar-container,
+.body-sidebar,
+.body-sidebar-cards,
+.body-sidebar-bottom,
+.standard-items-sections,
+.sidebar-header {
+  background-color: #002050 !important;
 }
 
-/* Sidebar item hover */
-.sidebar-item:hover,
-.list-sidebar .list-sidebar-button:hover,
-.desk-sidebar .sidebar-item:hover {
-  background-color: #D6E4F7 !important;
-  color: #002050 !important;
+/* Crimson right border */
+.body-sidebar,
+.body-sidebar-container {
+  border-right: 2px solid #900010 !important;
 }
 
-/* Sidebar item active/selected */
-.sidebar-item.selected,
-.sidebar-item.active,
-.list-sidebar .list-sidebar-button.active,
-.desk-sidebar .sidebar-item.active {
-  background-color: #D6E4F7 !important;
-  color: #002050 !important;
-  border-left: 3px solid #002050 !important;
-  font-weight: 600;
+/* Nuke inherited white/near-white backgrounds */
+.body-sidebar *,
+.body-sidebar-container * {
+  background-color: transparent !important;
 }
 
-/* Sidebar card buttons (from DevTools image 3) */
-.sidebar-card-button {
-  outline-color: #002050 !important;
-  color: #002050 !important;
+/* Re-apply navy to containers (wins after wildcard transparent) */
+.body-sidebar-container,
+.body-sidebar,
+.body-sidebar-cards,
+.body-sidebar-bottom,
+.standard-items-sections,
+.sidebar-header {
+  background-color: #002050 !important;
 }
 
+/* Header text (app name, workspace name, dropdown) */
+.sidebar-header,
+.sidebar-header a,
+.sidebar-header span,
+.sidebar-header svg,
+.sidebar-header .dropdown-toggle {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
 
+/* Nav item links */
+.item-anchor {
+  color: #D6E4F7 !important;
+  border-radius: 6px !important;
+}
+.item-anchor:hover {
+  background-color: #1A3A7A !important;
+  color: #ffffff !important;
+}
+.standard-sidebar-item.selected .item-anchor,
+.standard-sidebar-item.active .item-anchor {
+  background-color: #004080 !important;
+  color: #ffffff !important;
+}
+
+/* Labels and icons */
+.sidebar-item-label,
+.item-anchor svg,
+.sidebar-item-icon {
+  color: #D6E4F7 !important;
+  fill: #D6E4F7 !important;
+}
+
+/* Footer (user avatar / name) */
+.body-sidebar-bottom,
+.body-sidebar-bottom *,
+.body-sidebar-bottom a,
+.body-sidebar-bottom span {
+  color: #D6E4F7 !important;
+  border-top: 1px solid #1A3A7A !important;
+}
 /* ═══════════════════════════════════════════════════════
    5. FORM HEADERS & SECTION HEADINGS
 ═══════════════════════════════════════════════════════ */
