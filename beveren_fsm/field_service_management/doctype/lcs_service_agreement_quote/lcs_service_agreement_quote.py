@@ -106,18 +106,6 @@ class LCSServiceAgreementQuote(Document):
                 frappe.throw("Interval (Months) must be a positive integer.")
 
     # -----------------------------------------------------------------------
-    # Whitelisted API — called by the JS client to get a suggested price
-    # -----------------------------------------------------------------------
-
-    @frappe.whitelist()
-    def get_suggested_price(scale_type: str, difficulty: str) -> dict:
-        """
-        Returns { "price": <float> } for the given scale type and difficulty.
-        Called via frappe.call from the client script.
-        """
-        return {"price": suggested_price(scale_type, difficulty)}
-
-    # -----------------------------------------------------------------------
     # Action: Convert to Service Agreement
     # -----------------------------------------------------------------------
 
@@ -162,3 +150,14 @@ class LCSServiceAgreementQuote(Document):
             indicator="green",
         )
         return sa.name
+
+
+# ---------------------------------------------------------------------------
+# Module-level whitelisted function — must live outside the class so Frappe
+# can resolve it via the dotted module path in frappe.call()
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_suggested_price(scale_type: str, difficulty: str) -> dict:
+    """Return { "price": <float> } for the given scale type and difficulty."""
+    return {"price": suggested_price(scale_type, difficulty)}
