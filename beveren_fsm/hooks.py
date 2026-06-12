@@ -26,6 +26,7 @@ fixtures = [
 	"Service Type",
 	"Product Location",
 	"LCS Service Agreement",
+	"LCS Service Agreement Quote",
 	"LCS Customer Equipment",
 	"LCS Scale Model",
 	# Export the "Service" Workspace only
