@@ -52,7 +52,7 @@ def mark_incentive_paid(lead_name):
     emp_email = emp.company_email or emp.personal_email or ""
 
     referred_name = f"{lead.first_name or ''} {lead.last_name or ''}".strip()
-    referred_co   = lead.organization_name or ""
+    referred_co   = lead.company_name or ""
     referred_city = lead.city or ""
 
     # 3. Add payout note to Lead
