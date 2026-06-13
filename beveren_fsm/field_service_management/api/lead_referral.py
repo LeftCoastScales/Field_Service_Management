@@ -47,73 +47,64 @@ def mark_incentive_paid(lead_name):
     emp = frappe.get_doc("Employee", lead.custom_referring_employee)
     emp_full_name = (
         emp.employee_name or
-        f"{emp.first_name or ''} {emp.last_name or ''}".strip()
+        ((emp.first_name or "") + " " + (emp.last_name or "")).strip()
     )
     emp_email = emp.company_email or emp.personal_email or ""
 
-    referred_name = f"{lead.first_name or ''} {lead.last_name or ''}".strip()
+    referred_name = ((lead.first_name or "") + " " + (lead.last_name or "")).strip()
     referred_co   = lead.company_name or ""
     referred_city = lead.city or ""
 
     # 3. Add payout note to Lead
     note_text = (
-        f"QUALIFIED & PAID — {paid_date}\n\n"
-        f"Lead confirmed as qualified by Sales.\n"
-        f"Referring employee: {emp_full_name}\n"
-        f"Cash payout of $10 disbursed from petty cash.\n"
-        f"Recorded by: {frappe.session.user}"
+        "QUALIFIED & PAID — " + paid_date + "\n\n"
+        "Lead confirmed as qualified by Sales.\n"
+        "Referring employee: " + emp_full_name + "\n"
+        "Cash payout of $10 disbursed from petty cash.\n"
+        "Recorded by: " + frappe.session.user
     )
 
-    frappe.get_doc({
-        "doctype": "CRM Note",
-        "reference_doctype": "Lead",
-        "reference_docname": lead_name,
+    lead.reload()
+    lead.append("notes", {
         "note": note_text,
-    }).insert(ignore_permissions=True)
+        "added_by": frappe.session.user,
+        "added_on": paid_date,
+    })
+    lead.save(ignore_permissions=True)
 
     # 4. Email employee confirmation
     if emp_email:
         frappe.sendmail(
             recipients=[emp_email],
             subject="Your LCS referral has been qualified — you've been paid!",
-            message=f"""
-<p>Hi {emp.first_name or emp_full_name},</p>
-
-<p>Your referral has been reviewed by Sales and confirmed as qualified.
-Your <strong>$10 cash payout</strong> has been recorded and is ready at the office.</p>
-
-<table style="border-collapse:collapse;width:100%;max-width:480px;
-              font-family:Arial,sans-serif;font-size:14px">
-  <tr style="background:#1B2A4A;color:#fff">
-    <td colspan="2" style="padding:10px 14px;font-weight:bold">Payout Summary</td>
-  </tr>
-  <tr style="background:#F2F4F8">
-    <td style="padding:8px 14px;font-weight:bold;width:40%">Referred contact</td>
-    <td style="padding:8px 14px">{referred_name}</td>
-  </tr>
-  <tr>
-    <td style="padding:8px 14px;font-weight:bold">Company</td>
-    <td style="padding:8px 14px">{referred_co}{', ' + referred_city if referred_city else ''}</td>
-  </tr>
-  <tr style="background:#F2F4F8">
-    <td style="padding:8px 14px;font-weight:bold">Payout amount</td>
-    <td style="padding:8px 14px"><strong>$10.00 cash</strong></td>
-  </tr>
-  <tr>
-    <td style="padding:8px 14px;font-weight:bold">Date confirmed</td>
-    <td style="padding:8px 14px">{paid_date}</td>
-  </tr>
-</table>
-
-<p style="margin-top:16px;padding:12px 16px;background:#EAF3DE;
-          border-left:4px solid #3B6D11;font-family:Arial,sans-serif;
-          font-size:14px;color:#27500A">
-  Keep it going — every qualified lead earns you $10, and milestone bonuses
-  stack at 10, 25, and 50 leads.
-</p>
-
-<p style="font-size:12px;color:#666;margin-top:24px">— Left Coast Scales</p>
-""",
+            message=(
+                "<p>Hi " + (emp.first_name or emp_full_name) + ",</p>"
+                "<p>Your referral has been reviewed by Sales and confirmed as qualified. "
+                "Your <strong>$10 cash payout</strong> has been recorded and is ready at the office.</p>"
+                "<table style='border-collapse:collapse;width:100%;max-width:480px;"
+                "font-family:Arial,sans-serif;font-size:14px'>"
+                "<tr style='background:#1B2A4A;color:#fff'>"
+                "<td colspan='2' style='padding:10px 14px;font-weight:bold'>Payout Summary</td></tr>"
+                "<tr style='background:#F2F4F8'>"
+                "<td style='padding:8px 14px;font-weight:bold;width:40%'>Referred contact</td>"
+                "<td style='padding:8px 14px'>" + referred_name + "</td></tr>"
+                "<tr>"
+                "<td style='padding:8px 14px;font-weight:bold'>Company</td>"
+                "<td style='padding:8px 14px'>" + referred_co + (", " + referred_city if referred_city else "") + "</td></tr>"
+                "<tr style='background:#F2F4F8'>"
+                "<td style='padding:8px 14px;font-weight:bold'>Payout amount</td>"
+                "<td style='padding:8px 14px'><strong>$10.00 cash</strong></td></tr>"
+                "<tr>"
+                "<td style='padding:8px 14px;font-weight:bold'>Date confirmed</td>"
+                "<td style='padding:8px 14px'>" + paid_date + "</td></tr>"
+                "</table>"
+                "<p style='margin-top:16px;padding:12px 16px;background:#EAF3DE;"
+                "border-left:4px solid #3B6D11;font-family:Arial,sans-serif;"
+                "font-size:14px;color:#27500A'>"
+                "Keep it going — every qualified lead earns you $10, and milestone bonuses "
+                "stack at 10, 25, and 50 leads.</p>"
+                "<p style='font-size:12px;color:#666;margin-top:24px'>— Left Coast Scales</p>"
+            ),
             now=True,
         )
 
