@@ -12,6 +12,7 @@ export interface Appointment {
   }>;
   service_type?: string;
   description?: string;
+  service_area?: string;
   location?: string | {
     lat: number;
     lng: number;

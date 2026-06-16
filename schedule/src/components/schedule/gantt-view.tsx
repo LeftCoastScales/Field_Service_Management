@@ -12,11 +12,13 @@ interface GanttViewProps {
   selectedDate: Date;
   onAppointmentClick?: (appointment: Appointment) => void;
   technicianSearch?: string;
+  serviceAreaFilter?: string;
 }
 
 interface Technician {
   name: string;
   full_name: string;
+  service_area?: string;
 }
 
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
@@ -29,6 +31,7 @@ export function GanttView({
   selectedDate,
   onAppointmentClick,
   technicianSearch = "",
+  serviceAreaFilter = "all",
 }: GanttViewProps) {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,14 +111,22 @@ export function GanttView({
 
   // Filter technicians by search
   const filteredTechnicians = useMemo(() => {
-    if (!technicianSearch.trim()) return technicians;
+    let result = technicians;
+
+    // Apply service area filter first
+    if (serviceAreaFilter !== "all") {
+      result = result.filter((tech) => tech.service_area === serviceAreaFilter);
+    }
+
+    // Then apply search
+    if (!technicianSearch.trim()) return result;
     const searchLower = technicianSearch.toLowerCase();
-    return technicians.filter(
+    return result.filter(
       (tech) =>
         tech.full_name.toLowerCase().includes(searchLower) ||
         tech.name.toLowerCase().includes(searchLower)
     );
-  }, [technicians, technicianSearch]);
+  }, [technicians, technicianSearch, serviceAreaFilter]);
 
   // Filter appointments for the selected date (parse as local to avoid TZ drift)
   const appointmentsForSelectedDate = useMemo(() => {
