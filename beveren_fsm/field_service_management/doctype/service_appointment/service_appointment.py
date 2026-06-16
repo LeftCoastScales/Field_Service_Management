@@ -15,6 +15,7 @@ class ServiceAppointment(Document):
 	def validate(self):
 		self.validate_items()
 		self.validate_technicians()
+		self.validate_crew_leader()
 		self.validate_overlap()
 		self.validate_resource_overlap()
 		self.set_scheduled_status()
@@ -34,6 +35,20 @@ class ServiceAppointment(Document):
 	def validate_technicians(self):
 		if not self.get("service_technicians"):
 			frappe.throw(_("Please add at least one technician"))
+
+	def validate_crew_leader(self):
+		"""Enforce that at most one technician per appointment carries the Crew Leader flag."""
+		leaders = [
+			row for row in self.get("service_technicians")
+			if row.get("custom_is_crew_leader")
+		]
+		if len(leaders) > 1:
+			names = ", ".join(
+				row.get("full_name") or row.get("service_technician") for row in leaders
+			)
+			frappe.throw(
+				_("Only one Crew Leader is allowed per appointment. Currently flagged: {0}").format(names)
+			)
 
 	def validate_overlap(self):
 		# Collect all parent Service Appointments tied to the same technicians
