@@ -16,10 +16,12 @@ class ServiceAppointment(Document):
 		self.validate_items()
 		self.validate_technicians()
 		self.validate_overlap()
+		self.validate_resource_overlap()
 		self.set_scheduled_status()
 
 	def before_update_after_submit(self):
 		self.validate_overlap()
+		self.validate_resource_overlap()
 		self.update_service_order_status()
 
 	def on_cancel(self):
@@ -103,6 +105,68 @@ class ServiceAppointment(Document):
 			print("\n\n\n OVERLAP ERROR\n\n", error_message, "\n\n")
 			frappe.throw(error_message)
 			return error_message  # Return for consistency
+
+	def validate_resource_overlap(self):
+		"""
+		Block saving if any non-human resource on this appointment is already
+		assigned to another overlapping appointment in the same time window.
+
+		Mirrors the logic of validate_overlap() but operates on the
+		appointment_resources child table (LCS Appointment Resource) instead of
+		service_technicians.
+		"""
+		resources = self.get("appointment_resources")
+		if not resources:
+			return  # No resources assigned — nothing to check
+
+		# Collect the names of all resources on this appointment
+		self_resource_names = [r.resource_name for r in resources]
+
+		# Find all Service Appointments that share at least one of these resource
+		# names AND overlap this appointment's time window
+		child_parents = frappe.get_all(
+			"LCS Appointment Resource",
+			filters={"resource_name": ["in", self_resource_names]},
+			pluck="parent",
+		)
+
+		if not child_parents:
+			return
+
+		filters = [
+			["name", "!=", self.name],
+			["name", "in", child_parents],
+			["status", "not in", ["Closed", "Cancelled"]],
+			["scheduled_start_datetime", "<", self.scheduled_finish_datetime],
+			["scheduled_finish_datetime", ">", self.scheduled_start_datetime],
+		]
+
+		overlapping = frappe.get_all(
+			"Service Appointment",
+			filters=filters,
+			fields=["name", "scheduled_start_datetime", "scheduled_finish_datetime"],
+		)
+		conflicting = [d for d in overlapping if d.name != self.name]
+
+		if not conflicting:
+			return
+
+		# Identify which specific resource(s) are double-booked for the first conflict
+		first = conflicting[0]
+		cand_doc = frappe.get_doc("Service Appointment", first.name)
+		cand_resource_names = {r.resource_name for r in cand_doc.get("appointment_resources")}
+		common_resources = sorted(set(self_resource_names).intersection(cand_resource_names))
+
+		resource_list = ", ".join(common_resources) if common_resources else _("assigned resources")
+
+		frappe.throw(
+			_("Resource conflict with appointment {apt} ({start} \u2013 {end}) for: {resources}").format(
+				apt=first.name,
+				start=first.scheduled_start_datetime,
+				end=first.scheduled_finish_datetime,
+				resources=resource_list,
+			)
+		)
 
 	def set_scheduled_status(self):
 		if self.scheduled_start_datetime and self.scheduled_finish_datetime:

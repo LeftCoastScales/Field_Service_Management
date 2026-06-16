@@ -25,6 +25,8 @@
   "service_details_tab",
   "service_team_section",
   "service_technicians",
+  "resources_section",
+  "appointment_resources",
   "services_section",
   "items",
   "amended_from",
@@ -51,7 +53,6 @@
    "fieldtype": "Tab Break",
    "label": "Service Details"
   },
-
   {
    "fieldname": "services_section",
    "fieldtype": "Section Break",
@@ -123,6 +124,17 @@
    "label": "Service Technicians",
    "options": "Service Technician Item",
    "reqd": 1
+  },
+  {
+   "fieldname": "resources_section",
+   "fieldtype": "Section Break",
+   "label": "Non-Human Resources"
+  },
+  {
+   "fieldname": "appointment_resources",
+   "fieldtype": "Table",
+   "label": "Resources",
+   "options": "LCS Appointment Resource"
   },
   {
    "fieldname": "amended_from",
