@@ -40,6 +40,7 @@ fixtures = [
 				"name",
 				"in",
 				[
+					# Service Order links (existing)
 					"Purchase Order-custom_service_order",
 					"Purchase Invoice-custom_service_order",
 					"Purchase Receipt-custom_service_order",
@@ -50,6 +51,12 @@ fixtures = [
 					"Purchase Order-custom_current_product_location",
 					"Purchase Invoice-custom_current_product_location",
 					"Purchase Receipt-custom_current_product_location",
+					# Service Area extensions (Phase 2D)
+					"Service Area-custom_branch_office",
+					"Service Area-custom_state",
+					"Service Area-custom_cost_center",
+					"Service Area-custom_territory",
+					"Service Area-custom_office_address",
 				],
 			]
 		],
