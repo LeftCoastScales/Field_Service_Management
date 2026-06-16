@@ -6,12 +6,16 @@ from frappe.utils import today
 def get_employee_list():
     """
     Returns active employees with only first/last name components.
+    Excludes Sales - LCS and Management - LCS departments.
     Called by the public Lead Referral webform dropdown.
     No PII beyond name fragments is returned.
     """
     employees = frappe.get_all(
         "Employee",
-        filters={"status": "Active"},
+        filters={
+            "status": "Active",
+            "department": ["not in", ["Sales - LCS", "Management - LCS"]],
+        },
         fields=["name", "first_name", "last_name"],
         order_by="first_name asc, last_name asc",
     )
