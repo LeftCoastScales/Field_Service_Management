@@ -29,7 +29,7 @@ fixtures = [
 	"LCS Service Agreement Quote",
 	"LCS Customer Equipment",
 	"LCS Scale Model",
-	"LCS Appointment Resource",       # Phase 2C — non-human resource child table
+	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
 	# Export the "Service" Workspace only
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 	# Export specific Custom Fields related to Service Order links

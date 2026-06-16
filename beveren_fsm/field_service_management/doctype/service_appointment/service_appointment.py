@@ -38,14 +38,9 @@ class ServiceAppointment(Document):
 
 	def validate_crew_leader(self):
 		"""Enforce that at most one technician per appointment carries the Crew Leader flag."""
-		leaders = [
-			row for row in self.get("service_technicians")
-			if row.get("custom_is_crew_leader")
-		]
+		leaders = [row for row in self.get("service_technicians") if row.get("custom_is_crew_leader")]
 		if len(leaders) > 1:
-			names = ", ".join(
-				row.get("full_name") or row.get("service_technician") for row in leaders
-			)
+			names = ", ".join(row.get("full_name") or row.get("service_technician") for row in leaders)
 			frappe.throw(
 				_("Only one Crew Leader is allowed per appointment. Currently flagged: {0}").format(names)
 			)
