@@ -9,6 +9,7 @@ export interface Appointment {
   service_technicians?: Array<{
     service_technician: string;
     full_name: string;
+    custom_is_crew_leader?: number | boolean;
   }>;
   service_type?: string;
   description?: string;

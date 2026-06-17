@@ -419,8 +419,13 @@ export function GanttView({
                           title={`${appointment.service_type || appointment.service_order || appointment.name} (${startTime} - ${endTime})`}
                           onClick={() => onAppointmentClick?.(appointment)}
                         >
-                          <div className="font-medium truncate text-[11px] leading-tight">
-                            {appointment.service_type || appointment.service_order || appointment.name}
+                          <div className="flex items-center gap-1">
+                            {appointment.service_technicians?.some((t) => t.custom_is_crew_leader) && (
+                              <span title="Crew Leader" className="text-yellow-300 text-[10px] leading-none flex-shrink-0">★</span>
+                            )}
+                            <div className="font-medium truncate text-[11px] leading-tight">
+                              {appointment.service_type || appointment.service_order || appointment.name}
+                            </div>
                           </div>
                           <div className="text-[10px] opacity-90 mt-0.5">
                             {startTime} - {endTime}

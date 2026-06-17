@@ -300,8 +300,11 @@ export function GridView({
                       {appointment.service_technicians && appointment.service_technicians.length > 0 ? (
                         <div className="text-sm">
                           {appointment.service_technicians.map((tech, idx) => (
-                            <div key={tech.service_technician || idx} className="truncate">
-                              {tech.full_name || tech.service_technician}
+                            <div key={tech.service_technician || idx} className="flex items-center gap-1 truncate">
+                              {tech.custom_is_crew_leader && (
+                                <span title="Crew Leader" className="text-yellow-500 text-[11px] leading-none flex-shrink-0">★</span>
+                              )}
+                              <span className="truncate">{tech.full_name || tech.service_technician}</span>
                             </div>
                           ))}
                         </div>

@@ -839,12 +839,15 @@ const getOrderStatusColor = (status?: string) => {
                           </div>
                           {appointment.service_technicians &&
                             appointment.service_technicians.length > 0 && (
-                              <div className="mt-2 text-xs text-muted-foreground">
-                                <span>
-                                  {appointment.service_technicians
-                                    .map((t) => t.full_name)
-                                    .join(", ")}
-                                </span>
+                              <div className="mt-2 text-xs text-muted-foreground space-y-0.5">
+                                {appointment.service_technicians.map((t, idx) => (
+                                  <div key={t.service_technician || idx} className="flex items-center gap-1">
+                                    {t.custom_is_crew_leader && (
+                                      <span title="Crew Leader" className="text-yellow-500 text-[11px] leading-none flex-shrink-0">★</span>
+                                    )}
+                                    <span>{t.full_name}</span>
+                                  </div>
+                                ))}
                               </div>
                             )}
                         </div>
