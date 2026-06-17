@@ -161,7 +161,7 @@ export function GridView({
     <div className="flex flex-col h-full bg-background">
       {/* Table */}
       <div className="flex-1 overflow-auto">
-        <Table>
+        <Table className="min-w-[1100px]">
           <TableHeader className="sticky top-0 bg-background z-10">
             <TableRow>
               <TableHead
