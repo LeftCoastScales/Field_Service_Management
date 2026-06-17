@@ -357,6 +357,7 @@ def auto_create_service_orders():
 		fields=["name"],
 	)
 
+
 	for row in agreements:
 		try:
 			doc = frappe.get_doc("LCS Service Agreement", row.name)
