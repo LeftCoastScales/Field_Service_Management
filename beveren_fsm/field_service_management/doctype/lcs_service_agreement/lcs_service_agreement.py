@@ -6,42 +6,24 @@ import calendar
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_days, add_months, get_last_day, getdate, nowdate, today
+from frappe.utils import add_days, add_months, getdate, get_last_day, nowdate, today
 
 # ---------------------------------------------------------------------------
 # Month name → number map
 # ---------------------------------------------------------------------------
 MONTH_MAP = {
-	"January": 1,
-	"February": 2,
-	"March": 3,
-	"April": 4,
-	"May": 5,
-	"June": 6,
-	"July": 7,
-	"August": 8,
-	"September": 9,
-	"October": 10,
-	"November": 11,
-	"December": 12,
+	"January": 1, "February": 2, "March": 3, "April": 4,
+	"May": 5, "June": 6, "July": 7, "August": 8,
+	"September": 9, "October": 10, "November": 11, "December": 12,
 }
 
 WEEKDAY_MAP = {
-	"Monday": 0,
-	"Tuesday": 1,
-	"Wednesday": 2,
-	"Thursday": 3,
-	"Friday": 4,
-	"Saturday": 5,
-	"Sunday": 6,
+	"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+	"Friday": 4, "Saturday": 5, "Sunday": 6,
 }
 
 WEEK_NUMBER_MAP = {
-	"1st": 1,
-	"2nd": 2,
-	"3rd": 3,
-	"4th": 4,
-	"Last": -1,
+	"1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "Last": -1,
 }
 
 
@@ -49,8 +31,8 @@ WEEK_NUMBER_MAP = {
 # DocType controller
 # ---------------------------------------------------------------------------
 
-
 class LCSServiceAgreement(Document):
+
 	# ------------------------------------------------------------------
 	# Frappe lifecycle hooks
 	# ------------------------------------------------------------------
@@ -143,7 +125,11 @@ class LCSServiceAgreement(Document):
 		on_or_after. Wraps into the next year if necessary.
 		"""
 		on_or_after = getdate(on_or_after)
-		month_numbers = sorted(MONTH_MAP[row.month] for row in self.fixed_months if row.month in MONTH_MAP)
+		month_numbers = sorted(
+			MONTH_MAP[row.month]
+			for row in self.fixed_months
+			if row.month in MONTH_MAP
+		)
 		if not month_numbers:
 			return None
 
@@ -218,7 +204,9 @@ class LCSServiceAgreement(Document):
 		trigger_date = getdate(trigger_date or today())
 
 		if not self.customer:
-			frappe.throw(_("Agreement {0} has no customer — cannot create Service Order").format(self.name))
+			frappe.throw(
+				_("Agreement {0} has no customer — cannot create Service Order").format(self.name)
+			)
 
 		# --- Due date ---
 		due = self.compute_due_date(trigger_date.year, trigger_date.month)
@@ -269,7 +257,8 @@ class LCSServiceAgreement(Document):
 		self.db_set("next_service_order_date", next_trigger, update_modified=False)
 
 		frappe.logger().info(
-			f"LCS Agreement {self.name}: created SO {so.name} " f"(due {due}); next trigger → {next_trigger}"
+			f"LCS Agreement {self.name}: created SO {so.name} "
+			f"(due {due}); next trigger → {next_trigger}"
 		)
 		return so.name
 
@@ -277,7 +266,6 @@ class LCSServiceAgreement(Document):
 # ---------------------------------------------------------------------------
 # Pure-function date helpers
 # ---------------------------------------------------------------------------
-
 
 def _last_day_of_month(year, month):
 	"""Return the last calendar day of the given year/month as a date."""
@@ -289,14 +277,17 @@ def _nth_weekday_of_month(year, month, week_number, weekday):
 	"""
 	Return the date of the Nth occurrence of weekday in year/month.
 
-	week_number: 1–4 for 1st–4th, -1 for Last.
-	weekday: 0=Monday … 6=Sunday (calendar.weekday convention).
+	week_number: 1-4 for 1st-4th, -1 for Last.
+	weekday: 0=Monday ... 6=Sunday (calendar.weekday convention).
 
 	Always returns a date within the given month (never overflows to next month).
 	"""
 	# Collect all occurrences of the weekday in the month
 	_, days_in_month = calendar.monthrange(year, month)
-	occurrences = [d for d in range(1, days_in_month + 1) if calendar.weekday(year, month, d) == weekday]
+	occurrences = [
+		d for d in range(1, days_in_month + 1)
+		if calendar.weekday(year, month, d) == weekday
+	]
 
 	if not occurrences:
 		# Should never happen for a valid weekday, but guard anyway
@@ -332,7 +323,6 @@ def _build_job_summary(agreement):
 # ---------------------------------------------------------------------------
 # Scheduler entry point — called nightly from hooks.py
 # ---------------------------------------------------------------------------
-
 
 def auto_create_service_orders():
 	"""
@@ -371,7 +361,9 @@ def auto_create_service_orders():
 			so_name = doc.create_service_order(trigger_date=trigger_date)
 
 			if so_name:
-				frappe.logger().info(f"Scheduler: SO {so_name} created for agreement {doc.name}")
+				frappe.logger().info(
+					f"Scheduler: SO {so_name} created for agreement {doc.name}"
+				)
 
 		except Exception:
 			frappe.log_error(
