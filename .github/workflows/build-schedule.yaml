@@ -55,8 +55,11 @@ jobs:
 
       - name: Create dummy common_site_config.json
         run: |
-          mkdir -p sites
-          echo '{"webserver_port": 8000}' > sites/common_site_config.json
+          # proxyOptions.ts resolves ../../../sites/ from schedule/
+          # In CI: /home/runner/work/Field_Service_Management/Field_Service_Management/schedule/
+          # Three levels up: /home/runner/work/
+          mkdir -p /home/runner/work/sites
+          echo '{"webserver_port": 8000}' > /home/runner/work/sites/common_site_config.json
 
       - name: Build
         working-directory: schedule

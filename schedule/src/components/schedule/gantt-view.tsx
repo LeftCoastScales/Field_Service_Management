@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { toast } from "../ui/use-toast";
 import { format, startOfDay, parse } from "date-fns";
 
+
 interface GanttViewProps {
   appointments: Appointment[];
   selectedDate: Date;
