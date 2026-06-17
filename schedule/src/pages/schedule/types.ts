@@ -11,6 +11,11 @@ export interface Appointment {
     full_name: string;
     custom_is_crew_leader?: number | boolean;
   }>;
+  appointment_resources?: Array<{
+    resource_name: string;
+    resource_type?: string;
+    service_area?: string;
+  }>;
   service_type?: string;
   description?: string;
   service_area?: string;

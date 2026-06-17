@@ -82,6 +82,15 @@ def get_appointments(
 			for tech in appointment_doc.service_technicians
 		]
 
+		appointment_data["appointment_resources"] = [
+			{
+				"resource_name": res.resource_name,
+				"resource_type": res.resource_type,
+				"service_area": res.service_area,
+			}
+			for res in (appointment_doc.appointment_resources or [])
+		]
+
 		# Always include items child table
 		appointment_data["items"] = [
 			{
@@ -169,6 +178,15 @@ def get_appointment(name):
 			"custom_is_crew_leader": tech.custom_is_crew_leader,
 		}
 		for tech in appointment_doc.service_technicians
+	]
+
+	appointment_data["appointment_resources"] = [
+		{
+			"resource_name": res.resource_name,
+			"resource_type": res.resource_type,
+			"service_area": res.service_area,
+		}
+		for res in (appointment_doc.appointment_resources or [])
 	]
 
 	# Format items child table

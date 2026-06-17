@@ -220,12 +220,13 @@ export function GridView({
                 </div>
               </TableHead>
               <TableHead>Technicians</TableHead>
+              <TableHead>Resources</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAndSortedAppointments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? "No appointments match your search" : "No appointments found"}
                 </TableCell>
               </TableRow>
@@ -305,6 +306,22 @@ export function GridView({
                                 <span title="Crew Leader" className="text-yellow-500 text-[11px] leading-none flex-shrink-0">★</span>
                               )}
                               <span className="truncate">{tech.full_name || tech.service_technician}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {appointment.appointment_resources && appointment.appointment_resources.length > 0 ? (
+                        <div className="text-sm">
+                          {appointment.appointment_resources.map((res, idx) => (
+                            <div key={idx} className="truncate" title={res.resource_type ? `${res.resource_name} (${res.resource_type})` : res.resource_name}>
+                              {res.resource_name}
+                              {res.resource_type && (
+                                <span className="text-muted-foreground text-[11px] ml-1">({res.resource_type})</span>
+                              )}
                             </div>
                           ))}
                         </div>

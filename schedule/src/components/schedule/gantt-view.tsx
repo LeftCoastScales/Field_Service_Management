@@ -416,7 +416,7 @@ export function GanttView({
                             width: width,
                             minWidth: "80px",
                           }}
-                          title={`${appointment.service_type || appointment.service_order || appointment.name} (${startTime} - ${endTime})`}
+                          title={`${appointment.service_type || appointment.service_order || appointment.name} (${startTime} - ${endTime})${appointment.appointment_resources?.length ? " | " + appointment.appointment_resources.map((r) => r.resource_name).join(", ") : ""}`}
                           onClick={() => onAppointmentClick?.(appointment)}
                         >
                           <div className="flex items-center gap-1">
