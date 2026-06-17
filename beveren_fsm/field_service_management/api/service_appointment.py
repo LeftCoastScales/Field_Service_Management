@@ -77,6 +77,7 @@ def get_appointments(
 				"service_technician": tech.service_technician,
 				"full_name": tech.full_name,
 				"name": tech.name,
+				"custom_is_crew_leader": tech.custom_is_crew_leader,
 			}
 			for tech in appointment_doc.service_technicians
 		]
@@ -165,6 +166,7 @@ def get_appointment(name):
 			"service_technician": tech.service_technician,
 			"full_name": tech.full_name,
 			"name": tech.name,
+			"custom_is_crew_leader": tech.custom_is_crew_leader,
 		}
 		for tech in appointment_doc.service_technicians
 	]
