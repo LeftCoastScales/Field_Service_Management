@@ -1,0 +1,178 @@
+[
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Submit a Lead Referral",
+    "section": "Sales",
+    "enabled": 1,
+    "url": "/submit-lead",
+    "description": "Refer a new prospect for a sales commission incentive",
+    "icon": "\ud83c\udfaf",
+    "badge": "Form",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Referral Leaderboard",
+    "section": "Sales",
+    "enabled": 1,
+    "url": "/referral-leaderboard",
+    "description": "See who\u2019s on top of the Lead Referral Program",
+    "icon": "\ud83c\udfc6",
+    "badge": "Board",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Service Agreement Quote",
+    "section": "Sales",
+    "enabled": 1,
+    "url": "/lcs-service-agreement-quote",
+    "description": "Generate a service agreement proposal for a customer",
+    "icon": "\ud83d\udcdd",
+    "badge": "Form",
+    "sort_order": 30
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Time Clock",
+    "section": "Service",
+    "enabled": 1,
+    "url": "/timeclock",
+    "description": "Clock in and out, view your hours for the day",
+    "icon": "\u23f1\ufe0f",
+    "badge": "Tool",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Time Clock Kiosk",
+    "section": "Service",
+    "enabled": 1,
+    "url": "/timeclock-kiosk",
+    "description": "Shared tablet PIN-based time entry station",
+    "icon": "\ud83d\udcf1",
+    "badge": "Kiosk",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Dispatch Board",
+    "section": "Service",
+    "enabled": 1,
+    "url": "/schedule",
+    "description": "View and manage today\u2019s service appointments",
+    "icon": "\ud83d\udcc5",
+    "badge": "Board",
+    "sort_order": 30
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Pre-Trip Inspection",
+    "section": "Vehicle & Fleet",
+    "enabled": 0,
+    "url": "#",
+    "description": "Daily vehicle inspection checklist \u2014 required before dispatch",
+    "icon": "\ud83d\udd0d",
+    "badge": "Form",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Fuel & Mileage Log",
+    "section": "Vehicle & Fleet",
+    "enabled": 0,
+    "url": "#",
+    "description": "Record fuel purchases and odometer readings",
+    "icon": "\u26fd",
+    "badge": "Log",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Incident Report",
+    "section": "Vehicle & Fleet",
+    "enabled": 0,
+    "url": "#",
+    "description": "Report a vehicle incident, near-miss, or accident",
+    "icon": "\u26a0\ufe0f",
+    "badge": "Report",
+    "sort_order": 30
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "LCS Academy (Moodle)",
+    "section": "Training & LCS Academy",
+    "enabled": 1,
+    "url": "https://lms.leftcoastscales.com",
+    "description": "Access training courses, assessments, and certifications",
+    "icon": "\ud83d\udcda",
+    "badge": "LMS",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Tech Knowledge Assessment",
+    "section": "Training & LCS Academy",
+    "enabled": 0,
+    "url": "#",
+    "description": "140-question mechanical technician evaluation",
+    "icon": "\u270f\ufe0f",
+    "badge": "Quiz",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Expense Report",
+    "section": "HR & Personnel",
+    "enabled": 0,
+    "url": "#",
+    "description": "Submit receipts and out-of-pocket expenses for reimbursement",
+    "icon": "\ud83e\uddfe",
+    "badge": "Form",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Time Off Request",
+    "section": "HR & Personnel",
+    "enabled": 0,
+    "url": "#",
+    "description": "Request PTO, sick leave, or schedule adjustments",
+    "icon": "\ud83c\udfd6\ufe0f",
+    "badge": "Form",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Calibration Certificate",
+    "section": "Admin & Compliance",
+    "enabled": 0,
+    "url": "#",
+    "description": "Look up or reprint a customer calibration certificate",
+    "icon": "\ud83d\udcdc",
+    "badge": "Doc",
+    "sort_order": 10
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "Magnet Test Report",
+    "section": "Admin & Compliance",
+    "enabled": 1,
+    "url": "#",
+    "description": "MAG-001 field form \u2014 Gauss & pull-force results",
+    "icon": "\ud83e\uddf2",
+    "badge": "Form",
+    "sort_order": 20
+  },
+  {
+    "doctype": "LCS Shortcut",
+    "label": "SOP Library",
+    "section": "Admin & Compliance",
+    "enabled": 0,
+    "url": "#",
+    "description": "Standard operating procedures and work instructions",
+    "icon": "\ud83d\udcc2",
+    "badge": "Docs",
+    "sort_order": 30
+  }
+]

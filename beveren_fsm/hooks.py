@@ -30,6 +30,7 @@ fixtures = [
 	"LCS Customer Equipment",
 	"LCS Scale Model",
 	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
+	"LCS Shortcut",
 	# Export the "Service" Workspace only
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 	# Export specific Custom Fields related to Service Order links
