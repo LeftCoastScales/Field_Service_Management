@@ -13,7 +13,6 @@ SECTION_META = {
     "Admin & Compliance":      ("⚙️", "ta"),
 }
 
-# Canonical display order for sections
 SECTION_ORDER = list(SECTION_META.keys())
 
 
@@ -42,16 +41,42 @@ def get_context(context):
         context.designation = ""
         context.department  = ""
 
-    # --- Shortcuts from DocType (enabled only, ordered) ---
+    # --- Current user's roles ---
+    user_roles = set(frappe.get_roles(frappe.session.user))
+
+    # --- Fetch all enabled shortcuts ---
     rows = frappe.get_all(
         "LCS Shortcut",
         filters={"enabled": 1},
-        fields=["label", "section", "url", "description", "icon", "badge", "sort_order"],
+        fields=["name", "label", "section", "url", "description", "icon", "badge", "sort_order"],
         order_by="section asc, sort_order asc, label asc",
     )
 
-    # Group by section, preserving canonical order
-    by_section = {k: list(v) for k, v in groupby(rows, key=lambda r: r["section"])}
+    # --- Fetch all role restrictions in one query ---
+    all_role_rows = frappe.get_all(
+        "LCS Shortcut Role",
+        filters={"parent": ["in", [r["name"] for r in rows]]},
+        fields=["parent", "role"],
+    )
+
+    # Build a dict: shortcut name -> set of allowed roles
+    allowed_roles_map = {}
+    for rr in all_role_rows:
+        allowed_roles_map.setdefault(rr["parent"], set()).add(rr["role"])
+
+    # --- Filter shortcuts by role ---
+    visible = []
+    for row in rows:
+        allowed = allowed_roles_map.get(row["name"])
+        if not allowed:
+            # No restrictions — visible to everyone
+            visible.append(row)
+        elif user_roles & allowed:
+            # User has at least one of the required roles
+            visible.append(row)
+
+    # --- Group by section, preserving canonical order ---
+    by_section = {k: list(v) for k, v in groupby(visible, key=lambda r: r["section"])}
 
     sections = []
     for sec_name in SECTION_ORDER:
@@ -66,7 +91,7 @@ def get_context(context):
             "cards": cards,
         })
 
-    # Any section in the DB that isn't in SECTION_ORDER goes last
+    # Any section not in canonical order goes last
     for sec_name, cards in by_section.items():
         if sec_name not in SECTION_META:
             sections.append({
@@ -79,4 +104,4 @@ def get_context(context):
     context.sections = sections
 
     # --- Admin link visibility ---
-    context.is_system_manager = "System Manager" in frappe.get_roles(frappe.session.user)
+    context.is_system_manager = "System Manager" in user_roles

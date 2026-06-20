@@ -15,7 +15,9 @@
   "col_break_2",
   "icon",
   "badge",
-  "sort_order"
+  "sort_order",
+  "roles_section",
+  "roles"
  ],
  "fields": [
   {
@@ -78,6 +80,18 @@
    "fieldname": "sort_order",
    "fieldtype": "Int",
    "label": "Sort Order"
+  },
+  {
+   "fieldname": "roles_section",
+   "fieldtype": "Section Break",
+   "label": "Role Restrictions",
+   "description": "Leave empty to show to all logged-in users. Add roles to restrict visibility."
+  },
+  {
+   "fieldname": "roles",
+   "fieldtype": "Table",
+   "label": "Visible To Roles",
+   "options": "LCS Shortcut Role"
   }
  ],
  "links": [],
