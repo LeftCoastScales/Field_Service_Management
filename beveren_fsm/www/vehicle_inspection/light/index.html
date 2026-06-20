@@ -1,0 +1,539 @@
+{% extends "templates/web.html" %}
+{% block title %}Daily Vehicle Inspection — Light Vehicle — LCS{% endblock %}
+
+{% block head_include %}
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body.lcs-insp { background: #0d1824; color: #e8edf4; font-family: 'Inter', sans-serif; min-height: 100vh; }
+.insp-header { background: #002050; border-bottom: 3px solid #C8A020; padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.insp-logo { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: .08em; color: #fff; text-transform: uppercase; }
+.insp-logo span { color: #C8A020; }
+.insp-form-badge { background: #004080; color: #fff; font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .2rem .6rem; border-radius: 4px; }
+.back-link { color: #9bb3cc; font-size: .8rem; text-decoration: none; }
+.back-link:hover { color: #C8A020; }
+.insp-body { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+.vehicle-banner { background: #0a1e38; border: 1px solid #1a3050; border-left: 4px solid #004080; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem 1.5rem; }
+.vb-label { font-size: .65rem; text-transform: uppercase; letter-spacing: .1em; color: #5a7a9a; }
+.vb-value { font-size: .92rem; font-weight: 600; color: #d0daea; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: .75rem; }
+.field-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+label.fl { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #7a9ab8; display: block; margin-bottom: .3rem; }
+select.fi, input.fi, textarea.fi {
+  width: 100%; background: #0a1e38; border: 1px solid #1a3050; border-radius: 6px;
+  padding: .5rem .75rem; color: #e8edf4; font-family: 'Inter', sans-serif; font-size: .88rem;
+  outline: none; transition: border-color .15s;
+}
+select.fi:focus, input.fi:focus, textarea.fi:focus { border-color: #C8A020; }
+textarea.fi { resize: vertical; min-height: 70px; }
+.insp-section { background: #0a1e38; border: 1px solid #1a3050; border-radius: 10px; margin-bottom: 1rem; overflow: hidden; }
+.insp-section-head { background: #002050; padding: .65rem 1rem; display: flex; align-items: center; gap: .6rem; cursor: pointer; user-select: none; }
+.insp-section-head .sec-num { background: #004080; color: #fff; font-size: .7rem; font-weight: 700; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.insp-section-head .sec-title { font-family: 'Barlow Condensed', sans-serif; font-size: .95rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #D6E4F7; flex: 1; }
+.insp-section-body { padding: .85rem 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem .75rem; }
+.check-item { display: flex; align-items: center; gap: .5rem; background: #0d2540; border: 1px solid #1a3050; border-radius: 6px; padding: .45rem .65rem; }
+.check-label { font-size: .78rem; color: #c0d0e0; flex: 1; line-height: 1.3; }
+.tri-toggle { display: flex; gap: 2px; flex-shrink: 0; }
+.tri-toggle input[type=radio] { display: none; }
+.tri-toggle label { padding: .2rem .4rem; border-radius: 4px; font-size: .65rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; border: 1px solid #1a3050; color: #4a6a8a; background: #0a1e38; transition: all .12s; }
+.tri-toggle input[value="OK"]:checked + label { background: #1a6b3a; border-color: #2a9b5a; color: #fff; }
+.tri-toggle input[value="Needs Attention"]:checked + label { background: #7a4a10; border-color: #b07020; color: #fff; }
+.tri-toggle input[value="N/A"]:checked + label { background: #2a3a4a; border-color: #3a5a7a; color: #9ab; }
+.cert-box { background: #0a2040; border: 1px solid #1a4a8a; border-radius: 8px; padding: 1rem; margin: 1rem 0 0; }
+.cert-text { font-size: .78rem; color: #9bb3cc; line-height: 1.5; margin-bottom: .75rem; }
+.cert-check-row { display: flex; align-items: center; gap: .75rem; }
+.cert-check-row input[type=checkbox] { width: 18px; height: 18px; accent-color: #C8A020; flex-shrink: 0; cursor: pointer; }
+.cert-check-row label { font-size: .82rem; font-weight: 600; color: #d0daea; cursor: pointer; }
+.eod-section { background: #0d1e30; border: 1px solid #1a3050; border-radius: 10px; padding: 1rem; margin: 1.5rem 0 0; }
+.eod-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #D6E4F7; margin-bottom: .85rem; padding-bottom: .5rem; border-bottom: 1px solid #1a3050; }
+.eod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.submit-bar { position: sticky; bottom: 0; background: #002050; border-top: 2px solid #C8A020; padding: .85rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.btn-submit { background: #C8A020; color: #002050; border: none; border-radius: 8px; padding: .65rem 1.75rem; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: background .15s; }
+.btn-submit:hover { background: #d8b030; }
+.btn-submit:disabled { background: #3a5070; color: #6a8aaa; cursor: not-allowed; }
+.toast { position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%); background: #1a6b3a; color: #fff; padding: .75rem 1.5rem; border-radius: 8px; font-size: .88rem; font-weight: 600; display: none; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.toast.error { background: #900010; }
+#loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; z-index: 300; }
+.loading-spinner { width: 40px; height: 40px; border: 4px solid #1a3050; border-top-color: #C8A020; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) {
+  .field-row, .field-row.triple, .insp-section-body, .eod-grid, .vehicle-banner { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block page_content %}
+<body class="lcs-insp">
+<div id="loading-overlay" style="display:none;"><div class="loading-spinner"></div></div>
+<div class="toast" id="toast"></div>
+
+<header class="insp-header">
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <a href="/shortcuts" class="back-link">← Hub</a>
+    <span class="insp-logo">Left Coast <span>Scales</span></span>
+  </div>
+  <span class="insp-form-badge">Form LCS-VEH-002</span>
+</header>
+
+<div class="insp-body">
+
+  <!-- Vehicle / Driver Info -->
+  <div style="margin-bottom:1.25rem;">
+    <div class="field-row">
+      <div>
+        <label class="fl">Vehicle</label>
+        <select class="fi" id="vehicle" required>
+          <option value="">— Select Vehicle —</option>
+        </select>
+      </div>
+      <div>
+        <label class="fl">Inspection Date</label>
+        <input type="date" class="fi" id="inspection_date" required>
+      </div>
+    </div>
+    <div class="vehicle-banner" id="vehicle-banner" style="display:none;">
+      <div><div class="vb-label">Driver</div><div class="vb-value" id="vb-driver">—</div></div>
+      <div><div class="vb-label">Vehicle</div><div class="vb-value" id="vb-vehicle">—</div></div>
+      <div><div class="vb-label">Type</div><div class="vb-value" id="vb-type">—</div></div>
+      <div><div class="vb-label">Plate / State</div><div class="vb-value" id="vb-plate">—</div></div>
+    </div>
+    <div class="field-row triple" style="margin-top:.75rem;">
+      <div>
+        <label class="fl">Odometer — Start</label>
+        <input type="number" class="fi" id="odometer_start" min="0" required placeholder="Miles">
+      </div>
+      <div>
+        <label class="fl">Odometer — End <span style="color:#5a7a9a">(fill at end of day)</span></label>
+        <input type="number" class="fi" id="odometer_end" min="0" placeholder="Miles">
+      </div>
+      <div>
+        <label class="fl">Dispatch Branch</label>
+        <select class="fi" id="dispatch_branch" required>
+          <option value="">— Select —</option>
+          <option>Perris</option>
+          <option>San Diego</option>
+          <option>El Centro</option>
+          <option>Apache Junction</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;color:#5090d0;margin-bottom:.6rem;">Pre-Departure Inspection — Complete Before Leaving the Yard</div>
+
+  <!-- 1. Exterior -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">1</div><div class="sec-title">Exterior Walk-Around</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_body_panels","Body Panels — Damage / Dents","OK"),
+        ("pd_glass","Glass — Windshield & Windows","OK"),
+        ("pd_mirrors","Mirrors — Condition & Adjustment","OK"),
+        ("pd_hood_latch","Hood Latch & Seal","OK"),
+        ("pd_doors","Doors — All Latch & Close Properly","OK"),
+        ("pd_bumpers","Bumpers — Front & Rear","OK"),
+        ("pd_fuel_cap","Fuel Cap — Secure & No Leaks","OK"),
+        ("pd_license_plates","License Plates — Front & Rear","OK"),
+        ("pd_registration","Registration / IFTA Sticker Current","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 2. Engine -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">2</div><div class="sec-title">Engine Compartment</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_oil_level","Engine Oil Level","OK"),
+        ("pd_coolant","Coolant / Antifreeze Level","OK"),
+        ("pd_brake_fluid","Brake Fluid Level","OK"),
+        ("pd_power_steering","Power Steering Fluid (if applicable)","OK"),
+        ("pd_washer_fluid","Windshield Washer Fluid","OK"),
+        ("pd_trans_fluid","Transmission Fluid (if dipstick accessible)","OK"),
+        ("pd_battery","Battery — Secure, No Corrosion","OK"),
+        ("pd_belts","Belts — Condition & Tension","OK"),
+        ("pd_hoses","Hoses — No Cracks / Leaks","OK"),
+        ("pd_fluid_leaks","No Fluid Leaks Under Vehicle","OK"),
+        ("pd_air_filter","Air Filter Indicator / Condition","OK"),
+        ("pd_engine_warning","Engine Warning Light — Clear","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 3. Lights -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">3</div><div class="sec-title">Lights & Electrical</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_headlights","Headlights — High & Low Beam","OK"),
+        ("pd_tail_lights","Tail Lights","OK"),
+        ("pd_brake_lights","Brake / Stop Lights","OK"),
+        ("pd_reverse_lights","Reverse Lights","OK"),
+        ("pd_turn_signals","Turn Signals — Front & Rear","OK"),
+        ("pd_hazard_flashers","Hazard / 4-Way Flashers","OK"),
+        ("pd_parking_lights","Parking Lights","OK"),
+        ("pd_dome_lights","Interior Dome / Cab Lights","OK"),
+        ("pd_dash_warning","Dash Warning Lights — Clear","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 4. Tires -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">4</div><div class="sec-title">Tires & Wheels</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_front_left","Front Left — Inflation & Tread","OK"),
+        ("pd_front_right","Front Right — Inflation & Tread","OK"),
+        ("pd_rear_left","Rear Left — Inflation & Tread","OK"),
+        ("pd_rear_right","Rear Right — Inflation & Tread","OK"),
+        ("pd_spare_tire","Spare Tire — Secured & Inflated (if equipped)","N/A"),
+        ("pd_lug_nuts","Lug Nuts — All Present & Tight","OK"),
+        ("pd_sidewalls","Sidewalls — No Cuts / Bulges","OK"),
+        ("pd_valve_stems","Valve Stems & Caps","OK"),
+        ("pd_wheel_covers","Wheel Covers / Hub Caps Secure","N/A")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 5. Brakes -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">5</div><div class="sec-title">Brakes</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_brake_pedal","Brake Pedal — Firm, No Fade","OK"),
+        ("pd_parking_brake","Parking / Emergency Brake","OK"),
+        ("pd_brake_lines","Brake Lines — No Leaks / Damage","OK"),
+        ("pd_abs_light","ABS Warning Light — Extinguishes","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 6. Safety -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">6</div><div class="sec-title">Safety & Operational Equipment</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_seat_belts","Seat Belts — All Rows Functional","OK"),
+        ("pd_horn","Horn — Audible","OK"),
+        ("pd_wipers_front","Wipers & Washers — Front","OK"),
+        ("pd_wipers_rear","Wipers & Washers — Rear (if equipped)","N/A"),
+        ("pd_defroster","Defroster — Front & Rear","OK"),
+        ("pd_hvac","HVAC / Heater Operation","OK"),
+        ("pd_fire_extinguisher","Fire Extinguisher — Present & Charged","OK"),
+        ("pd_first_aid","First Aid Kit — Stocked","OK"),
+        ("pd_hi_vis","Hi-Vis Vest(s) — Present","OK"),
+        ("pd_warning_triangles","Warning Triangles / Flares","OK"),
+        ("pd_backup_camera","Backup Camera / Sensors (if equipped)","N/A"),
+        ("pd_gps_tracker","GPS / Fleet Tracker — Powered On","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 7. Van Cargo -->
+  <div class="insp-section" id="sec-van">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">7</div><div class="sec-title">Van Cargo Area <span style="font-size:.7rem;color:#5a7a9a;font-weight:400">(Vans)</span></div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_cargo_area","Cargo Area — Clean & Organized","N/A"),
+        ("pd_sliding_doors","Sliding / Rear Doors — Latch & Seal","N/A"),
+        ("pd_cargo_shelving","Cargo Shelving / Racking — Secure","N/A"),
+        ("pd_tools_stowed","Tools & Equipment — Stowed & Tied","N/A"),
+        ("pd_no_loose_items","No Loose Items in Cab Area","N/A"),
+        ("pd_cargo_floor","Cargo Floor — No Damage / Grease","N/A")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 8. Pickup Bed -->
+  <div class="insp-section" id="sec-pickup">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">8</div><div class="sec-title">Pickup Bed & Trailer Equipment <span style="font-size:.7rem;color:#5a7a9a;font-weight:400">(Pickups)</span></div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_tailgate","Tailgate — Latches & Opens Freely","N/A"),
+        ("pd_bed_liner","Bed Liner — Intact, No Cracks","N/A"),
+        ("pd_bed_tiedown","Bed Tie-Down Rings / E-Track","N/A"),
+        ("pd_tonneau_cover","Tonneau Cover / Camper Shell (if equipped)","N/A"),
+        ("pd_truck_toolbox","Truck Tool Box — Locked & Secure (if equipped)","N/A"),
+        ("pd_trailer_hitch","Trailer Hitch / Ball Mount (if equipped)","N/A"),
+        ("pd_trailer_wiring","Trailer Wiring / 7-Pin Connector (if equipped)","N/A")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- 9. LCS Equipment -->
+  <div class="insp-section">
+    <div class="insp-section-head" onclick="toggleSection(this)">
+      <div class="sec-num">9</div><div class="sec-title">LCS Calibration Equipment & Field Gear</div>
+    </div>
+    <div class="insp-section-body">
+      {% for id, label, def in [
+        ("pd_cal_tools","Calibration Tools — Cased & Stowed","OK"),
+        ("pd_test_weights","Test Weights — Secured / Padded","N/A"),
+        ("pd_portable_standard","Portable Reference Standard — Secure","N/A"),
+        ("pd_equipment_crates","Equipment Crates / Cases — Latched","OK"),
+        ("pd_ipad_tablet","LCS iPad / Tablet — Charged","OK"),
+        ("pd_ppe","PPE — Hard Hat, Safety Glasses, Vest","OK"),
+        ("pd_work_orders","Work Order / Job Docs On-Hand","OK"),
+        ("pd_cell_phone","Company Cell Phone — Charged","OK")
+      ] %}{{ lv_item(id, label, def) }}{% endfor %}
+    </div>
+  </div>
+
+  <!-- Defects + cert -->
+  <div style="margin:.75rem 0;">
+    <label class="fl">Defects / Items Needing Attention</label>
+    <textarea class="fi" id="pd_defect_remarks" rows="3" placeholder="Describe any items needing attention…"></textarea>
+  </div>
+  <div class="cert-box">
+    <div class="cert-text">I have inspected this vehicle and all items above have been checked. Any defects or items needing attention are noted above. I confirm this vehicle is safe to operate for today's service.</div>
+    <div class="cert-check-row">
+      <input type="checkbox" id="pd_certified">
+      <label for="pd_certified">I certify the pre-departure inspection is complete and accurate.</label>
+    </div>
+  </div>
+
+  <!-- END OF DAY -->
+  <div class="eod-section" style="margin-top:2rem;">
+    <div class="eod-title">End-of-Day Return Inspection</div>
+    <div style="font-size:.75rem;color:#5a7a9a;margin-bottom:.85rem;">Note any new defects or changes from this morning's inspection.</div>
+    <div class="eod-grid">
+      {% for id, label in [
+        ("eod_exterior","Exterior — No New Damage"),
+        ("eod_lights","Lights — All Functional"),
+        ("eod_tires","Tires — OK / Pressure Held"),
+        ("eod_brakes","Brakes — No Change"),
+        ("eod_fluid_leaks","Fluid Leaks Observed?"),
+        ("eod_equipment_returned","Equipment Returned & Stowed"),
+        ("eod_fuel_adequate","Fuel Level Adequate for AM"),
+        ("eod_vehicle_secured","Vehicle Secured / Locked"),
+        ("eod_keys_returned","Keys Returned to Cabinet")
+      ] %}{{ lv_item(id, label, "OK") }}{% endfor %}
+    </div>
+    <div style="margin-top:.75rem;">
+      <label class="fl">New Defects / Damage Observed During Day</label>
+      <textarea class="fi" id="eod_new_defects" rows="3" placeholder="If no new issues, leave blank…"></textarea>
+    </div>
+    <div class="field-row triple" style="margin-top:.75rem;">
+      <div><label class="fl">Fuel Added (gal)</label><input type="number" step="0.1" class="fi" id="eod_fuel_added" placeholder="0.0"></div>
+      <div><label class="fl">Fuel Location</label><input type="text" class="fi" id="eod_fuel_location" placeholder="Station name / address"></div>
+      <div><label class="fl">Receipt #</label><input type="text" class="fi" id="eod_receipt_number" placeholder="—"></div>
+    </div>
+    <div class="cert-box" style="margin-top:.75rem;">
+      <div class="cert-text">I have returned this vehicle in the same or better condition than received. Any new defects discovered during today's operation are noted above.</div>
+      <div class="cert-check-row">
+        <input type="checkbox" id="eod_certified">
+        <label for="eod_certified">I certify the end-of-day inspection is complete and accurate.</label>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /insp-body -->
+
+<div class="submit-bar">
+  <span style="font-size:.72rem;color:#5a7a9a;">Complete all required fields to submit.</span>
+  <button class="btn-submit" id="btn-submit" onclick="submitForm()">Submit Inspection</button>
+</div>
+
+</body>
+{% endblock %}
+
+{% macro lv_item(id, label, def) %}
+<div class="check-item">
+  <span class="check-label">{{ label }}</span>
+  <div class="tri-toggle">
+    <input type="radio" name="{{ id }}" id="{{ id }}-ok" value="OK" {% if def == 'OK' %}checked{% endif %}>
+    <label for="{{ id }}-ok">OK</label>
+    <input type="radio" name="{{ id }}" id="{{ id }}-na2" value="Needs Attention">
+    <label for="{{ id }}-na2">!</label>
+    <input type="radio" name="{{ id }}" id="{{ id }}-na" value="N/A" {% if def == 'N/A' %}checked{% endif %}>
+    <label for="{{ id }}-na">N/A</label>
+  </div>
+</div>
+{% endmacro %}
+
+{% block script %}
+<script>
+const API = '/api/method/field_service_management.api.vehicle_inspection';
+let vehicleData = {};
+
+async function loadDefaults() {
+  try {
+    const r = await fetch(`${API}.get_vehicle_defaults?form_type=Light+Vehicle`);
+    const d = await r.json();
+    const info = d.message;
+
+    document.getElementById('vb-driver').textContent = info.employee_name;
+    document.getElementById('inspection_date').value = info.today;
+
+    if (info.branch) {
+      const br = document.getElementById('dispatch_branch');
+      for (let o of br.options) { if (o.value === info.branch) { o.selected = true; break; } }
+    }
+
+    const sel = document.getElementById('vehicle');
+    vehicleData = {};
+    info.vehicles.forEach(v => {
+      vehicleData[v.name] = v;
+      const o = document.createElement('option');
+      o.value = v.name;
+      o.textContent = v.display_label;
+      if (v.branch) o.textContent += ` [${v.branch}]`;
+      sel.appendChild(o);
+    });
+
+    if (info.last_vehicle && vehicleData[info.last_vehicle]) {
+      sel.value = info.last_vehicle;
+      onVehicleChange(info.last_odometer);
+    }
+  } catch(e) {
+    showToast('Error loading vehicle data. Please refresh.', true);
+  }
+}
+
+function onVehicleChange(prefillOdometer) {
+  const sel = document.getElementById('vehicle');
+  const v = vehicleData[sel.value];
+  if (!v) { document.getElementById('vehicle-banner').style.display = 'none'; return; }
+
+  document.getElementById('vb-vehicle').textContent = v.display_label;
+  document.getElementById('vb-type').textContent = v.vehicle_type;
+  document.getElementById('vb-plate').textContent = (v.license_plate || '—') + (v.plate_state ? ' ' + v.plate_state : '');
+  document.getElementById('vehicle-banner').style.display = 'grid';
+
+  // Auto-set section 7 (van) or 8 (pickup) based on vehicle type
+  const isVan = v.vehicle_type === 'Van';
+  const isPickup = v.vehicle_type === 'Pickup';
+  setVanPickupDefaults(isVan, isPickup);
+
+  if (v.branch) {
+    const br = document.getElementById('dispatch_branch');
+    if (!br.value) {
+      for (let o of br.options) { if (o.value === v.branch) { o.selected = true; break; } }
+    }
+  }
+
+  const odo = prefillOdometer !== undefined ? prefillOdometer : v.last_odometer;
+  if (odo) document.getElementById('odometer_start').value = odo;
+}
+
+function setVanPickupDefaults(isVan, isPickup) {
+  // Van cargo items
+  const vanFields = ['pd_cargo_area','pd_sliding_doors','pd_cargo_shelving','pd_tools_stowed','pd_no_loose_items','pd_cargo_floor'];
+  vanFields.forEach(f => {
+    const val = isVan ? 'OK' : 'N/A';
+    const el = document.querySelector(`input[name="${f}"][value="${val}"]`);
+    if (el) el.checked = true;
+  });
+
+  // Pickup fields
+  const pickupFields = ['pd_tailgate','pd_bed_liner','pd_bed_tiedown'];
+  pickupFields.forEach(f => {
+    const val = isPickup ? 'OK' : 'N/A';
+    const el = document.querySelector(`input[name="${f}"][value="${val}"]`);
+    if (el) el.checked = true;
+  });
+}
+
+function toggleSection(head) {
+  const body = head.nextElementSibling;
+  body.style.display = body.style.display === 'none' ? '' : 'none';
+}
+
+function getRadioValue(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+async function submitForm() {
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+
+  const fields = [
+    'pd_body_panels','pd_glass','pd_mirrors','pd_hood_latch','pd_doors','pd_bumpers','pd_fuel_cap','pd_license_plates','pd_registration',
+    'pd_oil_level','pd_coolant','pd_brake_fluid','pd_power_steering','pd_washer_fluid','pd_trans_fluid','pd_battery','pd_belts','pd_hoses','pd_fluid_leaks','pd_air_filter','pd_engine_warning',
+    'pd_headlights','pd_tail_lights','pd_brake_lights','pd_reverse_lights','pd_turn_signals','pd_hazard_flashers','pd_parking_lights','pd_dome_lights','pd_dash_warning',
+    'pd_front_left','pd_front_right','pd_rear_left','pd_rear_right','pd_spare_tire','pd_lug_nuts','pd_sidewalls','pd_valve_stems','pd_wheel_covers',
+    'pd_brake_pedal','pd_parking_brake','pd_brake_lines','pd_abs_light',
+    'pd_seat_belts','pd_horn','pd_wipers_front','pd_wipers_rear','pd_defroster','pd_hvac','pd_fire_extinguisher','pd_first_aid','pd_hi_vis','pd_warning_triangles','pd_backup_camera','pd_gps_tracker',
+    'pd_cargo_area','pd_sliding_doors','pd_cargo_shelving','pd_tools_stowed','pd_no_loose_items','pd_cargo_floor',
+    'pd_tailgate','pd_bed_liner','pd_bed_tiedown','pd_tonneau_cover','pd_truck_toolbox','pd_trailer_hitch','pd_trailer_wiring',
+    'pd_cal_tools','pd_test_weights','pd_portable_standard','pd_equipment_crates','pd_ipad_tablet','pd_ppe','pd_work_orders','pd_cell_phone',
+    'eod_exterior','eod_lights','eod_tires','eod_brakes','eod_fluid_leaks','eod_equipment_returned','eod_fuel_adequate','eod_vehicle_secured','eod_keys_returned'
+  ];
+
+  const data = {
+    vehicle: document.getElementById('vehicle').value,
+    inspection_date: document.getElementById('inspection_date').value,
+    odometer_start: parseInt(document.getElementById('odometer_start').value) || 0,
+    odometer_end: parseInt(document.getElementById('odometer_end').value) || 0,
+    dispatch_branch: document.getElementById('dispatch_branch').value,
+    pd_defect_remarks: document.getElementById('pd_defect_remarks').value,
+    eod_new_defects: document.getElementById('eod_new_defects').value,
+    eod_fuel_added: parseFloat(document.getElementById('eod_fuel_added').value) || 0,
+    eod_fuel_location: document.getElementById('eod_fuel_location').value,
+    eod_receipt_number: document.getElementById('eod_receipt_number').value,
+    pd_certified: document.getElementById('pd_certified').checked ? 1 : 0,
+    eod_certified: document.getElementById('eod_certified').checked ? 1 : 0,
+  };
+
+  fields.forEach(f => { data[f] = getRadioValue(f) || 'N/A'; });
+
+  if (!data.vehicle) { showToast('Please select a vehicle.', true); btn.disabled = false; return; }
+  if (!data.inspection_date) { showToast('Please enter the inspection date.', true); btn.disabled = false; return; }
+  if (!data.odometer_start) { showToast('Please enter the starting odometer reading.', true); btn.disabled = false; return; }
+  if (!data.dispatch_branch) { showToast('Please select a dispatch branch.', true); btn.disabled = false; return; }
+  if (!data.pd_certified) { showToast('Please certify the pre-departure inspection.', true); btn.disabled = false; return; }
+
+  document.getElementById('loading-overlay').style.display = 'flex';
+
+  try {
+    const r = await fetch(`${API}.submit_light_inspection`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': frappe.csrf_token},
+      body: JSON.stringify({data: JSON.stringify(data)})
+    });
+    const result = await r.json();
+    document.getElementById('loading-overlay').style.display = 'none';
+    if (result.message && result.message.status === 'success') {
+      showToast(`✓ Inspection saved — ${result.message.name}`);
+      setTimeout(() => { window.location.href = '/shortcuts'; }, 2000);
+    } else {
+      showToast('Error saving inspection. Please try again.', true);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    document.getElementById('loading-overlay').style.display = 'none';
+    showToast('Network error. Please try again.', true);
+    btn.disabled = false;
+  }
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+document.getElementById('vehicle').addEventListener('change', () => onVehicleChange());
+document.addEventListener('DOMContentLoaded', loadDefaults);
+</script>
+{% endblock %}
