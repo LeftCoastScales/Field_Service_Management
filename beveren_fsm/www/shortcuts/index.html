@@ -63,6 +63,22 @@ body.lcs-shortcuts-page {
 .qa-user-name { font-size: 0.82rem; font-weight: 600; color: #fff; white-space: nowrap; }
 .qa-user-role { font-size: 0.7rem; color: #9bb3cc; white-space: nowrap; }
 
+.qa-admin-link {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.72rem; font-weight: 500; letter-spacing: 0.04em;
+  color: #C8A020; text-decoration: none;
+  border: 1px solid rgba(200,160,32,0.35);
+  border-radius: 6px; padding: 0.3rem 0.65rem;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.qa-admin-link:hover {
+  background: rgba(200,160,32,0.12);
+  border-color: rgba(200,160,32,0.65);
+  color: #d8b840;
+}
+.qa-admin-link svg { flex-shrink: 0; }
+
 /* ---------- SEARCH ---------- */
 .qa-search-zone {
   background: linear-gradient(180deg, #002050 0%, #0d1824 100%);
@@ -197,11 +213,22 @@ body.lcs-shortcuts-page {
     <div class="qa-header-divider"></div>
     <span class="qa-header-title">Quick Access</span>
   </div>
-  <div class="qa-user-chip">
-    <div class="qa-user-avatar" id="qa-avatar">??</div>
-    <div class="qa-user-info">
-      <div class="qa-user-name" id="qa-user-name">{{ employee_name }}</div>
-      <div class="qa-user-role">{{ designation or department or 'Employee' }}</div>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    {% if is_system_manager %}
+    <a class="qa-admin-link" href="/app/lcs-shortcut" title="Manage shortcuts in ERPNext desk">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>
+      </svg>
+      Manage Shortcuts
+    </a>
+    {% endif %}
+    <div class="qa-user-chip">
+      <div class="qa-user-avatar" id="qa-avatar">??</div>
+      <div class="qa-user-info">
+        <div class="qa-user-name" id="qa-user-name">{{ employee_name }}</div>
+        <div class="qa-user-role">{{ designation or department or 'Employee' }}</div>
+      </div>
     </div>
   </div>
 </header>

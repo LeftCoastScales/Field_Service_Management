@@ -77,3 +77,6 @@ def get_context(context):
             })
 
     context.sections = sections
+
+    # --- Admin link visibility ---
+    context.is_system_manager = "System Manager" in frappe.get_roles(frappe.session.user)
