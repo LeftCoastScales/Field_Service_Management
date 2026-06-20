@@ -411,7 +411,9 @@ let employeeId = '';
 
 async function loadDefaults() {
   try {
-    const r = await fetch(`${API}.get_vehicle_defaults?form_type=DOT`);
+    const r = await fetch(`${API}.get_vehicle_defaults?form_type=DOT`, {
+      headers: {'X-Frappe-CSRF-Token': frappe.csrf_token}
+    });
     const d = await r.json();
     const info = d.message;
 

@@ -375,8 +375,9 @@ let vehicleData = {};
 
 async function loadDefaults() {
   try {
-    const r = await fetch(`${API}.get_vehicle_defaults?form_type=Light+Vehicle`);
-    const d = await r.json();
+const r = await fetch(`${API}.get_vehicle_defaults?form_type=Light+Vehicle`, {
+  headers: {'X-Frappe-CSRF-Token': frappe.csrf_token}
+});    const d = await r.json();
     const info = d.message;
 
     document.getElementById('vb-driver').textContent = info.employee_name;
