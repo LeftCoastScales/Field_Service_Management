@@ -380,16 +380,15 @@ function getCookie(name) {
 
 async function loadDefaults() {
   try {
-    const r = await fetch(`${API}.get_vehicle_defaults`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': getCSRF()
-      },
-      body: JSON.stringify({form_type: 'Light Vehicle'})
+    const result = await new Promise((resolve, reject) => {
+      frappe.call({
+        method: 'beveren_fsm.field_service_management.api.vehicle_inspection.get_vehicle_defaults',
+        args: {form_type: 'Light Vehicle'},
+        callback: (r) => resolve(r),
+        error: (r) => reject(r)
+      });
     });
-    const d = await r.json();
-    const info = d.message;
+    const info = result.message;
 
     document.getElementById('vb-driver').textContent = info.employee_name;
     document.getElementById('inspection_date').value = info.today;
@@ -515,22 +514,25 @@ async function submitForm() {
 
   document.getElementById('loading-overlay').style.display = 'flex';
 
-  try {
-    const r = await fetch(`${API}.submit_light_inspection`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCookie('csrf_token')},
-      body: JSON.stringify({data: JSON.stringify(data)})
-    });
-    const result = await r.json();
-    document.getElementById('loading-overlay').style.display = 'none';
-    if (result.message && result.message.status === 'success') {
-      showToast(`✓ Inspection saved — ${result.message.name}`);
-      setTimeout(() => { window.location.href = '/shortcuts'; }, 2000);
-    } else {
-      showToast('Error saving inspection. Please try again.', true);
+  frappe.call({
+    method: 'beveren_fsm.field_service_management.api.vehicle_inspection.submit_light_inspection',
+    args: {data: JSON.stringify(data)},
+    callback: (r) => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      if (r.message && r.message.status === 'success') {
+        showToast(`✓ Inspection saved — ${r.message.name}`);
+        setTimeout(() => { window.location.href = '/shortcuts'; }, 2000);
+      } else {
+        showToast('Error saving inspection. Please try again.', true);
+        btn.disabled = false;
+      }
+    },
+    error: () => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      showToast('Network error. Please try again.', true);
       btn.disabled = false;
     }
-  } catch(e) {
+  }); catch(e) {
     document.getElementById('loading-overlay').style.display = 'none';
     showToast('Network error. Please try again.', true);
     btn.disabled = false;
