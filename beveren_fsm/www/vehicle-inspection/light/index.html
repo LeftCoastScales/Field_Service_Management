@@ -382,8 +382,7 @@ async function loadDefaults() {
   try {
     const result = await new Promise((resolve, reject) => {
       frappe.call({
-        method: 'beveren_fsm.field_service_management.api.vehicle_inspection.get_vehicle_defaults',
-        args: {form_type: 'Light Vehicle'},
+        method: 'get_light_vehicle_defaults',
         callback: (r) => resolve(r),
         error: (r) => reject(r)
       });
