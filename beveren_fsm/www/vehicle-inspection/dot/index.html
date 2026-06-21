@@ -551,11 +551,7 @@ async function submitForm() {
       showToast('Network error. Please try again.', true);
       btn.disabled = false;
     }
-  }); catch(e) {
-    document.getElementById('loading-overlay').style.display = 'none';
-    showToast('Network error. Please try again.', true);
-    btn.disabled = false;
-  }
+  });
 }
 
 function showToast(msg, isError) {
