@@ -5,31 +5,95 @@ import frappe
 from frappe.utils import today, now_datetime
 
 
-@frappe.whitelist()
-def get_vehicle_defaults(form_type):
-	"""
-	Returns:
-	  - vehicles: list of active LCS Vehicle records filtered by form_type
-	  - employee: logged-in employee name + branch
-	  - last_vehicle: last vehicle this employee drove (from most recent inspection)
-	  - last_odometer: last odometer for that vehicle
-	  - branch: employee's home branch
-	"""
+def _get_employee():
 	user = frappe.session.user
 	if user == "Guest":
 		frappe.throw("Not permitted", frappe.PermissionError)
-
-	# Get employee record
 	employee = frappe.db.get_value(
-		"Employee",
-		{"user_id": user, "status": "Active"},
-		["name", "employee_name", "branch", "department"],
-		as_dict=True,
+		"Employee", {"user_id": user, "status": "Active"},
+		["name", "employee_name", "branch"], as_dict=True,
 	)
 	if not employee:
 		frappe.throw("No active Employee record found for your login.")
+	return employee
 
-	# Get vehicles filtered by form type
+
+@frappe.whitelist()
+def get_dot_page_state():
+	"""
+	Returns the state the DOT inspection page should render in:
+	  - mode: 'pre_trip' (no open record today) or 'post_trip' (open record exists)
+	  - record: the open record name if post_trip mode
+	  - plus vehicle defaults for pre_trip mode
+	"""
+	employee = _get_employee()
+	today_date = today()
+
+	# Check for an open (Pre-Trip Complete) record for today
+	open_record = frappe.db.get_value(
+		"LCS DOT Inspection",
+		{"driver": employee.name, "inspection_date": today_date, "inspection_status": "Pre-Trip Complete"},
+		["name", "vehicle", "odometer_start", "dispatch_branch",
+		 "vehicle_year_make_model", "license_plate", "plate_state", "vin_last_4"],
+		order_by="creation desc",
+		as_dict=True,
+	)
+
+	if open_record:
+		return {
+			"mode": "post_trip",
+			"record": open_record,
+			"employee_name": employee.employee_name,
+			"employee_id": employee.name,
+			"today": today_date,
+		}
+
+	# No open record — pre-trip mode, return vehicle defaults
+	vehicles = frappe.get_all(
+		"LCS Vehicle",
+		filters={"form_type": "DOT", "status": "Active"},
+		fields=["name", "unit_number", "nickname", "year", "make", "model",
+		        "vin_last_4", "license_plate", "plate_state", "branch",
+		        "last_odometer", "vehicle_type"],
+		order_by="branch asc, unit_number asc",
+	)
+	for v in vehicles:
+		nick = f" ({v.nickname})" if v.nickname else ""
+		v["display_label"] = f"{v.year} {v.make} {v.model}{nick} - VIN {v.vin_last_4}"
+
+	last_insp = frappe.db.get_value(
+		"LCS DOT Inspection",
+		{"driver": employee.name},
+		["vehicle", "odometer_end", "odometer_start"],
+		order_by="inspection_date desc, creation desc",
+		as_dict=True,
+	)
+	last_vehicle = None
+	last_odometer = 0
+	if last_insp:
+		last_vehicle = last_insp.vehicle
+		last_odometer = last_insp.odometer_end or last_insp.odometer_start or 0
+	if last_vehicle:
+		master_odo = frappe.db.get_value("LCS Vehicle", last_vehicle, "last_odometer")
+		if master_odo:
+			last_odometer = master_odo
+
+	return {
+		"mode": "pre_trip",
+		"employee_name": employee.employee_name,
+		"employee_id": employee.name,
+		"branch": employee.branch or "",
+		"vehicles": vehicles,
+		"last_vehicle": last_vehicle,
+		"last_odometer": last_odometer,
+		"today": today_date,
+	}
+
+
+@frappe.whitelist()
+def get_vehicle_defaults(form_type):
+	"""Legacy endpoint — kept for light vehicle form."""
+	employee = _get_employee()
 	vehicles = frappe.get_all(
 		"LCS Vehicle",
 		filters={"form_type": form_type, "status": "Active"},
@@ -38,52 +102,25 @@ def get_vehicle_defaults(form_type):
 		        "last_odometer", "last_driver", "vehicle_type"],
 		order_by="branch asc, unit_number asc",
 	)
-
-	# Build display label for each vehicle
 	for v in vehicles:
 		nick = f" ({v.nickname})" if v.nickname else ""
-		v["display_label"] = f"{v.year} {v.make} {v.model}{nick} — VIN {v.vin_last_4}"
+		v["display_label"] = f"{v.year} {v.make} {v.model}{nick} - VIN {v.vin_last_4}"
 
-	# Find last vehicle this employee drove — check both inspection doctypes
+	doctype = "LCS DOT Inspection" if form_type == "DOT" else "LCS Light Vehicle Inspection"
+	last_insp = frappe.db.get_value(
+		doctype, {"driver": employee.name},
+		["vehicle", "odometer_end", "odometer_start"],
+		order_by="inspection_date desc, creation desc", as_dict=True,
+	)
 	last_vehicle = None
 	last_odometer = 0
-
-	if form_type == "DOT":
-		last_insp = frappe.db.get_value(
-			"LCS DOT Inspection",
-			{"driver": employee.name},
-			["vehicle", "odometer_end", "odometer_start", "inspection_date"],
-			order_by="inspection_date desc, creation desc",
-			as_dict=True,
-		)
-	else:
-		last_insp = frappe.db.get_value(
-			"LCS Light Vehicle Inspection",
-			{"driver": employee.name},
-			["vehicle", "odometer_end", "odometer_start", "inspection_date"],
-			order_by="inspection_date desc, creation desc",
-			as_dict=True,
-		)
-
 	if last_insp:
 		last_vehicle = last_insp.vehicle
 		last_odometer = last_insp.odometer_end or last_insp.odometer_start or 0
-
-	# If no prior inspection, try last_driver on vehicles
-	if not last_vehicle:
-		driven = frappe.db.get_value(
-			"LCS Vehicle",
-			{"last_driver": employee.name, "form_type": form_type},
-			"name",
-		)
-		if driven:
-			last_vehicle = driven
-
-	# If we have a last vehicle, get its current last odometer from the master
 	if last_vehicle:
-		master_odometer = frappe.db.get_value("LCS Vehicle", last_vehicle, "last_odometer")
-		if master_odometer:
-			last_odometer = master_odometer
+		master_odo = frappe.db.get_value("LCS Vehicle", last_vehicle, "last_odometer")
+		if master_odo:
+			last_odometer = master_odo
 
 	return {
 		"employee_name": employee.employee_name,
@@ -98,7 +135,6 @@ def get_vehicle_defaults(form_type):
 
 @frappe.whitelist()
 def get_vehicle_odometer(vehicle):
-	"""Return the last recorded odometer for a given vehicle."""
 	if frappe.session.user == "Guest":
 		frappe.throw("Not permitted", frappe.PermissionError)
 	odometer = frappe.db.get_value("LCS Vehicle", vehicle, "last_odometer")
@@ -106,34 +142,109 @@ def get_vehicle_odometer(vehicle):
 
 
 @frappe.whitelist(methods=["POST"])
-def submit_dot_inspection(data):
-	"""Create and save an LCS DOT Inspection from the web form."""
+def submit_dot_pretrip(data):
+	"""Create a new LCS DOT Inspection with pre-trip data. Status = Pre-Trip Complete."""
 	import json
 	if isinstance(data, str):
 		data = json.loads(data)
 
-	user = frappe.session.user
-	if user == "Guest":
-		frappe.throw("Not permitted", frappe.PermissionError)
-
-	employee = frappe.db.get_value(
-		"Employee", {"user_id": user, "status": "Active"}, "name"
-	)
-	if not employee:
-		frappe.throw("No active Employee record found.")
-
-	# Populate vehicle info from master
+	employee = _get_employee()
 	vehicle = frappe.get_doc("LCS Vehicle", data.get("vehicle"))
 
 	doc = frappe.new_doc("LCS DOT Inspection")
 	doc.update(data)
-	doc.driver = employee
+	doc.driver = employee.name
+	doc.inspection_status = "Pre-Trip Complete"
 	doc.vehicle_year_make_model = f"{vehicle.year} {vehicle.make} {vehicle.model}"
 	doc.license_plate = vehicle.license_plate or ""
 	doc.plate_state = vehicle.plate_state or ""
 	doc.vin_last_4 = vehicle.vin_last_4 or ""
+	if doc.pt_certified:
+		doc.pt_certified_time = now_datetime()
 
-	# Certification time
+	doc.insert(ignore_permissions=True)
+	doc.save(ignore_permissions=True)
+
+	# Update vehicle master with start odometer
+	if data.get("odometer_start"):
+		vehicle.last_odometer = int(data["odometer_start"])
+		vehicle.last_odometer_date = data.get("inspection_date") or today()
+		vehicle.last_driver = employee.name
+		vehicle.save(ignore_permissions=True)
+
+	return {"name": doc.name, "status": "success"}
+
+
+@frappe.whitelist(methods=["POST"])
+def submit_dot_posttrip(data):
+	"""Update an existing LCS DOT Inspection with post-trip data. Status = Complete."""
+	import json
+	if isinstance(data, str):
+		data = json.loads(data)
+
+	employee = _get_employee()
+	record_name = data.get("record_name")
+	if not record_name:
+		frappe.throw("No inspection record specified.")
+
+	doc = frappe.get_doc("LCS DOT Inspection", record_name)
+
+	# Verify this driver owns the record
+	if doc.driver != employee.name:
+		frappe.throw("You are not authorized to update this inspection.")
+
+	# Update post-trip fields
+	doc.odometer_end = int(data.get("odometer_end") or 0) or None
+	doc.fuel_level = data.get("fuel_level") or ""
+	doc.post_brakes = data.get("post_brakes") or "OK"
+	doc.post_steering = data.get("post_steering") or "OK"
+	doc.post_lights = data.get("post_lights") or "OK"
+	doc.post_tires = data.get("post_tires") or "OK"
+	doc.post_engine = data.get("post_engine") or "OK"
+	doc.post_body = data.get("post_body") or "OK"
+	doc.post_safety = data.get("post_safety") or "OK"
+	doc.post_cargo = data.get("post_cargo") or "OK"
+	doc.post_defect_remarks = data.get("post_defect_remarks") or ""
+	doc.post_certified = 1 if data.get("post_certified") else 0
+	if doc.post_certified:
+		doc.post_certified_time = now_datetime()
+
+	# Compute total miles
+	if doc.odometer_start and doc.odometer_end:
+		doc.total_miles = max(0, doc.odometer_end - doc.odometer_start)
+
+	doc.inspection_status = "Complete"
+	doc.save(ignore_permissions=True)
+
+	# Update vehicle master with end odometer
+	if doc.odometer_end:
+		vehicle = frappe.get_doc("LCS Vehicle", doc.vehicle)
+		vehicle.last_odometer = doc.odometer_end
+		vehicle.last_odometer_date = doc.inspection_date
+		vehicle.last_driver = employee.name
+		vehicle.save(ignore_permissions=True)
+
+	return {"name": doc.name, "status": "success"}
+
+
+@frappe.whitelist(methods=["POST"])
+def submit_dot_inspection(data):
+	"""Legacy single-submit endpoint — kept for compatibility."""
+	import json
+	if isinstance(data, str):
+		data = json.loads(data)
+
+	employee = _get_employee()
+	vehicle = frappe.get_doc("LCS Vehicle", data.get("vehicle"))
+
+	doc = frappe.new_doc("LCS DOT Inspection")
+	doc.update(data)
+	doc.driver = employee.name
+	doc.inspection_status = "Complete"
+	doc.vehicle_year_make_model = f"{vehicle.year} {vehicle.make} {vehicle.model}"
+	doc.license_plate = vehicle.license_plate or ""
+	doc.plate_state = vehicle.plate_state or ""
+	doc.vin_last_4 = vehicle.vin_last_4 or ""
 	if doc.pt_certified:
 		doc.pt_certified_time = now_datetime()
 	if doc.post_certified:
@@ -142,12 +253,11 @@ def submit_dot_inspection(data):
 	doc.insert(ignore_permissions=True)
 	doc.save(ignore_permissions=True)
 
-	# Update vehicle master
 	odometer = data.get("odometer_end") or data.get("odometer_start")
 	if odometer:
 		vehicle.last_odometer = int(odometer)
 		vehicle.last_odometer_date = data.get("inspection_date") or today()
-		vehicle.last_driver = employee
+		vehicle.last_driver = employee.name
 		vehicle.save(ignore_permissions=True)
 
 	return {"name": doc.name, "status": "success"}
@@ -160,21 +270,12 @@ def submit_light_inspection(data):
 	if isinstance(data, str):
 		data = json.loads(data)
 
-	user = frappe.session.user
-	if user == "Guest":
-		frappe.throw("Not permitted", frappe.PermissionError)
-
-	employee = frappe.db.get_value(
-		"Employee", {"user_id": user, "status": "Active"}, "name"
-	)
-	if not employee:
-		frappe.throw("No active Employee record found.")
-
+	employee = _get_employee()
 	vehicle = frappe.get_doc("LCS Vehicle", data.get("vehicle"))
 
 	doc = frappe.new_doc("LCS Light Vehicle Inspection")
 	doc.update(data)
-	doc.driver = employee
+	doc.driver = employee.name
 	doc.vehicle_type = vehicle.vehicle_type
 	doc.vehicle_year_make = f"{vehicle.year} {vehicle.make} {vehicle.model}"
 	doc.unit_fleet_number = vehicle.unit_number
@@ -193,7 +294,7 @@ def submit_light_inspection(data):
 	if odometer:
 		vehicle.last_odometer = int(odometer)
 		vehicle.last_odometer_date = data.get("inspection_date") or today()
-		vehicle.last_driver = employee
+		vehicle.last_driver = employee.name
 		vehicle.save(ignore_permissions=True)
 
 	return {"name": doc.name, "status": "success"}
