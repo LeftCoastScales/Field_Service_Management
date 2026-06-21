@@ -373,11 +373,18 @@ textarea.fi { resize: vertical; min-height: 70px; }
 const API = '/api/method/field_service_management.api.vehicle_inspection';
 let vehicleData = {};
 
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : '';
+}
+
 async function loadDefaults() {
   try {
-const r = await fetch(`${API}.get_vehicle_defaults?form_type=Light+Vehicle`, {
-  headers: {'X-Frappe-CSRF-Token': frappe.csrf_token}
-});    const d = await r.json();
+    const csrfToken = getCookie('csrf_token');
+    const r = await fetch(`${API}.get_vehicle_defaults?form_type=Light+Vehicle`, {
+      headers: {'X-Frappe-CSRF-Token': csrfToken}
+    });
+    const d = await r.json();
     const info = d.message;
 
     document.getElementById('vb-driver').textContent = info.employee_name;
@@ -507,7 +514,7 @@ async function submitForm() {
   try {
     const r = await fetch(`${API}.submit_light_inspection`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': frappe.csrf_token},
+      headers: {'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCookie('csrf_token')},
       body: JSON.stringify({data: JSON.stringify(data)})
     });
     const result = await r.json();
