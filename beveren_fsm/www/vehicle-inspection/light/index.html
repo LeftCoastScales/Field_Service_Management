@@ -36,7 +36,7 @@ textarea.fi { resize: vertical; min-height: 70px; }
 .tri-toggle input[type=radio] { display: none; }
 .tri-toggle label { padding: .2rem .4rem; border-radius: 4px; font-size: .65rem; font-weight: 700; letter-spacing: .05em; cursor: pointer; border: 1px solid #1a3050; color: #4a6a8a; background: #0a1e38; transition: all .12s; }
 .tri-toggle input[value="OK"]:checked + label { background: #1a6b3a; border-color: #2a9b5a; color: #fff; }
-.tri-toggle input[value="Needs Attention"]:checked + label { background: #7a4a10; border-color: #b07020; color: #fff; }
+.tri-toggle input[value="Defect"]:checked + label { background: #7a1020; border-color: #b01830; color: #fff; }
 .tri-toggle input[value="N/A"]:checked + label { background: #2a3a4a; border-color: #3a5a7a; color: #9ab; }
 .fuel-toggle { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
 .fuel-toggle input[type=radio] { display: none; }
@@ -267,13 +267,13 @@ function buildSection(num, title, items) {
 }
 
 function buildCheckItem(id, label, def) {
-  var okChk = def === 'OK' ? ' checked' : '';
-  var naChk = def === 'N/A' ? ' checked' : '';
+  var okChk = '';
+  var naChk = '';
   return '<div class="check-item">' +
     '<span class="check-label">' + label + '</span>' +
     '<div class="tri-toggle">' +
       '<input type="radio" name="' + id + '" id="' + id + '-ok" value="OK"' + okChk + '><label for="' + id + '-ok">OK</label>' +
-      '<input type="radio" name="' + id + '" id="' + id + '-na2" value="Needs Attention"><label for="' + id + '-na2">!</label>' +
+      '<input type="radio" name="' + id + '" id="' + id + '-na2" value="Defect"><label for="' + id + '-na2">Defect</label>' +
       '<input type="radio" name="' + id + '" id="' + id + '-na" value="N/A"' + naChk + '><label for="' + id + '-na">N/A</label>' +
     '</div>' +
   '</div>';
@@ -283,8 +283,8 @@ function buildEodItem(id, label) {
   return '<div class="check-item">' +
     '<span class="check-label">' + label + '</span>' +
     '<div class="tri-toggle">' +
-      '<input type="radio" name="' + id + '" id="' + id + '-ok" value="OK" checked><label for="' + id + '-ok">OK</label>' +
-      '<input type="radio" name="' + id + '" id="' + id + '-na2" value="Needs Attention"><label for="' + id + '-na2">!</label>' +
+      '<input type="radio" name="' + id + '" id="' + id + '-ok" value="OK"><label for="' + id + '-ok">OK</label>' +
+      '<input type="radio" name="' + id + '" id="' + id + '-na2" value="Defect"><label for="' + id + '-na2">Defect</label>' +
       '<input type="radio" name="' + id + '" id="' + id + '-na" value="N/A"><label for="' + id + '-na">N/A</label>' +
     '</div>' +
   '</div>';

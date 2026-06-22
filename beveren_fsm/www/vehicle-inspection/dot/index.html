@@ -263,8 +263,8 @@ function buildSection(num, title, items) {
 }
 
 function buildCheckItem(id, label, def) {
-  var okChk = def === 'OK' ? ' checked' : '';
-  var naChk = def === 'N/A' ? ' checked' : '';
+  var okChk = '';
+  var naChk = '';
   return '<div class="check-item">' +
     '<span class="check-label">' + label + '</span>' +
     '<div class="tri-toggle">' +
@@ -279,7 +279,7 @@ function buildPostItem(id, label) {
   return '<div class="check-item">' +
     '<span class="check-label">' + label + '</span>' +
     '<div class="tri-toggle">' +
-      '<input type="radio" name="' + id + '" id="' + id + '-ok" value="OK" checked><label for="' + id + '-ok">OK</label>' +
+      '<input type="radio" name="' + id + '" id="' + id + '-ok" value="OK"><label for="' + id + '-ok">OK</label>' +
       '<input type="radio" name="' + id + '" id="' + id + '-defect" value="Defect"><label for="' + id + '-defect">Defect</label>' +
       '<input type="radio" name="' + id + '" id="' + id + '-na" value="N/A"><label for="' + id + '-na">N/A</label>' +
     '</div>' +
