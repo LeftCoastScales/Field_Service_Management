@@ -1,0 +1,218 @@
+[
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Alexus Hanserd",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-09-15",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Alyssa Reeves",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2023-09-13",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Ayden Campos",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2024-08-19",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Corey Stacy",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2015-02-25",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Daniel Hernandez",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2023-10-02",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Dyla Grant",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2020-07-27",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Edward Perez",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-03-03",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Hilda Gil",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2020-11-09",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jake Cowger",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-12-15",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jason Fitzgerald",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2006-08-21",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jayden Whipple",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-12-15",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jessica Fitzgerald",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2018-01-29",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jonathon Dyer",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2023-12-18",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Megan Reeves",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2022-03-15",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Michael Rankin",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-05-01",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Nikolas Banuelos",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2026-01-05",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Peter Dyer",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-02-03",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Rachel Simon",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2026-01-05",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Roger Kramer",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2016-11-03",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Sierra Wittig",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2019-12-16",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Medardo Montano",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-09-16",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Lucian Stacy",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2005-01-01",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jeffrey Hudson",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2024-07-18",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Jeannette Hauser",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2025-11-25",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Kristy Stacy",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2024-07-22",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Matthew Stacy",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2023-04-04",
+    "status": "Active"
+  },
+  {
+    "doctype": "Shift Assignment",
+    "employee": "Michelle Brown",
+    "shift_type": "LCS Standard",
+    "company": "Left Coast Scales, LLC",
+    "start_date": "2023-02-28",
+    "status": "Active"
+  }
+]

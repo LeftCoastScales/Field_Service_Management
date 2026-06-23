@@ -1,0 +1,56 @@
+[
+  {
+    "doctype": "Role",
+    "role_name": "Field Service User",
+    "desk_access": 0,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Field Service Manager",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Dispatcher",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Crew Leader",
+    "desk_access": 0,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Credit Manager",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Fleet Manager",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Quality Manager",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Training Manager",
+    "desk_access": 1,
+    "disabled": 0
+  },
+  {
+    "doctype": "Role",
+    "role_name": "Compliance Officer",
+    "desk_access": 1,
+    "disabled": 0
+  }
+]

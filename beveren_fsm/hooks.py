@@ -22,7 +22,9 @@ app_license = "mit"
 # ]
 
 fixtures = [
-	# Export your custom "Service Type" doctype
+	# ---------------------------------------------------------------------------
+	# LCS custom doctypes — export all records (existing, unchanged)
+	# ---------------------------------------------------------------------------
 	# "LCS Shortcut",  # seeded on initial deploy only — do not re-enable
 	"Service Type",
 	"Product Location",
@@ -32,9 +34,9 @@ fixtures = [
 	"LCS Scale Model",
 	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
 	"LCS Vehicle",
-	# Export the "Service" Workspace only
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
-	# Export specific Custom Fields related to Service Order links
+
+	# Custom Fields for Service Order links and Service Area extensions (Phase 2D)
 	{
 		"doctype": "Custom Field",
 		"filters": [
@@ -63,6 +65,104 @@ fixtures = [
 			]
 		],
 	},
+
+	# ---------------------------------------------------------------------------
+	# LCS HR / People fixtures — filtered exports of standard Frappe doctypes
+	#
+	# ORDER MATTERS: Frappe applies fixtures in list order during migrate.
+	# Masters (Designation, Department, Role, Shift Type) must land before
+	# the records that depend on them (Employee, User, Shift Assignment).
+	#
+	# These use filtered dict format so we only touch LCS records — we never
+	# export every Designation or every User in the system.
+	# ---------------------------------------------------------------------------
+
+	# Designations — only the ones LCS actually uses
+	{
+		"dt": "Designation",
+		"filters": [
+			["designation_name", "in", [
+				"Account Manager",
+				"Accountant",
+				"Administrative Assistant",
+				"Chief Executive Officer",
+				"Chief Financial Officer",
+				"Data Specialist",
+				"General Manager",
+				"Inside Sales",
+				"Marketing Coordinator",
+				"Master Technician",
+				"Sales Admin",
+				"Sales Manager",
+				"Service Administrator",
+				"Service Manager",
+				"Shop Technician",
+				"Technician",
+			]],
+		],
+	},
+
+	# LCS-Training department (the only new department we're adding)
+	{
+		"dt": "Department",
+		"filters": [["department_name", "=", "LCS-Training"]],
+	},
+
+	# Employment Type — Full-time (may already exist; safe to re-export)
+	{
+		"dt": "Employment Type",
+		"filters": [["employee_type", "=", "Full-time"]],
+	},
+
+	# LCS custom roles only — never exports built-in Frappe/ERPNext roles
+	{
+		"dt": "Role",
+		"filters": [
+			["role_name", "in", [
+				"Field Service User",
+				"Field Service Manager",
+				"Dispatcher",
+				"Crew Leader",
+				"Credit Manager",
+				"Fleet Manager",
+				"Quality Manager",
+				"Training Manager",
+				"Compliance Officer",
+			]],
+		],
+	},
+
+	# LCS Standard shift — Mon–Fri 06:30–17:30
+	{
+		"dt": "Shift Type",
+		"filters": [["shift_type_name", "=", "LCS Standard"]],
+	},
+
+	# All LCS employees under Left Coast Scales, LLC
+	{
+		"dt": "Employee",
+		"filters": [["company", "=", "Left Coast Scales, LLC"]],
+	},
+
+	# LCS User accounts — scoped to LCS email domains only
+	# This exports the User record including the roles child table,
+	# so role assignments travel with the fixture automatically.
+	{
+		"dt": "User",
+		"filters": [
+			["email", "like", "%@leftcoastscales.com"],
+			["email", "like", "%@lcs-training.com"],
+		],
+	},
+
+	# Shift assignments — all LCS Standard assignments for LCS company
+	{
+		"dt": "Shift Assignment",
+		"filters": [
+			["company", "=", "Left Coast Scales, LLC"],
+			["shift_type", "=", "LCS Standard"],
+		],
+	},
 ]
 
 
@@ -80,10 +180,6 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "beveren_fsm/public/scss/website"
 
-# include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
-# webform_include_css = {"doctype": "public/css/doctype.css"}
-
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
 
@@ -92,12 +188,10 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
-# bench --site fsm.local export-fixtures
-# fixtures = ["Service Type", {"dt": "Workspace", "filters": {"name": "Service"}}]
+# bench --site fsm.local export-fixtures  (reference — actual fixtures list is above)
 
 # Svg Icons
 # ------------------
-# include app icons in desk
 # app_include_icons = "beveren_fsm/public/icons.svg"
 
 # Home Pages
@@ -140,30 +234,20 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 
 # Integration Setup
 # ------------------
-# To set up dependencies/integrations with other apps
-# Name of the app being installed is passed as an argument
-
 # before_app_install = "beveren_fsm.utils.before_app_install"
 # after_app_install = "beveren_fsm.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
-# To clean up dependencies/integrations with other apps
-# Name of the app being uninstalled is passed as an argument
-
 # before_app_uninstall = "beveren_fsm.utils.before_app_uninstall"
 # after_app_uninstall = "beveren_fsm.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
-# See frappe.core.notifications.get_notification_config
-
 # notification_config = "beveren_fsm.notifications.get_notification_config"
 
 # Permissions
 # -----------
-# Permissions evaluated in scripted ways
-
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
@@ -174,8 +258,6 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 
 # DocType Class
 # ---------------
-# Override standard doctype classes
-
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
@@ -245,19 +327,11 @@ scheduler_events = {
 # 	"frappe.desk.doctype.event.event.get_events": "beveren_fsm.event.get_events"
 # }
 #
-# each overriding function accepts a `data` argument;
-# generated from the base implementation of the doctype dashboard,
-# along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
 # 	"Task": "beveren_fsm.task.get_dashboard_data"
 # }
 
-# exempt linked doctypes from being automatically cancelled
-#
 # auto_cancel_exempted_doctypes = ["Auto Repeat"]
-
-# Ignore links to specified DocTypes when deleting documents
-# -----------------------------------------------------------
 
 # ignore_links_on_delete = ["Communication", "ToDo"]
 
@@ -281,18 +355,6 @@ scheduler_events = {
 # 		"redact_fields": ["{field_1}", "{field_2}"],
 # 		"partial": 1,
 # 	},
-# 	{
-# 		"doctype": "{doctype_2}",
-# 		"filter_by": "{filter_by}",
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_3}",
-# 		"strict": False,
-# 	},
-# 	{
-# 		"doctype": "{doctype_4}"
-# 	}
 # ]
 
 # Authentication and authorization
@@ -302,7 +364,6 @@ scheduler_events = {
 # 	"beveren_fsm.auth.validate"
 # ]
 
-# Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {

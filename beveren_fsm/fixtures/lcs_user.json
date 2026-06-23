@@ -1,0 +1,707 @@
+[
+  {
+    "doctype": "User",
+    "email": "ahanserd@leftcoastscales.com",
+    "first_name": "Alexus",
+    "last_name": "Hanserd",
+    "full_name": "Alexus Hanserd",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Helpdesk Agent"
+      },
+      {
+        "role": "Sales User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "areeves@leftcoastscales.com",
+    "first_name": "Alyssa",
+    "last_name": "Reeves",
+    "full_name": "Alyssa Reeves",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "acampos@leftcoastscales.com",
+    "first_name": "Ayden",
+    "last_name": "Campos",
+    "full_name": "Ayden Campos",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "corey@leftcoastscales.com",
+    "first_name": "Corey",
+    "last_name": "Stacy",
+    "full_name": "Corey Stacy",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts Manager"
+      },
+      {
+        "role": "CRM Manager"
+      },
+      {
+        "role": "Compliance Officer"
+      },
+      {
+        "role": "Credit Manager"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service Manager"
+      },
+      {
+        "role": "Fleet Manager"
+      },
+      {
+        "role": "HR Manager"
+      },
+      {
+        "role": "Helpdesk Manager"
+      },
+      {
+        "role": "Purchase Manager"
+      },
+      {
+        "role": "Quality Manager"
+      },
+      {
+        "role": "Sales Manager"
+      },
+      {
+        "role": "Stock Manager"
+      },
+      {
+        "role": "System Manager"
+      },
+      {
+        "role": "Training Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "dhernandez@leftcoastscales.com",
+    "first_name": "Daniel",
+    "last_name": "Hernandez",
+    "full_name": "Daniel Hernandez",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "dgrant@leftcoastscales.com",
+    "first_name": "Dyla",
+    "last_name": "Grant",
+    "full_name": "Dyla Grant",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      },
+      {
+        "role": "Helpdesk Agent"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "eperez@leftcoastscales.com",
+    "first_name": "Edward",
+    "last_name": "Perez",
+    "full_name": "Edward Perez",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "hgil@leftcoastscales.com",
+    "first_name": "Hilda",
+    "last_name": "Gil",
+    "full_name": "Hilda Gil",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts Manager"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "HR User"
+      },
+      {
+        "role": "Purchase Manager"
+      },
+      {
+        "role": "Stock User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jcowger@leftcoastscales.com",
+    "first_name": "Jake",
+    "last_name": "Cowger",
+    "full_name": "Jake Cowger",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Sales User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jfitzgerald@leftcoastscales.com",
+    "first_name": "Jason",
+    "last_name": "Fitzgerald",
+    "full_name": "Jason Fitzgerald",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "CRM Manager"
+      },
+      {
+        "role": "Credit Manager"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service Manager"
+      },
+      {
+        "role": "Helpdesk Agent"
+      },
+      {
+        "role": "Sales Manager"
+      },
+      {
+        "role": "System Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jwhipple@leftcoastscales.com",
+    "first_name": "Jayden",
+    "last_name": "Whipple",
+    "full_name": "Jayden Whipple",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jessie@leftcoastscales.com",
+    "first_name": "Jessica",
+    "last_name": "Fitzgerald",
+    "full_name": "Jessica Fitzgerald",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Credit Manager"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service Manager"
+      },
+      {
+        "role": "Fleet Manager"
+      },
+      {
+        "role": "Helpdesk Agent"
+      },
+      {
+        "role": "Sales User"
+      },
+      {
+        "role": "System Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jondyer@leftcoastscales.com",
+    "first_name": "Jonathon",
+    "last_name": "Dyer",
+    "full_name": "Jonathon Dyer",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "mreeves@leftcoastscales.com",
+    "first_name": "Megan",
+    "last_name": "Reeves",
+    "full_name": "Megan Reeves",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Purchase User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "mrankin@leftcoastscales.com",
+    "first_name": "Michael",
+    "last_name": "Rankin",
+    "full_name": "Michael Rankin",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "nbanuelos@leftcoastscales.com",
+    "first_name": "Nikolas",
+    "last_name": "Banuelos",
+    "full_name": "Nikolas Banuelos",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "pdyer@leftcoastscales.com",
+    "first_name": "Peter",
+    "last_name": "Dyer",
+    "full_name": "Peter Dyer",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts Manager"
+      },
+      {
+        "role": "CRM Manager"
+      },
+      {
+        "role": "Credit Manager"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service Manager"
+      },
+      {
+        "role": "Fleet Manager"
+      },
+      {
+        "role": "HR Manager"
+      },
+      {
+        "role": "Helpdesk Manager"
+      },
+      {
+        "role": "Purchase Manager"
+      },
+      {
+        "role": "Sales Manager"
+      },
+      {
+        "role": "System Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "rsimon@leftcoastscales.com",
+    "first_name": "Rachel",
+    "last_name": "Simon",
+    "full_name": "Rachel Simon",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      },
+      {
+        "role": "Helpdesk Agent"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "rkramer@leftcoastscales.com",
+    "first_name": "Roger",
+    "last_name": "Kramer",
+    "full_name": "Roger Kramer",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Sales User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "swittig@leftcoastscales.com",
+    "first_name": "Sierra",
+    "last_name": "Wittig",
+    "full_name": "Sierra Wittig",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Crew Leader"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "mmontano@leftcoastscales.com",
+    "first_name": "Medardo",
+    "last_name": "Montano",
+    "full_name": "Medardo Montano",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "lucian@leftcoastscales.com",
+    "first_name": "Lucian",
+    "last_name": "Stacy",
+    "full_name": "Lucian Stacy",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts Manager"
+      },
+      {
+        "role": "CRM Manager"
+      },
+      {
+        "role": "Compliance Officer"
+      },
+      {
+        "role": "Credit Manager"
+      },
+      {
+        "role": "Dispatcher"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service Manager"
+      },
+      {
+        "role": "Fleet Manager"
+      },
+      {
+        "role": "HR Manager"
+      },
+      {
+        "role": "Helpdesk Manager"
+      },
+      {
+        "role": "Purchase Manager"
+      },
+      {
+        "role": "Quality Manager"
+      },
+      {
+        "role": "Sales Manager"
+      },
+      {
+        "role": "Stock Manager"
+      },
+      {
+        "role": "System Manager"
+      },
+      {
+        "role": "Training Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jhudson@leftcoastscales.com",
+    "first_name": "Jeffrey",
+    "last_name": "Hudson",
+    "full_name": "Jeffrey Hudson",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "Field Service User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "jeannette@lcs-training.com",
+    "first_name": "Jeannette",
+    "last_name": "Hauser",
+    "full_name": "Jeannette Hauser",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "HR User"
+      },
+      {
+        "role": "Training Manager"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "kristy@lcs-training.com",
+    "first_name": "Kristy",
+    "last_name": "Stacy",
+    "full_name": "Kristy Stacy",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "CRM User"
+      },
+      {
+        "role": "Employee"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "matthew@lcs-training.com",
+    "first_name": "Matthew",
+    "last_name": "Stacy",
+    "full_name": "Matthew Stacy",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Accounts User"
+      },
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "HR User"
+      }
+    ]
+  },
+  {
+    "doctype": "User",
+    "email": "michelle@lcs-training.com",
+    "first_name": "Michelle",
+    "last_name": "Brown",
+    "full_name": "Michelle Brown",
+    "enabled": 1,
+    "user_type": "System User",
+    "send_welcome_email": 0,
+    "roles": [
+      {
+        "role": "Employee"
+      },
+      {
+        "role": "HR User"
+      },
+      {
+        "role": "Training Manager"
+      }
+    ]
+  }
+]
