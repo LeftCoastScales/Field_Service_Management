@@ -1,65 +1,30 @@
 [
   {
     "doctype": "Role",
-    "role_name": "Field Service User",
-    "desk_access": 0,
-    "disabled": 0,
-    "name": "Field Service User"
-  },
-  {
-    "doctype": "Role",
-    "role_name": "Field Service Manager",
+    "name": "CRM User",
+    "role_name": "CRM User",
     "desk_access": 1,
-    "disabled": 0,
-    "name": "Field Service Manager"
+    "disabled": 0
   },
   {
     "doctype": "Role",
-    "role_name": "Dispatcher",
+    "name": "CRM Manager",
+    "role_name": "CRM Manager",
     "desk_access": 1,
-    "disabled": 0,
-    "name": "Dispatcher"
+    "disabled": 0
   },
   {
     "doctype": "Role",
-    "role_name": "Crew Leader",
-    "desk_access": 0,
-    "disabled": 0,
-    "name": "Crew Leader"
-  },
-  {
-    "doctype": "Role",
-    "role_name": "Credit Manager",
+    "name": "Helpdesk Agent",
+    "role_name": "Helpdesk Agent",
     "desk_access": 1,
-    "disabled": 0,
-    "name": "Credit Manager"
+    "disabled": 0
   },
   {
     "doctype": "Role",
-    "role_name": "Fleet Manager",
+    "name": "Helpdesk Manager",
+    "role_name": "Helpdesk Manager",
     "desk_access": 1,
-    "disabled": 0,
-    "name": "Fleet Manager"
-  },
-  {
-    "doctype": "Role",
-    "role_name": "Quality Manager",
-    "desk_access": 1,
-    "disabled": 0,
-    "name": "Quality Manager"
-  },
-  {
-    "doctype": "Role",
-    "role_name": "Training Manager",
-    "desk_access": 1,
-    "disabled": 0,
-    "name": "Training Manager"
-  },
-  {
-    "doctype": "Role",
-    "role_name": "Compliance Officer",
-    "desk_access": 1,
-    "disabled": 0,
-    "name": "Compliance Officer"
+    "disabled": 0
   }
 ]

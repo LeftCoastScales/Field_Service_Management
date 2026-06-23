@@ -115,19 +115,17 @@ fixtures = [
 	},
 
 	# LCS custom roles only — never exports built-in Frappe/ERPNext roles
+	# Only 4 custom roles needed — all others (Field Service User, Dispatcher,
+	# Crew Leader, Credit Manager, Fleet Manager, Quality Manager, Training Manager,
+	# Compliance Officer, Field Service Manager) already exist in this ERPNext instance.
 	{
 		"dt": "Role",
 		"filters": [
 			["role_name", "in", [
-				"Field Service User",
-				"Field Service Manager",
-				"Dispatcher",
-				"Crew Leader",
-				"Credit Manager",
-				"Fleet Manager",
-				"Quality Manager",
-				"Training Manager",
-				"Compliance Officer",
+				"CRM User",
+				"CRM Manager",
+				"Helpdesk Agent",
+				"Helpdesk Manager",
 			]],
 		],
 	},
