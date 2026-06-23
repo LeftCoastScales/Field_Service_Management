@@ -138,29 +138,22 @@ fixtures = [
 		"filters": [["shift_type_name", "=", "LCS Standard"]],
 	},
 
-	# All LCS employees under Left Coast Scales, LLC
-	{
-		"dt": "Employee",
-		"filters": [["company", "=", "Left Coast Scales, LLC"]],
-	},
-
 	# LCS User accounts — scoped to LCS email domains only
-	# This exports the User record including the roles child table,
-	# so role assignments travel with the fixture automatically.
+	# User.name = email, so these can be fixture-imported safely.
+	# Role assignments are embedded in the roles child table on each record.
+	# Note: Employee and Shift Assignment use auto-generated naming series
+	# (HR-EMP-XXXXX) and cannot be fixture-imported — create those via the
+	# ERPNext HR module UI after this migration runs.
 	{
 		"dt": "User",
 		"filters": [
 			["email", "like", "%@leftcoastscales.com"],
-			["email", "like", "%@lcs-training.com"],
 		],
 	},
-
-	# Shift assignments — all LCS Standard assignments for LCS company
 	{
-		"dt": "Shift Assignment",
+		"dt": "User",
 		"filters": [
-			["company", "=", "Left Coast Scales, LLC"],
-			["shift_type", "=", "LCS Standard"],
+			["email", "like", "%@lcs-training.com"],
 		],
 	},
 ]

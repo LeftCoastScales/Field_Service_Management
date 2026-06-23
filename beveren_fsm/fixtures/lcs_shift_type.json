@@ -14,6 +14,7 @@
     "enable_auto_attendance": 1,
     "begin_check_in_before_shift_start_time": 30,
     "allow_check_out_after_shift_end_time": 30,
-    "mark_auto_attendance_on_holidays": 0
+    "mark_auto_attendance_on_holidays": 0,
+    "name": "LCS Standard"
   }
 ]

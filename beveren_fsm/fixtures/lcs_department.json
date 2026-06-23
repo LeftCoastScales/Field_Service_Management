@@ -4,6 +4,7 @@
     "department_name": "LCS-Training",
     "company": "Left Coast Scales, LLC",
     "parent_department": "All Departments",
-    "disabled": 0
+    "disabled": 0,
+    "name": "LCS-Training"
   }
 ]

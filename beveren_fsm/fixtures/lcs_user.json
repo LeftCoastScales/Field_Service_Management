@@ -21,7 +21,8 @@
       {
         "role": "Sales User"
       }
-    ]
+    ],
+    "name": "ahanserd@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -42,7 +43,8 @@
       {
         "role": "Employee"
       }
-    ]
+    ],
+    "name": "areeves@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -60,7 +62,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "acampos@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -120,7 +123,8 @@
       {
         "role": "Training Manager"
       }
-    ]
+    ],
+    "name": "corey@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -138,7 +142,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "dhernandez@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -168,7 +173,8 @@
       {
         "role": "Helpdesk Agent"
       }
-    ]
+    ],
+    "name": "dgrant@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -186,7 +192,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "eperez@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -213,7 +220,8 @@
       {
         "role": "Stock User"
       }
-    ]
+    ],
+    "name": "hgil@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -234,7 +242,8 @@
       {
         "role": "Sales User"
       }
-    ]
+    ],
+    "name": "jcowger@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -273,7 +282,8 @@
       {
         "role": "System Manager"
       }
-    ]
+    ],
+    "name": "jfitzgerald@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -291,7 +301,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "jwhipple@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -333,7 +344,8 @@
       {
         "role": "System Manager"
       }
-    ]
+    ],
+    "name": "jessie@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -351,7 +363,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "jondyer@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -372,7 +385,8 @@
       {
         "role": "Purchase User"
       }
-    ]
+    ],
+    "name": "mreeves@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -390,7 +404,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "mrankin@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -408,7 +423,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "nbanuelos@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -456,7 +472,8 @@
       {
         "role": "System Manager"
       }
-    ]
+    ],
+    "name": "pdyer@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -483,7 +500,8 @@
       {
         "role": "Helpdesk Agent"
       }
-    ]
+    ],
+    "name": "rsimon@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -504,7 +522,8 @@
       {
         "role": "Sales User"
       }
-    ]
+    ],
+    "name": "rkramer@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -525,7 +544,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "swittig@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -543,7 +563,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "mmontano@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -603,7 +624,8 @@
       {
         "role": "Training Manager"
       }
-    ]
+    ],
+    "name": "lucian@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -621,7 +643,8 @@
       {
         "role": "Field Service User"
       }
-    ]
+    ],
+    "name": "jhudson@leftcoastscales.com"
   },
   {
     "doctype": "User",
@@ -642,7 +665,8 @@
       {
         "role": "Training Manager"
       }
-    ]
+    ],
+    "name": "jeannette@lcs-training.com"
   },
   {
     "doctype": "User",
@@ -660,7 +684,8 @@
       {
         "role": "Employee"
       }
-    ]
+    ],
+    "name": "kristy@lcs-training.com"
   },
   {
     "doctype": "User",
@@ -681,7 +706,8 @@
       {
         "role": "HR User"
       }
-    ]
+    ],
+    "name": "matthew@lcs-training.com"
   },
   {
     "doctype": "User",
@@ -702,6 +728,7 @@
       {
         "role": "Training Manager"
       }
-    ]
+    ],
+    "name": "michelle@lcs-training.com"
   }
 ]

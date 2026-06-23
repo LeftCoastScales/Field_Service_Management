@@ -1,6 +1,7 @@
 [
   {
     "doctype": "Employment Type",
-    "employee_type": "Full-time"
+    "employee_type": "Full-time",
+    "name": "Full-time"
   }
 ]
