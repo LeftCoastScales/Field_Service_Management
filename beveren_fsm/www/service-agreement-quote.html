@@ -139,6 +139,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
 </style>
 </head>
 <body>
+<!-- Inject CSRF token so frappe.call() works — same pattern as schedule.html -->
+<script>
+if (!window.frappe) window.frappe = {};
+window.csrf_token = '{{ csrf_token }}';
+</script>
 <div class="pg">
 
 <!-- DEBUG BAR - remove after testing -->
@@ -810,7 +815,7 @@ function clearForm() {
   addUnit(); addUnit(); addUnit();
 }
 
-// ─── BOOT — wrap in frappe.ready if available, else DOMContentLoaded ──
+// ─── BOOT ────────────────────────────────────────────────────────
 function boot() {
   dbg('boot started');
 
@@ -872,34 +877,16 @@ function boot() {
   setSched(12);
   addUnit(); addUnit(); addUnit();
 
-  // Sales rep — non-blocking, fires after page is ready
-  try {
-    if (typeof frappe !== 'undefined' && frappe.session && frappe.session.user !== 'Guest') {
-      frappe.call({
-        method: 'frappe.client.get',
-        args: { doctype: 'User', name: frappe.session.user },
-        callback: function(r) {
-          if (r && r.message && r.message.full_name) {
-            document.getElementById('sales_rep').value = r.message.full_name;
-          }
-          dbg('sales rep loaded');
-        }
-      });
-    }
-  } catch(e) { dbg('sales rep error: ' + e.message); }
+  // Pre-fill sales rep from server-side session (injected by controller)
+  var srEl = document.getElementById('sales_rep');
+  if (srEl && '{{ sales_rep_name }}') srEl.value = '{{ sales_rep_name }}';
 
   dbg('boot complete — ' + units.length + ' units, buttons ready');
 }
 
-// Frappe www/ portal pages load jQuery — use $(document).ready
-// frappe.ready() is desk-only and does not fire on www/ pages
-if (typeof $ !== 'undefined') {
-  $(document).ready(boot);
-} else if (typeof frappe !== 'undefined' && frappe.ready) {
-  frappe.ready(boot);
-} else {
-  document.addEventListener('DOMContentLoaded', boot);
-}
+// Script is at bottom of <body> so DOM is already parsed.
+// No wrapper needed — just call boot() directly.
+boot();
 </script>
 </body>
 </html>
