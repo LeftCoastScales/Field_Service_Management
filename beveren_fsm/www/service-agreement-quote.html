@@ -810,74 +810,59 @@ function clearForm() {
   addUnit(); addUnit(); addUnit();
 }
 
-// ─── WIRE EVENTS ─────────────────────────────────────
-// Use event delegation on the whole document for all dynamic content
-document.addEventListener('click', function(e) {
-  var t = e.target;
-  // mode buttons
-  if (t.id==='mCal')  { setMode('cal');  return; }
-  if (t.id==='mPm')   { setMode('pm');   return; }
-  if (t.id==='mBoth') { setMode('both'); return; }
-  // capacity
-  if (t.id==='cLight') { setCap('Light Capacity'); return; }
-  if (t.id==='cHeavy') { setCap('Heavy Capacity'); return; }
-  // schedule presets
-  if (t.id==='sb1')  { setSched(1);  return; }
-  if (t.id==='sb3')  { setSched(3);  return; }
-  if (t.id==='sb6')  { setSched(6);  return; }
-  if (t.id==='sb12') { setSched(12); return; }
-  if (t.id==='sb24') { setSched(24); return; }
-  // add unit
-  if (t.id==='addUnitBtn')  { addUnit(); return; }
-  if (t.id==='addIdentBtn') { addIdentical(); return; }
-  // delete unit (button or its svg/path child)
-  var delBtn = t.closest ? t.closest('.delbtn') : null;
-  if (!delBtn && t.className === 'delbtn') delBtn = t;
-  if (delBtn && delBtn.getAttribute('data-id')) { removeUnit(parseInt(delBtn.getAttribute('data-id'))); return; }
-  // action buttons
-  if (t.id==='clearBtn') { clearForm(); return; }
-  if (t.id==='printBtn') { window.print(); return; }
-  if (t.id==='saveBtn')  { saveDraft(); return; }
-});
+// ─── BOOT — wrap in frappe.ready if available, else DOMContentLoaded ──
+function boot() {
+  dbg('boot started');
 
-document.addEventListener('change', function(e) {
-  var t = e.target;
-  // schedule type dropdown
-  if (t.id==='schedule_type') { onSchedType(); return; }
-  // interval months
-  if (t.id==='interval_months') { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
-  // equipment table selects/inputs
-  if (t.classList && t.classList.contains('eqtype')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
-  if (t.classList && t.classList.contains('eqdiff')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
-  // MLU task select
-  if (t.id && t.id.indexOf('ms-')===0) { onMLUChange(parseInt(t.id.replace('ms-',''))); return; }
-  // global modifiers
-  if (t.classList && t.classList.contains('gmod')) { calc(); return; }
-  // item modifiers
-  if (t.classList && t.classList.contains('imod')) { calc(); return; }
-  // siteScore
-  if (t.id==='siteScore') { calc(); return; }
-  // hrRate
-  if (t.id==='hrRate') { calc(); return; }
-  autoSave();
-});
+  document.addEventListener('click', function(e) {
+    var t = e.target;
+    if (t.id==='mCal')  { setMode('cal');  return; }
+    if (t.id==='mPm')   { setMode('pm');   return; }
+    if (t.id==='mBoth') { setMode('both'); return; }
+    if (t.id==='cLight') { setCap('Light Capacity'); return; }
+    if (t.id==='cHeavy') { setCap('Heavy Capacity'); return; }
+    if (t.id==='sb1')  { setSched(1);  return; }
+    if (t.id==='sb3')  { setSched(3);  return; }
+    if (t.id==='sb6')  { setSched(6);  return; }
+    if (t.id==='sb12') { setSched(12); return; }
+    if (t.id==='sb24') { setSched(24); return; }
+    if (t.id==='addUnitBtn')  { addUnit();      return; }
+    if (t.id==='addIdentBtn') { addIdentical(); return; }
+    var delBtn = t.closest ? t.closest('.delbtn') : null;
+    if (!delBtn && t.className === 'delbtn') delBtn = t;
+    if (delBtn && delBtn.getAttribute('data-id')) { removeUnit(parseInt(delBtn.getAttribute('data-id'))); return; }
+    if (t.id==='clearBtn') { clearForm();    return; }
+    if (t.id==='printBtn') { window.print(); return; }
+    if (t.id==='saveBtn')  { saveDraft();    return; }
+  });
 
-document.addEventListener('input', function(e) {
-  var t = e.target;
-  if (t.id==='interval_months') { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
-  if (t.id==='siteScore')   { calc(); return; }
-  if (t.id==='hrRate')      { calc(); return; }
-  if (t.id==='est_man_hours') { t._edited=true; return; }
-  // eq table inputs
-  if (t.classList && (t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc')||t.classList.contains('eqqty')||t.classList.contains('eqprice'))) {
-    onEqChange(parseInt(t.getAttribute('data-id'))); return;
-  }
-  autoSave();
-});
+  document.addEventListener('change', function(e) {
+    var t = e.target;
+    if (t.id==='schedule_type')    { onSchedType(); return; }
+    if (t.id==='interval_months')  { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
+    if (t.classList && t.classList.contains('eqtype')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
+    if (t.classList && t.classList.contains('eqdiff')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
+    if (t.id && t.id.indexOf('ms-')===0) { onMLUChange(parseInt(t.id.replace('ms-',''))); return; }
+    if (t.classList && t.classList.contains('gmod')) { calc(); return; }
+    if (t.classList && t.classList.contains('imod')) { calc(); return; }
+    if (t.id==='siteScore') { calc(); return; }
+    if (t.id==='hrRate')    { calc(); return; }
+    autoSave();
+  });
 
-// ─── INIT ────────────────────────────────────────────
-(function init() {
-  dbg('init started');
+  document.addEventListener('input', function(e) {
+    var t = e.target;
+    if (t.id==='interval_months') { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
+    if (t.id==='siteScore')     { calc(); return; }
+    if (t.id==='hrRate')        { calc(); return; }
+    if (t.id==='est_man_hours') { t._edited=true; return; }
+    if (t.classList && (t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc')||t.classList.contains('eqqty')||t.classList.contains('eqprice'))) {
+      onEqChange(parseInt(t.getAttribute('data-id'))); return;
+    }
+    autoSave();
+  });
+
+  // ─── INIT ──────────────────────────────────────────
   var today = new Date();
   var pad = function(d){return d.toISOString().split('T')[0];};
   document.getElementById('quote_date').value = pad(today);
@@ -886,20 +871,32 @@ document.addEventListener('input', function(e) {
   document.getElementById('terms').value = DEFAULT_TERMS;
   setSched(12);
   addUnit(); addUnit(); addUnit();
-  // Try to get sales rep name from Frappe session
-  if (typeof frappe !== 'undefined') {
-    dbg('frappe available, getting user');
-    try {
-      frappe.call({method:'frappe.client.get',args:{doctype:'User',name:frappe.session.user},callback:function(r){
-        if(r&&r.message) document.getElementById('sales_rep').value = r.message.full_name||'';
-        dbg('user loaded: '+(r&&r.message?r.message.full_name:'n/a'));
-      }});
-    } catch(e) { dbg('frappe user load error: '+e.message); }
-  } else {
-    dbg('frappe not available (standalone mode)');
-  }
-  dbg('init complete - ' + units.length + ' units ready');
-})();
+
+  // Sales rep — non-blocking, fires after page is ready
+  try {
+    if (typeof frappe !== 'undefined' && frappe.session && frappe.session.user !== 'Guest') {
+      frappe.call({
+        method: 'frappe.client.get',
+        args: { doctype: 'User', name: frappe.session.user },
+        callback: function(r) {
+          if (r && r.message && r.message.full_name) {
+            document.getElementById('sales_rep').value = r.message.full_name;
+          }
+          dbg('sales rep loaded');
+        }
+      });
+    }
+  } catch(e) { dbg('sales rep error: ' + e.message); }
+
+  dbg('boot complete — ' + units.length + ' units, buttons ready');
+}
+
+// Run via frappe.ready if in Frappe portal, else on DOMContentLoaded
+if (typeof frappe !== 'undefined' && frappe.ready) {
+  frappe.ready(boot);
+} else {
+  document.addEventListener('DOMContentLoaded', boot);
+}
 </script>
 </body>
 </html>
