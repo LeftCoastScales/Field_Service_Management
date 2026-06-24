@@ -3,1500 +3,903 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LCS Service Agreement Quote — Left Coast Scales</title>
+<title>LCS Service Agreement Quote</title>
 <!--
   beveren_fsm/www/service-agreement-quote.html
-  beveren_fsm/www/service-agreement-quote.py
   Route: /service-agreement-quote
-  DocType: LCS Service Agreement Quote
-  Child:   LCS Service Agreement Quote Item (equipment_items)
 -->
 <style>
-/* ===== LCS BRAND TOKENS ===== */
-:root {
-  --navy:      #002050;
-  --navy-alt:  #1A3A7A;
-  --steel:     #004080;
-  --blue:      #2E74B5;
-  --light-blue:#D6E4F7;
-  --crimson:   #900010;
-  --crimson-dk:#6A000C;
-  --gold:      #C8A020;
-  --gold-dk:   #9A7A10;
-  --red-bg:    #FEF2F2;
-  --red-bdr:   rgba(144,0,16,0.25);
-  --gray-bg:   #F5F7FA;
-  --gray-bdr:  #D0D7E0;
-  --text-dark: #1A1A2E;
-  --text-mid:  #4A5568;
-  --text-muted:#718096;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F0F4F8;color:#1A1A2E;font-size:14px;}
+:root{
+  --navy:#002050;--steel:#004080;--blue:#2E74B5;
+  --lbl:#D6E4F7;--crimson:#900010;--gold:#C8A020;
+  --gbg:#F5F7FA;--gbdr:#D0D7E0;--mid:#4A5568;--muted:#718096;
 }
 
-.saq-page { max-width: 1000px; margin: 0 auto; padding: 20px 16px 60px; }
+.pg{max-width:980px;margin:0 auto;padding:20px 16px 60px;}
+
+/* DEBUG BAR */
+#dbg{background:#1A1A2E;color:#00FF88;font-family:monospace;font-size:12px;padding:10px 14px;border-radius:6px;margin-bottom:14px;white-space:pre-wrap;max-height:120px;overflow-y:auto;}
 
 /* HEADER */
-.saq-header {
-  background: var(--navy); border-radius: var(--radius-lg);
-  padding: 16px 22px; display: flex; align-items: center; gap: 16px;
-  margin-bottom: 16px; box-shadow: var(--shadow-md);
-}
-.saq-logo { width: 44px; height: 44px; border-radius: 9px; background: var(--crimson);
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.saq-logo svg { width: 24px; height: 24px; fill: white; }
-.saq-header-text { flex: 1; }
-.saq-header-text h1 { font-size: 1.15rem; font-weight: 700; color: white; margin: 0; }
-.saq-header-text p { font-size: 0.72rem; color: var(--light-blue); margin: 2px 0 0; }
-.saq-meta { text-align: right; }
-.saq-docnum { font-size: 0.82rem; color: var(--gold); font-weight: 700; letter-spacing: .05em; }
-.saq-docdate { font-size: 0.68rem; color: var(--light-blue); margin-top: 2px; }
+.hdr{background:var(--navy);border-radius:12px;padding:15px 20px;display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.hdr-icon{width:42px;height:42px;border-radius:8px;background:var(--crimson);display:flex;align-items:center;justify-content:center;}
+.hdr-icon svg{width:22px;height:22px;fill:white;}
+.hdr h1{font-size:1.1rem;font-weight:700;color:white;margin:0;}
+.hdr p{font-size:.7rem;color:var(--lbl);margin:2px 0 0;}
 
-/* STATUS STRIP */
-.saq-status-strip {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px; margin-bottom: 14px;
-  background: white; border: 1px solid var(--gray-bdr);
-  border-radius: var(--radius-md); font-size: 0.78rem;
-}
-.status-pill {
-  padding: 3px 10px; border-radius: 20px; font-weight: 700; font-size: 0.72rem;
-}
-.status-draft   { background: #FBF5E0; color: var(--gold-dk); }
-.status-saved   { background: #ECFDF5; color: #065F46; }
-.status-error   { background: var(--red-bg); color: var(--crimson); }
-.saq-status-strip .strip-label { color: var(--text-muted); }
-.saq-status-strip .strip-link  { color: var(--blue); font-weight: 700; text-decoration: underline; cursor: pointer; margin-left: 8px; }
-
-/* SERVICE MODE TOGGLE */
-.mode-bar {
-  display: flex; background: white; border-radius: var(--radius-md);
-  border: 2px solid var(--navy); overflow: hidden;
-  margin-bottom: 14px; box-shadow: var(--shadow-sm);
-}
-.mode-opt {
-  flex: 1; padding: 9px 14px; text-align: center;
-  font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
-  cursor: pointer; user-select: none;
-  border-right: 1px solid var(--gray-bdr);
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: background .13s, color .13s;
-}
-.mode-opt:last-child { border-right: none; }
-.mode-opt input[type=radio] { display: none; }
-.mode-opt.sel-cal { background: var(--navy); color: white; }
-.mode-opt.sel-pm  { background: var(--steel); color: white; }
-.mode-opt.sel-both{ background: var(--navy-alt); color: white; }
+/* MODE TOGGLE */
+.mode-bar{display:flex;background:white;border-radius:8px;border:2px solid var(--navy);overflow:hidden;margin-bottom:12px;}
+.mo{flex:1;padding:10px;text-align:center;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;border-right:1px solid var(--gbdr);}
+.mo:last-child{border-right:none;}
+.mo.on{background:var(--navy);color:white;}
 
 /* CARDS */
-.saq-card {
-  background: white; border-radius: var(--radius-lg);
-  border: 1px solid var(--gray-bdr); box-shadow: var(--shadow-sm);
-  margin-bottom: 12px; overflow: hidden;
-}
-.saq-card-head {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 18px; border-bottom: 1px solid var(--gray-bdr);
-  background: var(--gray-bg);
-}
-.card-icon { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.card-icon svg { width: 16px; height: 16px; }
-.ci-navy { background: var(--navy); } .ci-navy svg { fill: var(--light-blue); }
-.ci-red  { background: var(--red-bg); border: 1px solid var(--red-bdr); } .ci-red svg { fill: var(--crimson); }
-.ci-blue { background: var(--light-blue); } .ci-blue svg { fill: var(--steel); }
-.ci-gold { background: #FBF5E0; } .ci-gold svg { fill: var(--gold-dk); }
-.ci-green{ background: #ECFDF5; } .ci-green svg { fill: #065F46; }
-.card-title { font-size: 0.87rem; font-weight: 700; color: var(--navy); flex: 1; }
-.card-badge { font-size: 0.63rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: var(--light-blue); color: var(--steel); }
-.card-body { padding: 16px 18px; }
+.card{background:white;border-radius:12px;border:1px solid var(--gbdr);margin-bottom:12px;overflow:hidden;}
+.card-hd{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--gbdr);background:var(--gbg);}
+.card-hd h2{font-size:.86rem;font-weight:700;color:var(--navy);margin:0;flex:1;}
+.card-bd{padding:16px;}
+.bdg{font-size:.63rem;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--lbl);color:var(--steel);}
 
-/* FIELD LAYOUT */
-.fg { display: grid; gap: 11px; margin-bottom: 11px; }
-.fg.g2 { grid-template-columns: 1fr 1fr; }
-.fg.g3 { grid-template-columns: 1fr 1fr 1fr; }
-.fg.g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-.fg.g1 { grid-template-columns: 1fr; }
-.fg.last { margin-bottom: 0; }
-.fld label {
-  display: block; font-size: 0.68rem; font-weight: 600;
-  color: var(--text-mid); margin-bottom: 4px;
-  text-transform: uppercase; letter-spacing: .04em;
-}
-.req { color: var(--crimson); }
-.fld input[type=text], .fld input[type=email], .fld input[type=tel],
-.fld input[type=number], .fld input[type=date], .fld select, .fld textarea {
-  width: 100%; padding: 7px 10px; font-size: 0.82rem;
-  border: 1.5px solid var(--gray-bdr); border-radius: var(--radius-sm);
-  background: white; color: var(--text-dark); font-family: inherit;
-  outline: none; -webkit-appearance: none;
-  transition: border-color .14s, box-shadow .14s;
-}
-.fld input:focus, .fld select:focus, .fld textarea:focus {
-  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(46,116,181,.12);
-}
-.fld textarea { resize: vertical; min-height: 74px; line-height: 1.5; }
-.fld .hint { font-size: 0.67rem; color: var(--text-muted); margin-top: 3px; }
-.fld .internal-tag {
-  font-size: 0.63rem; padding: 2px 7px; border-radius: 12px;
-  background: #FBF5E0; color: var(--gold-dk); font-weight: 700;
-  display: inline-block; margin-top: 3px;
-}
+/* FIELDS */
+.fg{display:grid;gap:10px;margin-bottom:10px;}
+.g2{grid-template-columns:1fr 1fr;}
+.g3{grid-template-columns:1fr 1fr 1fr;}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.g1{grid-template-columns:1fr;}
+.last{margin-bottom:0;}
+.f label{display:block;font-size:.68rem;font-weight:600;color:var(--mid);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.req{color:var(--crimson);}
+.f input,.f select,.f textarea{width:100%;padding:7px 9px;font-size:.82rem;border:1.5px solid var(--gbdr);border-radius:4px;background:white;color:#1A1A2E;font-family:inherit;outline:none;}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--blue);}
+.f textarea{resize:vertical;min-height:72px;}
+.hint{font-size:.66rem;color:var(--muted);margin-top:3px;}
 
-/* CAPACITY CLASS TOGGLE */
-.cap-toggle {
-  display: flex; gap: 8px; margin-bottom: 4px;
-}
-.cap-opt {
-  flex: 1; padding: 8px 10px; text-align: center;
-  border: 1.5px solid var(--gray-bdr); border-radius: var(--radius-sm);
-  font-size: 0.78rem; font-weight: 700; cursor: pointer; user-select: none;
-  color: var(--text-muted); transition: all .13s;
-}
-.cap-opt.active-light { background: var(--light-blue); border-color: var(--blue); color: var(--steel); }
-.cap-opt.active-heavy { background: var(--navy); border-color: var(--navy); color: white; }
-.cap-hint { font-size: 0.67rem; color: var(--text-muted); }
+/* CAPACITY */
+.cap-row{display:flex;gap:8px;margin-bottom:4px;}
+.co{flex:1;padding:8px;text-align:center;border:1.5px solid var(--gbdr);border-radius:4px;font-size:.78rem;font-weight:700;cursor:pointer;color:var(--muted);}
+.co.on-l{background:var(--lbl);border-color:var(--blue);color:var(--steel);}
+.co.on-h{background:var(--navy);border-color:var(--navy);color:white;}
 
-/* SCHEDULE PRESETS */
-.sched-presets { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 8px; }
-.sched-btn {
-  padding: 5px 12px; font-size: 0.73rem; font-weight: 700;
-  border: 1.5px solid var(--gray-bdr); border-radius: 20px;
-  background: white; color: var(--text-mid); cursor: pointer;
-  font-family: inherit; transition: all .12s;
-}
-.sched-btn:hover, .sched-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
+/* SCHEDULE */
+.sb-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.sb{padding:5px 12px;font-size:.73rem;font-weight:700;border:1.5px solid var(--gbdr);border-radius:20px;background:white;color:var(--mid);cursor:pointer;font-family:inherit;}
+.sb.on{background:var(--navy);border-color:var(--navy);color:white;}
 
-/* EQUIPMENT CHILD TABLE */
-.eq-scroll { overflow-x: auto; margin-bottom: 10px; }
-.eq-tbl { width: 100%; border-collapse: collapse; min-width: 820px; font-size: 0.79rem; }
-.eq-tbl th {
-  padding: 6px 8px; text-align: left; font-size: 0.64rem; font-weight: 700;
-  color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
-  background: var(--gray-bg); border-bottom: 2px solid var(--gray-bdr);
-  border-top: 1px solid var(--gray-bdr); white-space: nowrap;
-}
-.eq-tbl td { padding: 4px 3px; border-bottom: 1px solid var(--gray-bdr); vertical-align: middle; }
-.eq-tbl tr:last-child td { border-bottom: none; }
-.eq-tbl td input[type=text], .eq-tbl td input[type=number], .eq-tbl td select {
-  width: 100%; padding: 5px 6px; font-size: 0.77rem;
-  border: 1px solid var(--gray-bdr); border-radius: var(--radius-sm);
-  background: white; font-family: inherit; outline: none;
-}
-.eq-tbl td input:focus, .eq-tbl td select:focus { border-color: var(--blue); }
-.eq-tbl .rn { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); text-align: center; width: 26px; }
-.eq-tbl .ext-price { font-size: 0.79rem; font-weight: 700; color: var(--navy); text-align: right; padding-right: 8px; }
-.del-btn {
-  width: 26px; height: 26px; border-radius: var(--radius-sm);
-  background: var(--red-bg); border: 1px solid var(--red-bdr);
-  color: var(--crimson); cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-}
-.del-btn:hover { background: #FECACA; }
-.del-btn svg { width: 13px; height: 13px; fill: var(--crimson); }
-
-/* RATE SCHEDULE */
-.rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-/* MLU LABOR PANEL */
-.mlu-panel { background: var(--gray-bg); border-radius: var(--radius-md); padding: 14px; }
-.mlu-hint { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px; font-style: italic; }
-.mlu-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
-.mlu-tbl th {
-  padding: 6px 8px; font-size: 0.64rem; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: .05em;
-  background: var(--gray-bg); border-bottom: 2px solid var(--gray-bdr);
-  text-align: left; white-space: nowrap;
-}
-.mlu-tbl td { padding: 5px 7px; border-bottom: 1px solid var(--gray-bdr); vertical-align: middle; }
-.mlu-tbl tr:last-child td { border-bottom: none; }
-.mlu-tbl td select { width: 100%; padding: 4px 6px; font-size: 0.76rem; border: 1px solid var(--gray-bdr); border-radius: var(--radius-sm); font-family: inherit; outline: none; }
-.mlu-tbl td select:focus { border-color: var(--blue); }
-.mlu-empty { padding: 14px; text-align: center; font-size: 0.78rem; color: var(--text-muted); font-style: italic; }
-.mlu-hrs { font-size: 0.79rem; font-weight: 700; color: var(--navy); text-align: right; }
-.imod-row { display: none; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
-.imod-row.show { display: flex; }
-.imod-chip {
-  display: flex; align-items: center; gap: 4px;
-  font-size: 0.67rem; background: white; border: 1px solid var(--gray-bdr);
-  border-radius: 20px; padding: 2px 7px; cursor: pointer; user-select: none; white-space: nowrap;
-}
-.imod-chip input { accent-color: var(--crimson); }
-.multi-disc { font-size: 0.67rem; background: #FBF5E0; color: var(--gold-dk); border-radius: 12px; padding: 1px 6px; font-weight: 700; }
-.gmod-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 12px; }
-.gmod-chip {
-  display: flex; align-items: center; gap: 7px; padding: 6px 10px;
-  background: white; border: 1px solid var(--gray-bdr); border-radius: var(--radius-sm);
-  font-size: 0.73rem; color: var(--text-dark); cursor: pointer; user-select: none;
-}
-.gmod-chip input { accent-color: var(--crimson); flex-shrink: 0; }
-.site-score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.site-score-row input[type=range] { flex: 1; accent-color: var(--crimson); }
-.tier-pill {
-  display: inline-flex; padding: 3px 9px; border-radius: 20px;
-  font-size: 0.69rem; font-weight: 700;
-}
-.tier-n { background: #DCFCE7; color: #166534; }
-.tier-d { background: #FEF9C3; color: #713F12; }
-.tier-h { background: var(--red-bg); color: var(--crimson); }
-.sub-label {
-  font-size: 0.67rem; font-weight: 700; color: var(--text-muted);
-  text-transform: uppercase; letter-spacing: .06em;
-  margin: 12px 0 7px; padding-bottom: 3px; border-bottom: 1px solid var(--gray-bdr);
-}
+/* EQUIPMENT TABLE */
+.eq-wrap{overflow-x:auto;margin-bottom:10px;}
+.eq-tbl{width:100%;border-collapse:collapse;min-width:760px;font-size:.79rem;}
+.eq-tbl th{padding:6px 7px;text-align:left;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--gbg);border-bottom:2px solid var(--gbdr);white-space:nowrap;}
+.eq-tbl td{padding:4px 3px;border-bottom:1px solid var(--gbdr);vertical-align:middle;}
+.eq-tbl td input,.eq-tbl td select{width:100%;padding:5px 6px;font-size:.77rem;border:1px solid var(--gbdr);border-radius:4px;background:white;font-family:inherit;outline:none;}
+.rn{font-size:.68rem;font-weight:700;color:var(--muted);text-align:center;width:26px;}
+.ext-p{font-size:.79rem;font-weight:700;color:var(--navy);text-align:right;padding-right:4px;}
+.delbtn{width:26px;height:26px;border-radius:4px;background:#FEF2F2;border:1px solid rgba(144,0,16,.2);color:var(--crimson);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.delbtn svg{width:13px;height:13px;fill:var(--crimson);}
 
 /* SUMMARY */
-.sum-card {
-  background: var(--navy); border-radius: var(--radius-lg);
-  padding: 16px 20px; box-shadow: var(--shadow-md); margin-bottom: 16px;
-}
-.sum-title { font-size: 0.68rem; font-weight: 700; color: var(--light-blue);
-  text-transform: uppercase; letter-spacing: .08em;
-  margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(214,228,247,0.2); }
-.sum-ln { display: flex; justify-content: space-between; padding: 4px 0;
-  border-bottom: 1px solid rgba(214,228,247,0.1); font-size: 0.78rem; }
-.sum-ln:last-child { border-bottom: none; }
-.sum-ln .sl { color: var(--light-blue); }
-.sum-ln .sv { color: white; font-weight: 600; }
-.sum-ln .sg { color: var(--gold); font-size: 0.7rem; }
-.sum-empty { font-size: 0.77rem; color: rgba(214,228,247,.45); font-style: italic; text-align: center; padding: 8px 0; }
-.sum-divider { border: none; border-top: 1px solid rgba(214,228,247,0.22); margin: 10px 0; }
-.sum-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-.sstat { text-align: center; }
-.sstat .sl { font-size: 0.62rem; color: var(--light-blue); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
-.sstat .sv { font-size: 1.1rem; font-weight: 700; color: white; }
-.sstat .sv.gold { color: var(--gold); }
-.pricing-table {
-  background: rgba(255,255,255,0.07); border-radius: var(--radius-sm);
-  padding: 10px 14px; margin-bottom: 10px;
-}
-.price-row { display: flex; justify-content: space-between; padding: 4px 0;
-  font-size: 0.8rem; border-bottom: 1px solid rgba(214,228,247,0.12); }
-.price-row:last-child { border-bottom: none; }
-.price-row .pl { color: var(--light-blue); }
-.price-row .pv { color: white; font-weight: 600; }
-.price-row.annual .pl { color: var(--gold); font-weight: 700; }
-.price-row.annual .pv { color: var(--gold); font-size: 1rem; font-weight: 700; }
-.total-box {
-  background: white; border-radius: var(--radius-md);
-  padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;
-  border: 3px solid var(--crimson);
-}
-.total-box .tl { font-size: 0.87rem; font-weight: 700; color: var(--navy); }
-.total-box .tv { font-size: 1.4rem; font-weight: 700; color: var(--navy); }
+.sum{background:var(--navy);border-radius:12px;padding:16px 20px;margin-bottom:16px;}
+.sum h3{font-size:.67rem;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(214,228,247,.2);}
+.pr{display:flex;justify-content:space-between;padding:4px 0;font-size:.8rem;border-bottom:1px solid rgba(214,228,247,.1);}
+.pr:last-child{border-bottom:none;}
+.pr .l{color:var(--lbl);}
+.pr .v{color:white;font-weight:600;}
+.pr.ann .l{color:var(--gold);font-weight:700;}
+.pr.ann .v{color:var(--gold);font-size:1rem;font-weight:700;}
+.tot{background:white;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border:3px solid var(--crimson);margin-top:10px;}
+.tot .l{font-size:.87rem;font-weight:700;color:var(--navy);}
+.tot .v{font-size:1.4rem;font-weight:700;color:var(--navy);}
+
+/* BUTTONS */
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:4px;font-size:.8rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+.btn-ghost{background:white;border:1.5px solid var(--gbdr);color:var(--mid);}
+.btn-red{background:var(--crimson);color:white;}
+.btn svg{width:14px;height:14px;fill:currentColor;}
 
 /* BANNERS */
-.banner {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 9px 13px; border-radius: var(--radius-sm);
-  font-size: 0.77rem; border: 1px solid; line-height: 1.5; margin-bottom: 12px;
-}
-.banner svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
-.b-tip  { background: #FFFBEB; border-color: #FDE68A; color: #78530A; }
-.b-tip svg { fill: #D97706; }
-.b-info { background: #EFF6FF; border-color: #BFDBFE; color: var(--steel); }
-.b-info svg { fill: var(--blue); }
-.b-ok   { background: #ECFDF5; border-color: #6EE7B7; color: #065F46; display: none; }
-.b-ok.show { display: flex; }
-.b-ok svg { fill: #059669; }
-.b-restore { background: #FFFBEB; border-color: #FDE68A; color: #78530A; display: none; }
-.b-restore.show { display: flex; }
-.b-restore svg { fill: #D97706; }
-.banner a { font-weight: 700; text-decoration: underline; cursor: pointer; }
+.ban{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-radius:4px;font-size:.76rem;border:1px solid;line-height:1.5;margin-bottom:10px;}
+.ban svg{width:14px;height:14px;flex-shrink:0;margin-top:1px;}
+.ban-tip{background:#FFFBEB;border-color:#FDE68A;color:#78530A;}
+.ban-tip svg{fill:#D97706;}
+.ban-info{background:#EFF6FF;border-color:#BFDBFE;color:var(--steel);}
+.ban-info svg{fill:var(--blue);}
+.ban-ok{background:#ECFDF5;border-color:#6EE7B7;color:#065F46;display:none;}
+.ban-ok svg{fill:#059669;}
+.ban-ok.show{display:flex;}
+
+/* MLU */
+.mlu-wrap{background:var(--gbg);border-radius:8px;padding:14px;}
+.slbl{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 7px;padding-bottom:3px;border-bottom:1px solid var(--gbdr);}
+.gm-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;}
+.gm-chip{display:flex;align-items:center;gap:7px;padding:6px 10px;background:white;border:1px solid var(--gbdr);border-radius:4px;font-size:.73rem;cursor:pointer;}
+.gm-chip input{accent-color:var(--crimson);}
+.mlu-tbl{width:100%;border-collapse:collapse;font-size:.79rem;}
+.mlu-tbl th{padding:6px 7px;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;background:var(--gbg);border-bottom:2px solid var(--gbdr);text-align:left;white-space:nowrap;}
+.mlu-tbl td{padding:5px 7px;border-bottom:1px solid var(--gbdr);vertical-align:middle;}
+.mlu-tbl td select{width:100%;padding:4px 6px;font-size:.76rem;border:1px solid var(--gbdr);border-radius:4px;font-family:inherit;outline:none;}
+.mlu-empty{padding:14px;text-align:center;font-size:.77rem;color:var(--muted);font-style:italic;}
+.imod-row{display:none;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.imod-row.show{display:flex;}
+.ichip{display:flex;align-items:center;gap:4px;font-size:.66rem;background:white;border:1px solid var(--gbdr);border-radius:20px;padding:2px 7px;cursor:pointer;white-space:nowrap;}
+.ichip input{accent-color:var(--crimson);}
 
 /* AUTOSAVE */
-.autosave-bar {
-  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
-  background: var(--navy); color: var(--light-blue); font-size: 0.68rem;
-  padding: 5px 15px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-  z-index: 999; display: none; align-items: center; gap: 8px;
-}
-.autosave-bar.show { display: flex; }
-.autosave-bar svg { width: 12px; height: 12px; fill: var(--gold); }
+#asbar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--lbl);font-size:.68rem;padding:5px 15px;border-radius:20px;z-index:999;display:none;}
+#asbar.show{display:block;}
 
-/* ACTIONS */
-.actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 16px; }
-.btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 18px; border-radius: var(--radius-sm);
-  font-size: 0.8rem; font-weight: 700; cursor: pointer; border: none;
-  font-family: inherit; transition: background .14s, transform .1s;
+@media print{
+  #dbg,.hdr,.mode-bar,.actions,#asbar,.mlu-wrap,.slbl,.gm-grid{display:none !important;}
+  body{background:white;}
+  .card{box-shadow:none;border:1px solid #ccc;}
+  .sum{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
-.btn:active { transform: scale(0.98); }
-.btn-ghost  { background: white; border: 1.5px solid var(--gray-bdr); color: var(--text-mid); }
-.btn-ghost:hover  { border-color: var(--blue); color: var(--blue); }
-.btn-navy   { background: var(--navy); color: white; }
-.btn-navy:hover   { background: var(--navy-alt); }
-.btn-crimson{ background: var(--crimson); color: white; }
-.btn-crimson:hover{ background: var(--crimson-dk); }
-.btn svg { width: 14px; height: 14px; fill: currentColor; }
-
-/* PRINT — customer-facing only */
-@media print {
-  .saq-header, .mode-bar, .saq-status-strip, .autosave-bar,
-  .b-restore, .b-ok, .actions,
-  .mlu-panel, .sub-label, .gmod-grid, .site-score-row, .tier-pill,
-  .sum-stats, #internalSummary, .del-btn, .eq-tbl th:last-child, .eq-tbl td:last-child,
-  .card-body .banner { display: none !important; }
-  body { background: white; font-size: 10pt; font-family: Arial, sans-serif; }
-  .saq-page { max-width: 100%; padding: 0; }
-  .saq-card  { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; margin-bottom: 10pt; }
-  .sum-card  { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .total-box { border: 2pt solid var(--crimson) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-}
-
-@media (max-width: 640px) {
-  .fg.g3, .fg.g4 { grid-template-columns: 1fr 1fr; }
-  .fg.g2 { grid-template-columns: 1fr; }
-  .gmod-grid { grid-template-columns: 1fr 1fr; }
-  .sum-stats { grid-template-columns: 1fr 1fr; }
-  .rate-grid { grid-template-columns: 1fr; }
-}
+@media(max-width:640px){.g3,.g4{grid-template-columns:1fr 1fr;}.g2{grid-template-columns:1fr;}.gm-grid{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
-<body style="background:#F0F4F8;">
+<body>
+<div class="pg">
 
-<div class="saq-page">
+<!-- DEBUG BAR - remove after testing -->
+<div id="dbg">Initializing...</div>
 
-<!-- HEADER -->
-<header class="saq-header">
-  <div class="saq-logo"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-  <div class="saq-header-text">
-    <h1>LCS Service Agreement Quote</h1>
-    <p>Field Service &amp; Calibration &mdash; Complete this form to generate a Service Agreement Quote</p>
-  </div>
-  <div class="saq-meta">
-    <div class="saq-docnum" id="docNum">LCS-SAQ-NEW</div>
-    <div class="saq-docdate" id="docDate"></div>
-  </div>
+<header class="hdr">
+  <div class="hdr-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+  <div><h1>LCS Service Agreement Quote</h1><p>Field Service &amp; Calibration</p></div>
 </header>
 
-<!-- STATUS STRIP -->
-<div class="saq-status-strip">
-  <span class="strip-label">Status:</span>
-  <span class="status-pill status-draft" id="statusPill">Draft — not yet saved</span>
-  <span id="savedLink" style="display:none;">
-    <a class="strip-link" id="erpLink" target="_blank">Open in ERPNext →</a>
-  </span>
-  <span style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);">
-    Saved locally: <span id="lastSaveTime">never</span>
-  </span>
-</div>
-
-<!-- RESTORE BANNER -->
-<div class="banner b-restore" id="restoreBanner">
-  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-  <span>Unsaved draft found from a previous session.
-    <a onclick="restoreDraft()">Restore it</a> or <a onclick="clearDraft()">discard</a>.
-  </span>
-</div>
-
-<!-- SAVED TO ERPNEXT BANNER -->
-<div class="banner b-ok" id="savedBanner">
+<div class="ban ban-ok" id="savedBan">
   <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-  <span>Quote saved to ERPNext as <strong id="savedDocName"></strong>.
-    Find it at <strong>beveren_fsm → LCS Service Agreement Quote</strong>, filter Status = Draft.
-    It counts toward your quoting pipeline immediately.
-    <a id="savedDocLink" target="_blank">Open record →</a>
-  </span>
+  <span>Saved as <strong id="savedName"></strong>. Find it at beveren_fsm &rarr; LCS Service Agreement Quote. <a id="savedLink" target="_blank" style="color:var(--blue);font-weight:700;">Open record &rarr;</a></span>
 </div>
 
-<!-- SERVICE MODE TOGGLE -->
+<!-- MODE -->
 <div class="mode-bar">
-  <div class="mode-opt sel-cal" id="modeOptCal" onclick="setMode('cal')">Calibration</div>
-  <div class="mode-opt" id="modeOptPm" onclick="setMode('pm')">Preventive Maintenance (PM)</div>
-  <div class="mode-opt" id="modeOptBoth" onclick="setMode('both')">Calibration + PM</div>
+  <div class="mo on" id="mCal">Calibration</div>
+  <div class="mo" id="mPm">Preventive Maintenance (PM)</div>
+  <div class="mo" id="mBoth">Calibration + PM</div>
 </div>
 
-<!-- ── SECTION 1: QUOTE INFO ── -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-navy"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-    <span class="card-title">Quote Info</span>
-  </div>
-  <div class="card-body">
-    <div class="fg g4">
-      <div class="fld">
-        <label>Sales rep <span class="req">*</span></label>
-        <input type="text" id="sales_rep" placeholder="Full name">
-      </div>
-      <div class="fld">
-        <label>Quote date <span class="req">*</span></label>
-        <input type="date" id="quote_date">
-      </div>
-      <div class="fld">
-        <label>Valid until</label>
-        <input type="date" id="valid_until">
-      </div>
-      <div class="fld">
-        <label>Service type</label>
-        <input type="text" id="svc_type_display" readonly
-          style="background:var(--gray-bg);font-weight:700;color:var(--navy);" value="Calibration">
-      </div>
+<!-- QUOTE INFO -->
+<div class="card">
+  <div class="card-hd"><h2>Quote Info</h2></div>
+  <div class="card-bd">
+    <div class="fg g4 last">
+      <div class="f"><label>Sales rep <span class="req">*</span></label><input type="text" id="sales_rep" placeholder="Full name"></div>
+      <div class="f"><label>Quote date <span class="req">*</span></label><input type="date" id="quote_date"></div>
+      <div class="f"><label>Valid until</label><input type="date" id="valid_until"></div>
+      <div class="f"><label>Service type</label><input type="text" id="svc_display" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" value="Calibration"></div>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 2: CUSTOMER & CONTACT ── -->
-<!-- DocType fieldnames: customer_name, service_address, city_state_zip,
-     contact_name, contact_phone, contact_email, alt_contact, alt_phone,
-     capacity_class -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-blue"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
-    <span class="card-title">Customer &amp; Contact</span>
-    <span class="card-badge red" id="custBadge" style="display:none;"></span>
-  </div>
-  <div class="card-body">
-    <div class="banner b-info">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Customer name is a free-text field on this DocType — not a Link field. Enter the company name exactly as it should appear on the quote document.
-    </div>
-
+<!-- CUSTOMER -->
+<div class="card">
+  <div class="card-hd"><h2>Customer &amp; Contact</h2></div>
+  <div class="card-bd">
     <div class="fg g2">
-      <div class="fld">
-        <label>Customer / Company name <span class="req">*</span></label>
-        <!-- fieldname: customer_name (Data, not Link) -->
-        <input type="text" id="customer_name" placeholder="Acme Produce, Inc.">
-      </div>
-      <div class="fld">
+      <div class="f"><label>Customer / Company name <span class="req">*</span></label><input type="text" id="customer_name" placeholder="Acme Produce, Inc."></div>
+      <div class="f">
         <label>Capacity class <span class="req">*</span></label>
-        <!-- fieldname: capacity_class -->
-        <!-- Light Capacity = test weight under 1,000 lb; Heavy = over 1,000 lb -->
-        <div class="cap-toggle">
-          <div class="cap-opt active-light" id="capLight" onclick="setCapacity('Light Capacity')">
-            ⚖ Light (&lt;1,000 lb)
-          </div>
-          <div class="cap-opt" id="capHeavy" onclick="setCapacity('Heavy Capacity')">
-            🏗 Heavy (&gt;1,000 lb)
-          </div>
+        <div class="cap-row">
+          <div class="co on-l" id="cLight">Light (&lt;1,000 lb)</div>
+          <div class="co" id="cHeavy">Heavy (&gt;1,000 lb)</div>
         </div>
         <input type="hidden" id="capacity_class" value="Light Capacity">
-        <div class="cap-hint">Light = &lt;1,000 lb test weight &nbsp;|&nbsp; Heavy = &gt;1,000 lb test weight</div>
+        <div class="hint">Light = &lt;1,000 lb test weight &nbsp;|&nbsp; Heavy = &gt;1,000 lb</div>
       </div>
     </div>
-
     <div class="fg g2">
-      <div class="fld">
-        <label>Service address</label>
-        <!-- fieldname: service_address (single Data field) -->
-        <input type="text" id="service_address" placeholder="123 Industrial Blvd, Suite 4B">
-      </div>
-      <div class="fld">
-        <label>City, State, ZIP</label>
-        <!-- fieldname: city_state_zip (single combined Data field) -->
-        <input type="text" id="city_state_zip" placeholder="Riverside, CA 92507">
-      </div>
+      <div class="f"><label>Service address</label><input type="text" id="service_address" placeholder="123 Industrial Blvd, Suite 4B"></div>
+      <div class="f"><label>City, State, ZIP</label><input type="text" id="city_state_zip" placeholder="Riverside, CA 92507"></div>
     </div>
-
     <div class="fg g3">
-      <div class="fld">
-        <label>Contact name <span class="req">*</span></label>
-        <!-- fieldname: contact_name -->
-        <input type="text" id="contact_name" placeholder="Jane Smith">
-      </div>
-      <div class="fld">
-        <label>Phone</label>
-        <!-- fieldname: contact_phone -->
-        <input type="tel" id="contact_phone" placeholder="(555) 000-0000">
-      </div>
-      <div class="fld">
-        <label>Email</label>
-        <!-- fieldname: contact_email -->
-        <input type="email" id="contact_email" placeholder="jane@company.com">
-      </div>
+      <div class="f"><label>Contact name <span class="req">*</span></label><input type="text" id="contact_name" placeholder="Jane Smith"></div>
+      <div class="f"><label>Phone</label><input type="tel" id="contact_phone" placeholder="(555) 000-0000"></div>
+      <div class="f"><label>Email</label><input type="email" id="contact_email" placeholder="jane@company.com"></div>
     </div>
-
     <div class="fg g2 last">
-      <div class="fld">
-        <label>Alternate contact</label>
-        <!-- fieldname: alt_contact -->
-        <input type="text" id="alt_contact" placeholder="Name &amp; title">
-      </div>
-      <div class="fld">
-        <label>Alt phone</label>
-        <!-- fieldname: alt_phone -->
-        <input type="tel" id="alt_phone" placeholder="(555) 000-0000">
-      </div>
+      <div class="f"><label>Alternate contact</label><input type="text" id="alt_contact" placeholder="Name &amp; title"></div>
+      <div class="f"><label>Alt phone</label><input type="tel" id="alt_phone" placeholder="(555) 000-0000"></div>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 3: SERVICE SCHEDULE ── -->
-<!-- DocType fieldnames: schedule_type, interval_months -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-blue"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-    <span class="card-title">Service Schedule</span>
-    <span class="card-badge" id="schedBadge">Annual</span>
-  </div>
-  <div class="card-body">
-    <div class="sched-presets">
-      <button class="sched-btn" onclick="setSched(1,this)">Monthly</button>
-      <button class="sched-btn" onclick="setSched(3,this)">Quarterly</button>
-      <button class="sched-btn" onclick="setSched(6,this)">Semi-annual</button>
-      <button class="sched-btn active" onclick="setSched(12,this)">Annual</button>
-      <button class="sched-btn" onclick="setSched(24,this)">Every 2 years</button>
+<!-- SCHEDULE -->
+<div class="card">
+  <div class="card-hd"><h2>Service Schedule</h2><span class="bdg" id="schedBadge">Annual</span></div>
+  <div class="card-bd">
+    <div class="sb-row">
+      <button class="sb" id="sb1">Monthly</button>
+      <button class="sb" id="sb3">Quarterly</button>
+      <button class="sb" id="sb6">Semi-annual</button>
+      <button class="sb on" id="sb12">Annual</button>
+      <button class="sb" id="sb24">Every 2 years</button>
     </div>
-    <div class="fg g2 last">
-      <div class="fld">
+    <div class="fg g2">
+      <div class="f">
         <label>Schedule type <span class="req">*</span></label>
-        <!-- fieldname: schedule_type
-             Interval     = every N months (use Interval (Months) field below)
-             Fixed Monthly = specific calendar months (e.g. Jan, Apr, Aug) -->
-        <select id="schedule_type" onchange="onSchedTypeChange()">
-          <option value="Interval" selected>Interval — every N months</option>
+        <select id="schedule_type">
+          <option value="Interval">Interval — every N months</option>
           <option value="Fixed Monthly">Fixed Monthly — specific months of year</option>
         </select>
       </div>
-      <div class="fld" id="intervalField">
+      <div class="f" id="intField">
         <label>Interval (months) <span class="req">*</span></label>
-        <!-- fieldname: interval_months -->
-        <input type="number" id="interval_months" value="12" min="1" max="24" oninput="onSchedChange()">
-        <div class="hint">e.g. 3 = quarterly, 6 = semi-annual, 12 = annual</div>
+        <input type="number" id="interval_months" value="12" min="1" max="24">
+        <div class="hint">3 = quarterly &nbsp;·&nbsp; 6 = semi-annual &nbsp;·&nbsp; 12 = annual</div>
       </div>
     </div>
-    <!-- Fixed months selector — shown only when schedule_type = Fixed Monthly -->
-    <div id="fixedMonthsField" style="display:none;margin-top:10px;">
-      <label style="font-size:0.68rem;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">
-        Select the months service is scheduled
-      </label>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="monthCheckboxes"></div>
-      <div class="hint" style="margin-top:6px;">e.g. January + April + July + October = quarterly on fixed months</div>
+    <div id="fixedField" style="display:none;">
+      <label style="font-size:.68rem;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Select service months</label>
+      <div id="monthGrid" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 4: EQUIPMENT ── -->
-<!-- DocType fieldnames: equipment_items (Table → LCS Service Agreement Quote Item)
-     Child columns: location_dept, scale_type, difficulty, make, model, qty, unit_price, extended_price
-     serial_no is NOT a child column in the DocType — captured here for our internal tracking -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-red"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
-    <span class="card-title">Equipment to be Calibrated / Serviced</span>
-    <span class="card-badge" id="eqBadge">0 units</span>
-  </div>
-  <div class="card-body">
-    <div class="banner b-tip">
+<!-- EQUIPMENT -->
+<div class="card">
+  <div class="card-hd"><h2>Equipment to be Calibrated / Serviced</h2><span class="bdg" id="eqBadge">0 units</span></div>
+  <div class="card-bd">
+    <div class="ban ban-tip">
       <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      One row per unit — each gets its own serial number. The Unit Price column is the per-unit per-visit service price for that piece of equipment. Extended Price = Unit Price × Qty. Use "Add identical units" for same model, different serials.
+      One row per unit. Unit Price = per-unit per-visit service price. Extended = Unit Price x Qty.
     </div>
-    <div class="eq-scroll">
+    <div class="eq-wrap">
       <table class="eq-tbl">
-        <thead>
-          <tr>
-            <th style="width:26px;">#</th>
-            <th style="min-width:130px;">Scale type <span class="req">*</span></th>
-            <!-- scale_type = equipment type dropdown -->
-            <th style="min-width:100px;">Make</th>
-            <th style="min-width:100px;">Model</th>
-            <th style="min-width:105px;">Serial no.</th>
-            <!-- serial_no — internal tracking, not a child table column -->
-            <th style="min-width:110px;">Location / Dept</th>
-            <!-- location_dept -->
-            <th style="min-width:90px;">Difficulty</th>
-            <!-- difficulty: Normal / In Pit / Confined Space / Hazardous / Elevated -->
-            <th style="width:50px;">Qty <span class="req">*</span></th>
-            <!-- qty -->
-            <th style="min-width:90px;">Unit price ($)</th>
-            <!-- unit_price — salesperson enters service price per unit per visit -->
-            <th style="min-width:85px;">Extended</th>
-            <!-- extended_price = unit_price * qty, auto-calc -->
-            <th style="width:26px;"></th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th style="width:26px;">#</th>
+          <th style="min-width:140px;">Scale type *</th>
+          <th style="min-width:100px;">Make</th>
+          <th style="min-width:100px;">Model</th>
+          <th style="min-width:105px;">Serial no.</th>
+          <th style="min-width:105px;">Location/Dept</th>
+          <th style="min-width:90px;">Difficulty</th>
+          <th style="width:48px;">Qty</th>
+          <th style="min-width:88px;">Unit price ($)</th>
+          <th style="min-width:80px;">Extended</th>
+          <th style="width:26px;"></th>
+        </tr></thead>
         <tbody id="eqBody"></tbody>
       </table>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-      <button class="btn btn-ghost" style="font-size:0.77rem;padding:6px 12px;" onclick="addUnit()">+ Add unit</button>
-      <button class="btn btn-ghost" style="font-size:0.77rem;padding:6px 12px;" onclick="addIdentical()">+ Add identical units…</button>
-      <span style="font-size:0.68rem;color:var(--text-muted);margin-left:4px;">Each unit = its own row with individual serial number</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost" id="addUnitBtn">+ Add unit</button>
+      <button class="btn btn-ghost" id="addIdentBtn">+ Add identical units...</button>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 5: INTERNAL LABOR COSTING ── -->
-<!-- This section is internal only — not printed on customer quote.
-     It drives est_man_hours which feeds the rate schedule section. -->
-<div class="saq-card" id="laborCard">
-  <div class="saq-card-head">
-    <div class="card-icon ci-gold"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-    <span class="card-title">Internal Labor Costing</span>
-    <span class="card-badge" style="background:#FBF5E0;color:var(--gold-dk);">Internal — not printed</span>
-    <span class="card-badge" id="laborBadge" style="margin-left:4px;">0.00 hrs</span>
-  </div>
-  <div class="card-body">
-    <div class="banner b-tip" style="margin-bottom:10px;">
-      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      This section calculates estimated man-hours per visit using the MLU Labor Standard. The total feeds <strong>Est. Man Hours per Visit</strong> in the rate schedule below. It is never shown on the printed customer quote.
-    </div>
-    <div class="mlu-panel">
-      <div class="sub-label">Site difficulty &amp; global modifiers</div>
-      <div class="fg g2" style="margin-bottom:10px;">
-        <div class="fld">
-          <label>Site difficulty score (10–50)</label>
-          <div class="site-score-row">
-            <input type="range" id="siteScore" min="10" max="50" step="1" value="15" oninput="calc()">
-            <strong id="scoreVal" style="min-width:20px;color:var(--navy);">15</strong>
+<!-- INTERNAL LABOR -->
+<div class="card">
+  <div class="card-hd"><h2>Internal Labor Costing</h2><span class="bdg" style="background:#FBF5E0;color:#7A5E00;">Internal — not printed</span><span class="bdg" id="lbrBadge" style="margin-left:4px;">0.00 hrs</span></div>
+  <div class="card-bd">
+    <div class="mlu-wrap">
+      <div class="fg g2">
+        <div class="f">
+          <label>Site difficulty (10-50)</label>
+          <input type="range" id="siteScore" min="10" max="50" value="15" style="width:100%;accent-color:var(--crimson);">
+          <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:3px;">
+            <span>Score: <strong id="scoreVal">15</strong></span>
+            <span id="tierLbl" style="background:#DCFCE7;color:#166534;padding:2px 8px;border-radius:20px;font-weight:700;">Normal 1.0x</span>
           </div>
-          <span class="tier-pill tier-n" id="tierPill">Normal — 1.0×</span>
         </div>
-        <div class="fld">
-          <label>Loaded hourly rate ($/hr) — internal costing only</label>
-          <input type="number" id="hourlyRate" value="165" min="0" step="1" oninput="calc()">
-          <div class="hint internal-tag">Internal — used to verify margin, not shown to customer</div>
+        <div class="f">
+          <label>Loaded hourly rate ($/hr)</label>
+          <input type="number" id="hrRate" value="165" min="0" step="1">
+          <div class="hint" style="font-size:.62rem;background:#FBF5E0;color:#7A5E00;padding:2px 7px;border-radius:12px;display:inline-block;margin-top:3px;">Internal — not shown to customer</div>
         </div>
       </div>
-      <div class="gmod-grid">
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.20" onchange="calc()"> Outdoor / adverse weather +20%</label>
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.15" onchange="calc()"> Night / weekend shift +15%</label>
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.20" onchange="calc()"> W&amp;M inspector witnessed +20%</label>
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.25" onchange="calc()"> ISO 17025 / GMP documentation +25%</label>
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.15" onchange="calc()"> Remote location +15%</label>
-        <label class="gmod-chip"><input type="checkbox" class="gmod" value="0.20" onchange="calc()"> Extended weight transport +20%</label>
+      <div class="slbl">Global job modifiers</div>
+      <div class="gm-grid">
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.20"> Outdoor / adverse weather +20%</label>
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.15"> Night / weekend +15%</label>
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.20"> W&amp;M witnessed +20%</label>
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.25"> ISO 17025 / GMP docs +25%</label>
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.15"> Remote location +15%</label>
+        <label class="gm-chip"><input type="checkbox" class="gmod" value="0.20"> Extended weight transport +20%</label>
       </div>
-      <div class="sub-label">MLU labor lines — auto-generated from equipment list</div>
-      <div class="mlu-hint">Each unit generates a labor line. Select the matching MLU task. The 2nd+ unit of the same type gets an 85% base-hour discount automatically.</div>
+      <div class="slbl">MLU labor lines</div>
       <div style="overflow-x:auto;">
         <table class="mlu-tbl">
-          <thead>
-            <tr>
-              <th style="width:26px;">#</th>
-              <th style="min-width:130px;">Unit</th>
-              <th style="min-width:220px;">MLU task</th>
-              <th style="min-width:75px;">Base hrs</th>
-              <th style="min-width:75px;">Adj. hrs</th>
-              <th style="min-width:90px;">Labor cost</th>
-              <th style="min-width:180px;">Per-unit modifiers</th>
-            </tr>
-          </thead>
-          <tbody id="mluBody">
-            <tr><td colspan="7" class="mlu-empty">Add equipment above to generate labor lines.</td></tr>
-          </tbody>
+          <thead><tr>
+            <th style="width:26px;">#</th>
+            <th style="min-width:130px;">Unit</th>
+            <th style="min-width:220px;">MLU task</th>
+            <th style="min-width:75px;">Base hrs</th>
+            <th style="min-width:75px;">Adj. hrs</th>
+            <th style="min-width:88px;">Labor cost</th>
+            <th style="min-width:180px;">Per-unit modifiers</th>
+          </tr></thead>
+          <tbody id="mluBody"><tr><td colspan="7" class="mlu-empty">Add equipment above to generate labor lines.</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 6: PREFERRED CUSTOMER RATE SCHEDULE ── -->
-<!-- DocType fieldnames: rate_regular, rate_overtime, rate_holiday,
-     rates_valid_until, est_man_hours, plan_service -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-navy"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-    <span class="card-title">Preferred Customer Rate Schedule (Emergency / Non-Scheduled)</span>
-  </div>
-  <div class="card-body">
-    <div class="banner b-tip" style="margin-bottom:12px;">
-      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      These are the T&amp;M rates for emergency and non-scheduled work — they appear on the printed quote. The Service Agreement visit price is set in the Equipment table above via Unit Price.
-    </div>
-    <div class="rate-grid">
-      <div>
-        <div class="fg g1">
-          <div class="fld">
-            <label>Regular hours ($/hr — 1 hr min)</label>
-            <!-- fieldname: rate_regular -->
-            <input type="number" id="rate_regular" value="115.00" min="0" step="0.50">
-          </div>
-          <div class="fld">
-            <label>Overtime hours ($/hr — 1 hr min)</label>
-            <!-- fieldname: rate_overtime -->
-            <input type="number" id="rate_overtime" value="172.50" min="0" step="0.50">
-          </div>
-          <div class="fld">
-            <label>Sundays &amp; holidays ($/hr — 2 hr min)</label>
-            <!-- fieldname: rate_holiday -->
-            <input type="number" id="rate_holiday" value="230.00" min="0" step="0.50">
-          </div>
-        </div>
+<!-- RATE SCHEDULE -->
+<div class="card">
+  <div class="card-hd"><h2>Preferred Customer Rate Schedule (Emergency / Non-Scheduled)</h2></div>
+  <div class="card-bd">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="fg g1">
+        <div class="f"><label>Regular hours ($/hr - 1 hr min)</label><input type="number" id="rate_regular" value="115.00" min="0" step="0.50"></div>
+        <div class="f"><label>Overtime hours ($/hr - 1 hr min)</label><input type="number" id="rate_overtime" value="172.50" min="0" step="0.50"></div>
+        <div class="f"><label>Sundays &amp; holidays ($/hr - 2 hr min)</label><input type="number" id="rate_holiday" value="230.00" min="0" step="0.50"></div>
       </div>
-      <div>
-        <div class="fg g1">
-          <div class="fld">
-            <label>Rates valid until</label>
-            <!-- fieldname: rates_valid_until -->
-            <input type="date" id="rates_valid_until">
-          </div>
-          <div class="fld">
-            <label>Est. man hours per visit</label>
-            <!-- fieldname: est_man_hours — auto-filled from MLU costing above -->
-            <input type="number" id="est_man_hours" min="0" step="0.25" placeholder="Auto-filled from labor costing">
-            <div class="hint internal-tag">Internal — not shown on customer-facing print</div>
-          </div>
-          <div class="fld" style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            <input type="checkbox" id="plan_service" style="width:15px;height:15px;accent-color:var(--crimson);">
-            <!-- fieldname: plan_service -->
-            <label for="plan_service" style="font-size:0.82rem;font-weight:600;color:var(--text-dark);cursor:pointer;text-transform:none;letter-spacing:0;">Plan Service</label>
-          </div>
+      <div class="fg g1">
+        <div class="f"><label>Rates valid until</label><input type="date" id="rates_valid_until"></div>
+        <div class="f"><label>Est. man hours per visit</label><input type="number" id="est_man_hours" min="0" step="0.25" placeholder="Auto-filled from labor costing"><div class="hint" style="font-size:.62rem;background:#FBF5E0;color:#7A5E00;padding:2px 7px;border-radius:12px;display:inline-block;margin-top:3px;">Internal — not printed</div></div>
+        <div class="f" style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <input type="checkbox" id="plan_service" style="width:15px;height:15px;accent-color:var(--crimson);">
+          <label for="plan_service" style="font-size:.82rem;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0;margin:0;">Plan Service</label>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── SECTION 7: TERMS & CONDITIONS ── -->
-<!-- DocType fieldname: terms (Text Editor / rich text) -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-navy"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-    <span class="card-title">Terms &amp; Conditions</span>
-  </div>
-  <div class="card-body">
-    <div class="fg g1 last">
-      <div class="fld">
-        <!-- fieldname: terms -->
-        <textarea id="terms" style="min-height:160px;"></textarea>
-      </div>
-    </div>
-  </div>
+<!-- TERMS -->
+<div class="card">
+  <div class="card-hd"><h2>Terms &amp; Conditions</h2></div>
+  <div class="card-bd"><div class="fg g1 last"><div class="f"><textarea id="terms" style="min-height:160px;"></textarea></div></div></div>
 </div>
 
-<!-- ── SECTION 8: INTERNAL NOTES ── -->
-<!-- DocType fieldname: internal_notes -->
-<div class="saq-card">
-  <div class="saq-card-head">
-    <div class="card-icon ci-navy"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-    <span class="card-title">Internal Notes</span>
-    <span class="card-badge" style="background:#FBF5E0;color:var(--gold-dk);">Internal — not printed</span>
-  </div>
-  <div class="card-body">
-    <div class="fg g1 last">
-      <div class="fld">
-        <!-- fieldname: internal_notes -->
-        <textarea id="internal_notes" style="min-height:80px;"
-          placeholder="Site access notes, scope clarifications, pricing rationale, follow-up reminders…"></textarea>
-      </div>
-    </div>
-  </div>
+<!-- INTERNAL NOTES -->
+<div class="card">
+  <div class="card-hd"><h2>Internal Notes</h2><span class="bdg" style="background:#FBF5E0;color:#7A5E00;">Not printed</span></div>
+  <div class="card-bd"><div class="fg g1 last"><div class="f"><textarea id="internal_notes" style="min-height:80px;" placeholder="Site access, pricing rationale, follow-up reminders..."></textarea></div></div></div>
 </div>
 
-<!-- ── CUSTOMER-FACING SUMMARY ── -->
-<div class="sum-card">
-  <div class="sum-title">Customer-Facing Pricing Summary — this is what prints on the quote</div>
-  <div class="pricing-table">
-    <div class="price-row"><span class="pl">Price per service visit</span><span class="pv" id="sumPerVisit">$0.00</span></div>
-    <div class="price-row"><span class="pl">Scheduled visits per year</span><span class="pv" id="sumVisitsPerYear">1</span></div>
-    <div class="price-row annual"><span class="pl">Extended annual price</span><span class="pv" id="sumAnnual">$0.00</span></div>
+<!-- SUMMARY -->
+<div class="sum">
+  <h3>Customer-Facing Pricing</h3>
+  <div class="pr"><span class="l">Price per service visit</span><span class="v" id="sumPV">$0.00</span></div>
+  <div class="pr"><span class="l">Visits per year</span><span class="v" id="sumVPY">1</span></div>
+  <div class="pr ann"><span class="l">Extended annual price</span><span class="v" id="sumAnn">$0.00</span></div>
+  <hr style="border:none;border-top:1px solid rgba(214,228,247,.2);margin:10px 0;">
+  <h3 style="margin-bottom:8px;">Internal Costing (not printed)</h3>
+  <div id="sumBreak" style="margin-bottom:8px;"><div style="font-size:.76rem;color:rgba(214,228,247,.45);font-style:italic;text-align:center;padding:6px;">Select MLU tasks to see labor breakdown.</div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div style="text-align:center;"><div style="font-size:.62rem;color:var(--lbl);text-transform:uppercase;">Est. hrs/visit</div><div style="font-size:1.1rem;font-weight:700;color:var(--gold);" id="sumHrs">0.00</div></div>
+    <div style="text-align:center;"><div style="font-size:.62rem;color:var(--lbl);text-transform:uppercase;">Labor cost</div><div style="font-size:1.1rem;font-weight:700;color:white;" id="sumLbr">$0.00</div></div>
+    <div style="text-align:center;"><div style="font-size:.62rem;color:var(--lbl);text-transform:uppercase;">Revenue/labor</div><div style="font-size:1.1rem;font-weight:700;color:white;" id="sumMgn">-</div></div>
   </div>
-  <div id="internalSummary">
-    <div class="sum-divider"></div>
-    <div class="sum-title" style="margin-top:0;">Internal costing — not printed</div>
-    <div id="sumBreakdown"><div class="sum-empty">Add equipment and select MLU tasks to see labor breakdown.</div></div>
-    <div class="sum-divider"></div>
-    <div class="sum-stats">
-      <div class="sstat"><div class="sl">Est. hours/visit</div><div class="sv gold" id="sumHrs">0.00</div></div>
-      <div class="sstat"><div class="sl">Internal labor cost</div><div class="sv" id="sumLabor">$0.00</div></div>
-      <div class="sstat"><div class="sl">Revenue/labor ratio</div><div class="sv" id="sumMargin">—</div></div>
-    </div>
-  </div>
-  <div class="total-box">
-    <span class="tl">Per-Visit Quoted Price</span>
-    <span class="tv" id="sumTotal">$0.00</span>
-  </div>
+  <div class="tot"><span class="l">Per-Visit Quoted Price</span><span class="v" id="sumTot">$0.00</span></div>
 </div>
 
-<!-- ACTIONS -->
 <div class="actions">
-  <button class="btn btn-ghost" onclick="clearForm()">
-    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>Clear
-  </button>
-  <button class="btn btn-ghost" onclick="window.print()">
-    <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print customer quote
-  </button>
-  <button class="btn btn-crimson" onclick="saveToErpNext()">
-    <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Draft to ERPNext
-  </button>
+  <button class="btn btn-ghost" id="clearBtn"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>Clear</button>
+  <button class="btn btn-ghost" id="printBtn"><svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print quote</button>
+  <button class="btn btn-red" id="saveBtn"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Draft to ERPNext</button>
 </div>
 
-<!-- AUTOSAVE INDICATOR -->
-<div class="autosave-bar" id="autosaveBar">
-  <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-  Draft auto-saved locally
-</div>
+<div id="asbar">Draft saved locally</div>
 
-</div><!-- end .saq-page -->
+</div><!-- .pg -->
 
 <script>
-// ================================================================
-// MLU LABOR STANDARD DATA
-// In production inside Frappe, this is fetched via:
-//   frappe.call({ method: 'frappe.client.get_list',
-//     args: { doctype: 'MLU Labor Standard', fields: [...], limit: 500 },
-//     callback: r => { MLU_TASKS = r.message; renderMLU(); }
-//   });
-// For now it is embedded and matches the DocType structure exactly.
-// Cal/PM only — no repair tasks.
-// ================================================================
-const MLU_TASKS = [
-  {sec:"Bench & Counter", task:"Bench scale — single range, calibration",        hrs:0.50, mode:"cal", match:["Bench scale"]},
-  {sec:"Bench & Counter", task:"Bench scale — dual range, calibration",           hrs:0.75, mode:"cal", match:["Bench scale"]},
-  {sec:"Bench & Counter", task:"Counting scale — calibration + setup",            hrs:0.75, mode:"cal", match:["Counting scale"]},
-  {sec:"Bench & Counter", task:"Postal / parcel scale — calibration",             hrs:0.50, mode:"cal", match:["Postal / parcel"]},
-  {sec:"Bench & Counter", task:"Bench scale PM — clean, inspect, calibrate",     hrs:0.75, mode:"pm",  match:["Bench scale","Counting scale","Postal / parcel"]},
-  {sec:"Floor Scales",    task:"Floor scale — single cell analog, calibration",   hrs:1.00, mode:"cal", match:["Floor scale","Platform scale"]},
-  {sec:"Floor Scales",    task:"Floor scale — 4-cell analog, calibration",        hrs:1.50, mode:"cal", match:["Floor scale","Platform scale"]},
-  {sec:"Floor Scales",    task:"Floor scale — digital load cell (single), cal",   hrs:0.75, mode:"cal", match:["Floor scale","Platform scale"]},
-  {sec:"Floor Scales",    task:"Floor scale — digital load cell (4-cell), cal",   hrs:1.00, mode:"cal", match:["Floor scale","Platform scale"]},
-  {sec:"Floor Scales",    task:"Floor scale PM — clean, inspect, calibrate",     hrs:1.50, mode:"pm",  match:["Floor scale","Platform scale"]},
-  {sec:"Pallet Jack / Forklift", task:"Pallet jack scale — calibration",          hrs:1.00, mode:"cal", match:["Pallet jack scale"]},
-  {sec:"Pallet Jack / Forklift", task:"Forklift scale — calibration",             hrs:1.25, mode:"cal", match:["Forklift scale"]},
-  {sec:"Pallet Jack / Forklift", task:"Pallet jack scale PM",                     hrs:1.25, mode:"pm",  match:["Pallet jack scale"]},
-  {sec:"Crane & Hanging", task:"Crane scale — cal (customer supplies weights)",   hrs:1.00, mode:"cal", match:["Crane scale / hanging"]},
-  {sec:"Crane & Hanging", task:"Crane scale — cal (LCS supplies weights)",        hrs:1.50, mode:"cal", match:["Crane scale / hanging"]},
-  {sec:"Crane & Hanging", task:"Crane scale PM — inspect, lubricate, calibrate", hrs:1.25, mode:"pm",  match:["Crane scale / hanging"]},
-  {sec:"Tank / Hopper",   task:"Tank / hopper — calibration (1–4 cells)",         hrs:2.00, mode:"cal", match:["Tank / hopper"]},
-  {sec:"Tank / Hopper",   task:"Tank / hopper — calibration (5–8 cells)",         hrs:3.00, mode:"cal", match:["Tank / hopper"]},
-  {sec:"Tank / Hopper",   task:"Hopper scale PM — inspect, calibrate",            hrs:2.50, mode:"pm",  match:["Tank / hopper"]},
-  {sec:"Truck & Axle",    task:"Axle scale portable — single axle, calibration",  hrs:1.00, mode:"cal", match:["Truck scale / axle"]},
-  {sec:"Truck & Axle",    task:"Axle scale portable — tandem, calibration",       hrs:1.50, mode:"cal", match:["Truck scale / axle"]},
-  {sec:"Truck & Axle",    task:"Truck scale in-ground — calibration (≤70 ft)",    hrs:4.00, mode:"cal", match:["Truck scale / axle"]},
-  {sec:"Truck & Axle",    task:"Truck scale PM — clean, inspect, calibrate",      hrs:5.00, mode:"pm",  match:["Truck scale / axle"]},
-  {sec:"Analytical",      task:"Analytical balance — external calibration",        hrs:0.50, mode:"cal", match:["Analytical / precision"]},
-  {sec:"Analytical",      task:"Precision balance — multi-point calibration",      hrs:0.75, mode:"cal", match:["Analytical / precision"]},
-  {sec:"Analytical",      task:"Moisture analyzer — calibration + verification",   hrs:0.75, mode:"cal", match:["Moisture analyzer"]},
-  {sec:"Analytical",      task:"Analytical balance PM — clean, level, calibrate", hrs:1.00, mode:"pm",  match:["Analytical / precision","Moisture analyzer"]},
-  {sec:"Retail / POS",    task:"Retail / grocery scale — calibration",             hrs:0.50, mode:"cal", match:["Retail POS scale"]},
-  {sec:"Retail / POS",    task:"Retail scale PM — clean, calibrate",              hrs:0.75, mode:"pm",  match:["Retail POS scale"]},
-  {sec:"Checkweigher",    task:"Checkweigher — static calibration",                hrs:1.00, mode:"cal", match:["Checkweigher"]},
-  {sec:"Checkweigher",    task:"Checkweigher — dynamic calibration + setpoints",   hrs:2.00, mode:"cal", match:["Checkweigher"]},
-  {sec:"Checkweigher",    task:"Checkweigher PM — belt inspect, calibrate",       hrs:2.00, mode:"pm",  match:["Checkweigher","Conveyor / in-motion"]},
-  {sec:"Drum & Specialty",task:"Drum scale — calibration",                         hrs:0.75, mode:"cal", match:["Drum scale"]},
-  {sec:"Drum & Specialty",task:"Drum scale PM — clean, inspect, calibrate",       hrs:1.00, mode:"pm",  match:["Drum scale"]},
-  {sec:"Load Cells",      task:"Load cell — field calibration verification",        hrs:1.00, mode:"cal", match:["Load cells (service)"]},
-  {sec:"Load Cells",      task:"Load cell PM — inspect, verify output",            hrs:0.75, mode:"pm",  match:["Load cells (service)"]},
-];
-
-const SCALE_TYPES = [
-  "Bench scale","Floor scale","Pallet jack scale","Forklift scale",
-  "Crane scale / hanging","Truck scale / axle","Tank / hopper",
-  "Analytical / precision","Moisture analyzer","Retail POS scale",
-  "Checkweigher","Drum scale","Postal / parcel","Platform scale",
-  "Conveyor / in-motion","Load cells (service)","Rail scale","Other"
-];
-
-const DIFFICULTY_OPTS = ["Normal","In Pit","Confined Space","Washdown","Hazardous","Elevated Platform"];
-
-// ================================================================
-// STATE
-// ================================================================
-let svcMode = 'cal';
-let units   = [];   // [{id, scale_type, make, model, sn, location_dept, difficulty, qty, unit_price}]
-let unitIdC = 1;
-const LS_KEY = 'lcs_saq_draft_v2';
-
-// Schedule → visits per year map
-const SCHED_MAP = {1:12, 3:4, 6:2, 12:1, 24:0.5};
-function getVisitsPerYear() {
-  const iv = parseInt(document.getElementById('interval_months')?.value) || 12;
-  return SCHED_MAP[iv] || (12 / iv);
+// ─── DEBUG ───────────────────────────────────────────
+var dbgLines = [];
+function dbg(msg) {
+  dbgLines.push(msg);
+  if (dbgLines.length > 20) dbgLines.shift();
+  var el = document.getElementById('dbg');
+  if (el) el.textContent = dbgLines.join('\n');
 }
+// Catch any JS errors globally
+window.onerror = function(msg, src, line, col, err) {
+  dbg('ERROR line ' + line + ': ' + msg);
+  return false;
+};
+dbg('Script started');
+// ─────────────────────────────────────────────────────
+
+// ─── DATA ────────────────────────────────────────────
+var svcMode = 'cal';
+var units   = [];
+var uid     = 1;
+var LS_KEY  = 'lcs_saq_v4';
+
+var SCALE_TYPES = ['Bench scale','Floor scale','Pallet jack scale','Forklift scale','Crane scale / hanging','Truck scale / axle','Tank / hopper','Analytical / precision','Moisture analyzer','Retail POS scale','Checkweigher','Drum scale','Postal / parcel','Platform scale','Conveyor / in-motion','Load cells (service)','Rail scale','Other'];
+var DIFF_OPTS   = ['Normal','In Pit','Confined Space','Washdown','Hazardous','Elevated Platform'];
+var MONTHS      = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var SCHED_MAP   = {'1':12,'3':4,'6':2,'12':1,'24':0.5};
+
+var MLU = [
+  {task:'Bench scale - single range, calibration',    hrs:0.50,mode:'cal',match:'bench'},
+  {task:'Bench scale - dual range, calibration',      hrs:0.75,mode:'cal',match:'bench'},
+  {task:'Bench scale PM - clean, inspect, calibrate', hrs:0.75,mode:'pm', match:'bench'},
+  {task:'Counting scale - calibration + setup',       hrs:0.75,mode:'cal',match:'counting'},
+  {task:'Postal / parcel scale - calibration',        hrs:0.50,mode:'cal',match:'postal'},
+  {task:'Floor scale - single cell analog, cal',      hrs:1.00,mode:'cal',match:'floor|platform'},
+  {task:'Floor scale - 4-cell analog, calibration',   hrs:1.50,mode:'cal',match:'floor|platform'},
+  {task:'Floor scale - digital single cell, cal',     hrs:0.75,mode:'cal',match:'floor|platform'},
+  {task:'Floor scale - digital 4-cell, cal',          hrs:1.00,mode:'cal',match:'floor|platform'},
+  {task:'Floor scale PM - clean, inspect, cal',       hrs:1.50,mode:'pm', match:'floor|platform'},
+  {task:'Pallet jack scale - calibration',            hrs:1.00,mode:'cal',match:'pallet'},
+  {task:'Pallet jack scale PM',                       hrs:1.25,mode:'pm', match:'pallet'},
+  {task:'Forklift scale - calibration',               hrs:1.25,mode:'cal',match:'forklift'},
+  {task:'Crane scale - cal (customer weights)',        hrs:1.00,mode:'cal',match:'crane'},
+  {task:'Crane scale - cal (LCS weights)',            hrs:1.50,mode:'cal',match:'crane'},
+  {task:'Crane scale PM',                             hrs:1.25,mode:'pm', match:'crane'},
+  {task:'Tank / hopper - calibration (1-4 cells)',    hrs:2.00,mode:'cal',match:'tank|hopper'},
+  {task:'Tank / hopper - calibration (5-8 cells)',    hrs:3.00,mode:'cal',match:'tank|hopper'},
+  {task:'Hopper scale PM',                            hrs:2.50,mode:'pm', match:'tank|hopper'},
+  {task:'Axle scale - single axle',                  hrs:1.00,mode:'cal',match:'truck|axle'},
+  {task:'Axle scale - tandem',                        hrs:1.50,mode:'cal',match:'truck|axle'},
+  {task:'Truck scale in-ground - calibration',        hrs:4.00,mode:'cal',match:'truck|axle'},
+  {task:'Truck scale PM',                             hrs:5.00,mode:'pm', match:'truck|axle'},
+  {task:'Analytical balance - external calibration',  hrs:0.50,mode:'cal',match:'analytical|precision'},
+  {task:'Precision balance - multi-point cal',        hrs:0.75,mode:'cal',match:'analytical|precision'},
+  {task:'Moisture analyzer - calibration',            hrs:0.75,mode:'cal',match:'moisture'},
+  {task:'Analytical balance PM',                      hrs:1.00,mode:'pm', match:'analytical|moisture'},
+  {task:'Retail / grocery scale - calibration',       hrs:0.50,mode:'cal',match:'retail|pos'},
+  {task:'Retail scale PM',                            hrs:0.75,mode:'pm', match:'retail|pos'},
+  {task:'Checkweigher - static calibration',          hrs:1.00,mode:'cal',match:'check'},
+  {task:'Checkweigher - dynamic cal + setpoints',     hrs:2.00,mode:'cal',match:'check'},
+  {task:'Checkweigher PM',                            hrs:2.00,mode:'pm', match:'check|conveyor'},
+  {task:'Drum scale - calibration',                   hrs:0.75,mode:'cal',match:'drum'},
+  {task:'Drum scale PM',                              hrs:1.00,mode:'pm', match:'drum'},
+  {task:'Load cell - field calibration verification', hrs:1.00,mode:'cal',match:'load cell'},
+  {task:'Load cell PM',                               hrs:0.75,mode:'pm', match:'load cell'}
+];
+
+var DEFAULT_TERMS = 'Left Coast Scales will inspect and test with certified weights and standards all assets listed above, according to the schedule stated above.\nAll units will be tested with approved standards in accordance with NIST Handbook 44 tolerances.\nAll reports and certifications are stored digitally for future reference.\nAny additional services beyond the scope above will be performed with your authorization at our agreed-upon labor rates.\nEmergency service will be billed using the enclosed rate schedule, including mechanic time, travel time, and mileage.\nThis agreement will renew automatically. A written notice is required to terminate, sent at least 30 days prior to the next scheduled service.';
+
+// ─── HELPERS ─────────────────────────────────────────
+function fv(id) { var e = document.getElementById(id); return e ? e.value : ''; }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n) { return '$' + (parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function getUnit(id) { for(var i=0;i<units.length;i++){if(units[i].id===id)return units[i];}return null; }
+function getVPY() { var iv = String(parseInt(fv('interval_months'))||12); return SCHED_MAP[iv]||1; }
 function getSchedLabel() {
-  const iv = parseInt(document.getElementById('interval_months')?.value) || 12;
-  const map = {1:'Monthly',3:'Quarterly',6:'Semi-annual',12:'Annual',24:'Every 2 years'};
-  return map[iv] || `Every ${iv} months`;
+  var iv = parseInt(fv('interval_months'))||12;
+  var m = {1:'Monthly',3:'Quarterly',6:'Semi-annual',12:'Annual',24:'Every 2 years'};
+  return m[iv] || 'Every '+iv+' months';
 }
 
-// ================================================================
-// SERVICE MODE
-// ================================================================
+// ─── MODE ────────────────────────────────────────────
 function setMode(m) {
+  dbg('setMode: ' + m);
   svcMode = m;
-  const labels = {cal:'Calibration', pm:'Preventive Maintenance (PM)', both:'Calibration + PM'};
-  document.getElementById('svc_type_display').value = labels[m];
-  // Reset all, then activate the selected one
-  document.getElementById('modeOptCal').className  = 'mode-opt' + (m === 'cal'  ? ' sel-cal'  : '');
-  document.getElementById('modeOptPm').className   = 'mode-opt' + (m === 'pm'   ? ' sel-pm'   : '');
-  document.getElementById('modeOptBoth').className = 'mode-opt' + (m === 'both' ? ' sel-cal'  : '');
-  renderMLU(); calc();
-}
-
-// ================================================================
-// CAPACITY CLASS
-// ================================================================
-function setCapacity(val) {
-  document.getElementById('capacity_class').value = val;
-  document.getElementById('capLight').className = 'cap-opt' + (val === 'Light Capacity' ? ' active-light' : '');
-  document.getElementById('capHeavy').className = 'cap-opt' + (val === 'Heavy Capacity' ? ' active-heavy' : '');
-}
-
-// ================================================================
-// SCHEDULE PRESETS & TYPE
-// ================================================================
-const MONTHS = ['January','February','March','April','May','June',
-                'July','August','September','October','November','December'];
-
-function buildMonthCheckboxes() {
-  const wrap = document.getElementById('monthCheckboxes');
-  if (!wrap || wrap.children.length) return; // already built
-  MONTHS.forEach((m, i) => {
-    const lbl = document.createElement('label');
-    lbl.style.cssText = 'display:flex;align-items:center;gap:5px;padding:5px 10px;background:white;border:1px solid var(--gray-bdr);border-radius:20px;font-size:0.75rem;cursor:pointer;user-select:none;';
-    lbl.innerHTML = `<input type="checkbox" value="${i+1}" style="accent-color:var(--crimson);"> ${m}`;
-    lbl.querySelector('input').addEventListener('change', calc);
-    wrap.appendChild(lbl);
-  });
-}
-
-function onSchedTypeChange() {
-  const isFixed = document.getElementById('schedule_type').value === 'Fixed Monthly';
-  document.getElementById('intervalField').style.display    = isFixed ? 'none' : '';
-  document.getElementById('fixedMonthsField').style.display = isFixed ? 'block' : 'none';
-  if (isFixed) buildMonthCheckboxes();
-  // clear preset active state when switching to Fixed Monthly
-  if (isFixed) document.querySelectorAll('.sched-btn').forEach(b => b.classList.remove('active'));
-  onSchedChange();
-}
-
-function setSched(months, btn) {
-  // Switch to Interval mode
-  document.getElementById('schedule_type').value = 'Interval';
-  document.getElementById('intervalField').style.display    = '';
-  document.getElementById('fixedMonthsField').style.display = 'none';
-  // Set the interval value
-  document.getElementById('interval_months').value = months;
-  // Update preset button active state
-  document.querySelectorAll('.sched-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  onSchedChange();
-}
-
-function onSchedChange() {
-  document.getElementById('schedBadge').textContent = getSchedLabel();
+  var labels = {cal:'Calibration',pm:'Preventive Maintenance (PM)',both:'Calibration + PM'};
+  var el = document.getElementById('svc_display');
+  if (el) el.value = labels[m] || m;
+  var ids = {cal:'mCal',pm:'mPm',both:'mBoth'};
+  for (var k in ids) {
+    var btn = document.getElementById(ids[k]);
+    if (!btn) continue;
+    btn.className = 'mo' + (k === m ? ' on' : '');
+  }
+  renderMLU();
   calc();
 }
 
-// ================================================================
-// EQUIPMENT TABLE
-// ================================================================
+// ─── CAPACITY ────────────────────────────────────────
+function setCap(val) {
+  dbg('setCap: ' + val);
+  var hidden = document.getElementById('capacity_class');
+  if (hidden) hidden.value = val;
+  var cl = document.getElementById('cLight');
+  var ch = document.getElementById('cHeavy');
+  if (cl) cl.className = 'co' + (val === 'Light Capacity' ? ' on-l' : '');
+  if (ch) ch.className = 'co' + (val === 'Heavy Capacity' ? ' on-h' : '');
+}
+
+// ─── SCHEDULE ────────────────────────────────────────
+function setSched(months) {
+  dbg('setSched: ' + months);
+  var el = document.getElementById('interval_months');
+  if (el) el.value = months;
+  var sel = document.getElementById('schedule_type');
+  if (sel) sel.value = 'Interval';
+  document.getElementById('intField').style.display = '';
+  document.getElementById('fixedField').style.display = 'none';
+  var ids = [1,3,6,12,24];
+  for (var i=0; i<ids.length; i++) {
+    var btn = document.getElementById('sb'+ids[i]);
+    if (btn) btn.className = 'sb' + (ids[i] === months ? ' on' : '');
+  }
+  var badge = document.getElementById('schedBadge');
+  if (badge) badge.textContent = getSchedLabel();
+  calc();
+}
+function onSchedType() {
+  var isFixed = fv('schedule_type') === 'Fixed Monthly';
+  document.getElementById('intField').style.display   = isFixed ? 'none' : '';
+  document.getElementById('fixedField').style.display  = isFixed ? '' : 'none';
+  if (isFixed) buildMonthGrid();
+  var badge = document.getElementById('schedBadge');
+  if (badge) badge.textContent = isFixed ? 'Fixed months' : getSchedLabel();
+  calc();
+}
+function buildMonthGrid() {
+  var g = document.getElementById('monthGrid');
+  if (!g || g.children.length) return;
+  for (var i=0; i<MONTHS.length; i++) {
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:5px;padding:5px 10px;background:white;border:1px solid var(--gbdr);border-radius:20px;font-size:.75rem;cursor:pointer;';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.value = i+1; cb.style.accentColor = 'var(--crimson)';
+    cb.addEventListener('change', calc);
+    lbl.appendChild(cb); lbl.appendChild(document.createTextNode(' '+MONTHS[i]));
+    g.appendChild(lbl);
+  }
+}
+
+// ─── EQUIPMENT ───────────────────────────────────────
 function addUnit(pre) {
-  const id = unitIdC++;
-  units.push(pre || {id, scale_type:'Floor scale', make:'', model:'', sn:'', location_dept:'', difficulty:'Normal', qty:1, unit_price:0});
+  dbg('addUnit, total will be: ' + (units.length+1));
+  var id = uid++;
+  units.push(pre || {id:id,scale_type:'Floor scale',make:'',model:'',sn:'',location_dept:'',difficulty:'Normal',qty:1,unit_price:0});
   renderEq();
 }
-
 function addIdentical() {
-  const n = parseInt(prompt('How many identical units? (2 or more)'));
+  var n = parseInt(prompt('How many identical units?'));
   if (!n || n < 2) return;
-  const snInput = prompt('Comma-separated serial numbers (or leave blank to fill in the table):\ne.g. SN-001,SN-002,SN-003');
-  const sns = snInput ? snInput.split(',').map(s => s.trim()) : [];
-  for (let i = 0; i < n; i++) {
-    const id = unitIdC++;
-    units.push({id, scale_type:'Floor scale', make:'', model:'', sn:sns[i]||'', location_dept:'', difficulty:'Normal', qty:1, unit_price:0});
+  var raw = prompt('Comma-separated serial numbers (leave blank to fill later):');
+  var sns = raw ? raw.split(',').map(function(s){return s.trim();}) : [];
+  for (var i=0; i<n; i++) {
+    units.push({id:uid++,scale_type:'Floor scale',make:'',model:'',sn:sns[i]||'',location_dept:'',difficulty:'Normal',qty:1,unit_price:0});
   }
   renderEq();
 }
-
 function removeUnit(id) {
-  units = units.filter(u => u.id !== id);
+  dbg('removeUnit: ' + id);
+  units = units.filter(function(u){return u.id !== id;});
   renderEq();
 }
-
-function syncUnitFromRow(id) {
-  const tr = document.getElementById('eq-' + id);
+function readUnit(id) {
+  var tr = document.getElementById('eq-'+id);
   if (!tr) return;
-  const inputs = tr.querySelectorAll('td input[type=text], td input[type=number], td select');
-  const u = units.find(x => x.id === id);
-  if (!u) return;
-  u.scale_type    = tr.querySelector('select.eq-type')?.value || u.scale_type;
-  u.make          = inputs[0]?.value ?? u.make;
-  u.model         = inputs[1]?.value ?? u.model;
-  u.sn            = inputs[2]?.value ?? u.sn;
-  u.location_dept = inputs[3]?.value ?? u.location_dept;
-  u.difficulty    = tr.querySelector('select.eq-diff')?.value || u.difficulty;
-  u.qty           = parseFloat(tr.querySelector('input.eq-qty')?.value) || 1;
-  u.unit_price    = parseFloat(tr.querySelector('input.eq-price')?.value) || 0;
+  var u = getUnit(id); if (!u) return;
+  u.scale_type    = tr.querySelector('select.eqtype').value;
+  u.make          = tr.querySelector('input.eqmake').value;
+  u.model         = tr.querySelector('input.eqmodel').value;
+  u.sn            = tr.querySelector('input.eqsn').value;
+  u.location_dept = tr.querySelector('input.eqloc').value;
+  u.difficulty    = tr.querySelector('select.eqdiff').value;
+  u.qty           = parseFloat(tr.querySelector('input.eqqty').value)||1;
+  u.unit_price    = parseFloat(tr.querySelector('input.eqprice').value)||0;
 }
-
-function renderEq() {
-  const tb = document.getElementById('eqBody');
-  tb.innerHTML = '';
-  units.forEach((u, idx) => {
-    const ext = (u.unit_price || 0) * (u.qty || 1);
-    const tr  = document.createElement('tr');
-    tr.id     = 'eq-' + u.id;
-    tr.innerHTML = `
-      <td class="rn">${idx+1}</td>
-      <td><select class="eq-type" onchange="onEqChange(${u.id})" style="min-width:125px;">
-        ${SCALE_TYPES.map(t => `<option${t===u.scale_type?' selected':''}>${t}</option>`).join('')}
-      </select></td>
-      <td><input type="text" value="${esc(u.make)}" placeholder="Mettler-Toledo" onchange="onEqChange(${u.id})"></td>
-      <td><input type="text" value="${esc(u.model)}" placeholder="IND570" onchange="onEqChange(${u.id})"></td>
-      <td><input type="text" value="${esc(u.sn)}" placeholder="S/N *"
-        style="border-color:${u.sn?'':'var(--crimson)'};" onchange="onEqChange(${u.id})"></td>
-      <td><input type="text" value="${esc(u.location_dept)}" placeholder="Dock 3 / Line B" onchange="onEqChange(${u.id})"></td>
-      <td><select class="eq-diff" onchange="onEqChange(${u.id})">
-        ${DIFFICULTY_OPTS.map(d=>`<option${d===u.difficulty?' selected':''}>${d}</option>`).join('')}
-      </select></td>
-      <td><input type="number" class="eq-qty" value="${u.qty}" min="1" style="width:48px;text-align:center;"
-        oninput="onEqChange(${u.id})"></td>
-      <td><input type="number" class="eq-price" value="${u.unit_price||''}" min="0" step="0.01"
-        placeholder="0.00" oninput="onEqChange(${u.id})" style="text-align:right;"></td>
-      <td class="ext-price" id="ext-${u.id}">${ext > 0 ? fmt(ext) : '—'}</td>
-      <td><button class="del-btn" onclick="removeUnit(${u.id})" aria-label="Remove">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      </button></td>
-    `;
-    tb.appendChild(tr);
-  });
-  document.getElementById('eqBadge').textContent = units.length + (units.length===1?' unit':' units');
-  renderMLU(); calc();
-}
-
 function onEqChange(id) {
-  syncUnitFromRow(id);
-  const u   = units.find(x => x.id === id);
-  const ext = u ? (u.unit_price||0) * (u.qty||1) : 0;
-  const extEl = document.getElementById('ext-' + id);
-  if (extEl) extEl.textContent = ext > 0 ? fmt(ext) : '—';
-  // Update serial border
-  const tr = document.getElementById('eq-' + id);
-  if (tr) {
-    const snIn = tr.querySelectorAll('td input[type=text]')[2];
-    if (snIn) snIn.style.borderColor = snIn.value ? '' : 'var(--crimson)';
+  readUnit(id);
+  var u = getUnit(id); if (!u) return;
+  var ext = (u.unit_price||0)*(u.qty||1);
+  var extEl = document.getElementById('ext-'+id);
+  if (extEl) extEl.textContent = ext > 0 ? fmt(ext) : '-';
+  var snIn = document.getElementById('sn-'+id);
+  if (snIn) snIn.style.borderColor = snIn.value ? '' : 'var(--crimson)';
+  renderMLU(); calc();
+}
+function renderEq() {
+  var tb = document.getElementById('eqBody');
+  if (!tb) { dbg('ERROR: eqBody not found'); return; }
+  tb.innerHTML = '';
+  for (var i=0; i<units.length; i++) {
+    var u = units[i];
+    var ext = (u.unit_price||0)*(u.qty||1);
+    var typeOpts = SCALE_TYPES.map(function(t){return '<option'+(t===u.scale_type?' selected':'')+'>'+esc(t)+'</option>';}).join('');
+    var diffOpts = DIFF_OPTS.map(function(d){return '<option'+(d===u.difficulty?' selected':'')+'>'+d+'</option>';}).join('');
+    var tr = document.createElement('tr');
+    tr.id = 'eq-'+u.id;
+    tr.innerHTML =
+      '<td class="rn">'+(i+1)+'</td>'+
+      '<td><select class="eqtype" data-id="'+u.id+'">'+typeOpts+'</select></td>'+
+      '<td><input type="text" class="eqmake" data-id="'+u.id+'" value="'+esc(u.make)+'" placeholder="Mettler-Toledo"></td>'+
+      '<td><input type="text" class="eqmodel" data-id="'+u.id+'" value="'+esc(u.model)+'" placeholder="IND570"></td>'+
+      '<td><input type="text" class="eqsn" id="sn-'+u.id+'" data-id="'+u.id+'" value="'+esc(u.sn)+'" placeholder="S/N *"'+(u.sn?'':' style="border-color:var(--crimson);"')+'></td>'+
+      '<td><input type="text" class="eqloc" data-id="'+u.id+'" value="'+esc(u.location_dept)+'" placeholder="Dock 3"></td>'+
+      '<td><select class="eqdiff" data-id="'+u.id+'">'+diffOpts+'</select></td>'+
+      '<td><input type="number" class="eqqty" data-id="'+u.id+'" value="'+u.qty+'" min="1" style="width:46px;text-align:center;"></td>'+
+      '<td><input type="number" class="eqprice" data-id="'+u.id+'" value="'+(u.unit_price||'')+'" min="0" step="0.01" placeholder="0.00" style="text-align:right;"></td>'+
+      '<td class="ext-p" id="ext-'+u.id+'">'+(ext>0?fmt(ext):'-')+'</td>'+
+      '<td><button class="delbtn" data-id="'+u.id+'"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button></td>';
+    tb.appendChild(tr);
   }
+  document.getElementById('eqBadge').textContent = units.length+(units.length===1?' unit':' units');
   renderMLU(); calc();
 }
 
-// ================================================================
-// MLU LABOR TABLE
-// ================================================================
-function tasksForMode() {
-  return MLU_TASKS.filter(t => svcMode === 'both' || t.mode === svcMode);
+// ─── MLU ─────────────────────────────────────────────
+function tasksFor(scaleType) {
+  var st = (scaleType||'').toLowerCase();
+  var pool = MLU.filter(function(t){ return svcMode==='both'||t.mode===svcMode; });
+  var matched = pool.filter(function(t){
+    var parts = t.match.split('|');
+    for (var i=0;i<parts.length;i++){ if(st.indexOf(parts[i])>=0) return true; }
+    return false;
+  });
+  return matched.length ? matched : pool.slice(0, 6);
 }
-
-function bestTasks(scaleType) {
-  const pool    = tasksForMode();
-  const matched = pool.filter(t => t.match.some(m => scaleType.toLowerCase().includes(m.toLowerCase())));
-  return matched.length ? matched : pool.slice(0, 8);
-}
-
 function renderMLU() {
-  const tb = document.getElementById('mluBody');
+  var tb = document.getElementById('mluBody');
+  if (!tb) return;
   if (!units.length) {
     tb.innerHTML = '<tr><td colspan="7" class="mlu-empty">Add equipment above to generate labor lines.</td></tr>';
     return;
   }
-  const typeSeen = {};
-  tb.innerHTML   = '';
-  units.forEach((u, idx) => {
-    typeSeen[u.scale_type] = (typeSeen[u.scale_type] || 0) + 1;
-    const isMulti   = typeSeen[u.scale_type] > 1;
-    const discount  = isMulti ? 0.85 : 1.0;
-    const tasks     = bestTasks(u.scale_type);
-    const taskOpts  = `<option value="" data-hrs="0">— Select task —</option>` +
-      tasks.map(t => `<option value="${esc(t.task)}" data-hrs="${t.hrs}">${esc(t.task)} (${t.hrs.toFixed(2)} hrs)</option>`).join('');
-    const unitLabel = [u.location_dept || u.scale_type, u.make, u.model].filter(Boolean).join(' ');
-    const snLabel   = u.sn ? `S/N: ${u.sn}` : '<span style="color:var(--crimson);font-size:0.68rem;">S/N required</span>';
-
-    const tr  = document.createElement('tr');
-    tr.id     = 'mlu-row-' + u.id;
-    tr.innerHTML = `
-      <td class="rn">${idx+1}</td>
-      <td style="font-size:0.75rem;">
-        <div style="font-weight:700;color:var(--navy);">${esc(unitLabel)}</div>
-        <div style="color:var(--text-muted);margin-top:1px;">${snLabel}</div>
-        ${isMulti ? '<span class="multi-disc">85% multi-unit</span>' : ''}
-      </td>
-      <td><select id="mlu-${u.id}" data-uid="${u.id}" data-discount="${discount}"
-          onchange="onTaskChange(${u.id})">${taskOpts}</select></td>
-      <td style="font-size:0.77rem;color:var(--text-muted);text-align:center;" id="mlu-base-${u.id}">—</td>
-      <td style="font-size:0.77rem;font-weight:700;color:var(--navy);text-align:center;" id="mlu-adj-${u.id}">—</td>
-      <td class="mlu-hrs" id="mlu-cost-${u.id}">—</td>
-      <td>
-        <div class="imod-row" id="imods-${u.id}">
-          <label class="imod-chip"><input type="checkbox" class="imod" value="0.25" onchange="onTaskChange(${u.id})"> Pit +25%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="0.50" onchange="onTaskChange(${u.id})"> Confined +50%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="0.30" onchange="onTaskChange(${u.id})"> Washdown +30%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="0.40" onchange="onTaskChange(${u.id})"> Hazardous +40%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="0.35" onchange="onTaskChange(${u.id})"> Disrepair +35%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="-0.20" onchange="onTaskChange(${u.id})"> Pre-staged −20%</label>
-          <label class="imod-chip"><input type="checkbox" class="imod" value="-0.40" onchange="onTaskChange(${u.id})"> Digital tech −40%</label>
-        </div>
-        <div id="imod-hint-${u.id}" style="font-size:0.67rem;color:var(--text-muted);font-style:italic;">Select task to unlock</div>
-      </td>
-    `;
+  var typeSeen = {};
+  tb.innerHTML = '';
+  for (var i=0; i<units.length; i++) {
+    var u = units[i];
+    typeSeen[u.scale_type] = (typeSeen[u.scale_type]||0)+1;
+    var disc = typeSeen[u.scale_type]>1 ? 0.85 : 1.0;
+    var tasks = tasksFor(u.scale_type);
+    var opts = '<option value="" data-hrs="0">- Select task -</option>'+
+      tasks.map(function(t){return '<option value="'+esc(t.task)+'" data-hrs="'+t.hrs+'">'+esc(t.task)+' ('+t.hrs.toFixed(2)+' hrs)</option>';}).join('');
+    var lbl = u.location_dept||[u.scale_type,u.make,u.model].filter(Boolean).join(' ');
+    var sn  = u.sn ? 'S/N: '+u.sn : '<span style="color:var(--crimson);font-size:.68rem;">S/N required</span>';
+    var tr = document.createElement('tr');
+    tr.id = 'mlur-'+u.id;
+    tr.innerHTML =
+      '<td class="rn">'+(i+1)+'</td>'+
+      '<td style="font-size:.75rem;"><div style="font-weight:700;color:var(--navy);">'+esc(lbl)+'</div>'+
+        '<div style="color:var(--muted);margin-top:1px;">'+sn+'</div>'+
+        (disc<1?'<span style="font-size:.66rem;background:#FBF5E0;color:#7A5E00;border-radius:12px;padding:1px 6px;font-weight:700;">85% multi-unit</span>':'')+'</td>'+
+      '<td><select id="ms-'+u.id+'" data-disc="'+disc+'"><'+opts+'</select></td>'+
+      '<td id="mb-'+u.id+'" style="text-align:center;color:var(--muted);font-size:.77rem;">-</td>'+
+      '<td id="ma-'+u.id+'" style="text-align:center;font-weight:700;color:var(--navy);font-size:.77rem;">-</td>'+
+      '<td id="mc-'+u.id+'" style="text-align:right;font-weight:700;color:var(--navy);font-size:.77rem;">-</td>'+
+      '<td><div id="im-'+u.id+'" class="imod-row">'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="0.25"> Pit +25%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="0.50"> Confined +50%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="0.30"> Washdown +30%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="0.40"> Hazardous +40%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="0.35"> Disrepair +35%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="-0.20"> Pre-staged -20%</label>'+
+        '<label class="ichip"><input type="checkbox" class="imod" data-id="'+u.id+'" value="-0.40"> Digital -40%</label>'+
+      '</div><div id="ih-'+u.id+'" style="font-size:.67rem;color:var(--muted);font-style:italic;">Select task to unlock</div></td>';
     tb.appendChild(tr);
-  });
+  }
 }
-
-function onTaskChange(uid) {
-  const sel  = document.getElementById('mlu-' + uid);
-  if (!sel) return;
-  const opt  = sel.options[sel.selectedIndex];
-  const base = parseFloat(opt?.getAttribute('data-hrs')) || 0;
-  const mods = document.getElementById('imods-' + uid);
-  const hint = document.getElementById('imod-hint-' + uid);
-  if (base > 0) { if(mods) mods.classList.add('show'); if(hint) hint.style.display='none'; }
-  else          { if(mods) mods.classList.remove('show'); if(hint) hint.style.display='block'; }
+function onMLUChange(uid) {
+  var sel = document.getElementById('ms-'+uid); if (!sel) return;
+  var opt = sel.options[sel.selectedIndex];
+  var base = parseFloat(opt ? opt.getAttribute('data-hrs') : 0)||0;
+  var imRow = document.getElementById('im-'+uid);
+  var imHint= document.getElementById('ih-'+uid);
+  if (base>0){ if(imRow)imRow.classList.add('show'); if(imHint)imHint.style.display='none'; }
+  else        { if(imRow)imRow.classList.remove('show'); if(imHint)imHint.style.display=''; }
   calc();
 }
 
-// ================================================================
-// CORE CALCULATION
-// ================================================================
+// ─── CALCULATE ───────────────────────────────────────
 function calc() {
-  const hourlyRate = parseFloat(document.getElementById('hourlyRate')?.value) || 0;
-  const siteScore  = parseInt(document.getElementById('siteScore')?.value) || 10;
+  var hr    = parseFloat(fv('hrRate'))||0;
+  var score = parseInt(fv('siteScore'))||10;
+  var siteMult=1.0, tierTxt='Normal 1.0x', tierCls='background:#DCFCE7;color:#166534;';
+  if(score>=23&&score<=36){siteMult=1.5;tierTxt='Difficult 1.5x';tierCls='background:#FEF9C3;color:#713F12;';}
+  else if(score>=37)      {siteMult=2.5;tierTxt='Very Difficult 2.5x';tierCls='background:#FEF2F2;color:var(--crimson);';}
+  var sv=document.getElementById('scoreVal');if(sv)sv.textContent=score;
+  var tl=document.getElementById('tierLbl');if(tl){tl.textContent=tierTxt;tl.style.cssText='padding:2px 8px;border-radius:20px;font-weight:700;font-size:.69rem;'+tierCls;}
 
-  let siteMult = 1.0, tierText = 'Normal — 1.0×', tierCls = 'tier-pill tier-n';
-  if (siteScore >= 23 && siteScore <= 36) { siteMult=1.5; tierText='Difficult — 1.5×'; tierCls='tier-pill tier-d'; }
-  else if (siteScore >= 37)               { siteMult=2.5; tierText='Very Difficult — 2.5×'; tierCls='tier-pill tier-h'; }
-  const sv = document.getElementById('scoreVal'); if(sv) sv.textContent = siteScore;
-  const tp = document.getElementById('tierPill'); if(tp){ tp.textContent=tierText; tp.className=tierCls; }
+  var gMod=0;
+  var gcbs=document.querySelectorAll('.gmod:checked');
+  for(var g=0;g<gcbs.length;g++) gMod+=parseFloat(gcbs[g].value);
 
-  let globalMod = 0;
-  document.querySelectorAll('.gmod:checked').forEach(cb => globalMod += parseFloat(cb.value));
-
-  // Internal labor hours
-  let totalHrs = 0;
-  let breakdown = '';
-  units.forEach(u => {
-    const sel = document.getElementById('mlu-' + u.id); if(!sel) return;
-    const opt = sel.options[sel.selectedIndex];
-    const base = parseFloat(opt?.getAttribute('data-hrs')) || 0; if(!base) return;
-    const disc = parseFloat(sel.getAttribute('data-discount')) || 1.0;
-    let imod = 0;
-    const mods = document.getElementById('imods-' + u.id);
-    if(mods) mods.querySelectorAll('.imod:checked').forEach(cb => imod += parseFloat(cb.value));
-    const adj   = base * disc * siteMult * (1 + globalMod + imod);
-    totalHrs   += adj;
-    const lbl   = u.location_dept || [u.scale_type, u.make, u.model].filter(Boolean).join(' ');
-    breakdown  += `<div class="sum-ln"><span class="sl">${esc(lbl)}${u.sn?' (S/N '+u.sn+')':''}</span>
-      <span class="sv">${adj.toFixed(2)} hrs <span class="sg">${fmt(adj*hourlyRate)}</span></span></div>`;
-    // Update inline cells
-    const bEl=document.getElementById('mlu-base-'+u.id);
-    const aEl=document.getElementById('mlu-adj-'+u.id);
-    const cEl=document.getElementById('mlu-cost-'+u.id);
-    if(bEl) bEl.textContent=(base*disc).toFixed(2)+' hrs';
-    if(aEl) aEl.textContent=adj.toFixed(2)+' hrs';
-    if(cEl) cEl.textContent=fmt(adj*hourlyRate);
-  });
-
-  // Customer-facing: sum of equipment unit prices
-  let perVisit = 0;
-  units.forEach(u => { perVisit += (u.unit_price||0) * (u.qty||1); });
-  const vpy      = getVisitsPerYear();
-  const annual   = perVisit * vpy;
-  const laborCost= totalHrs * hourlyRate;
-  const margin   = perVisit > 0 && laborCost > 0 ? ((perVisit - laborCost) / perVisit * 100).toFixed(0) + '%' : '—';
-
-  document.getElementById('sumBreakdown').innerHTML   = breakdown || '<div class="sum-empty">Select MLU tasks above to see labor breakdown.</div>';
-  document.getElementById('sumHrs').textContent       = totalHrs.toFixed(2);
-  document.getElementById('sumLabor').textContent     = fmt(laborCost);
-  document.getElementById('sumMargin').textContent    = margin;
-  document.getElementById('sumPerVisit').textContent  = fmt(perVisit);
-  document.getElementById('sumVisitsPerYear').textContent = vpy % 1 === 0 ? vpy : vpy.toFixed(1);
-  document.getElementById('sumAnnual').textContent    = fmt(annual);
-  document.getElementById('sumTotal').textContent     = fmt(perVisit);
-  document.getElementById('laborBadge').textContent   = totalHrs.toFixed(2) + ' hrs';
-
-  // Auto-fill est_man_hours from MLU calc
-  const emh = document.getElementById('est_man_hours');
-  if (emh && !emh._manuallyEdited) emh.value = totalHrs > 0 ? totalHrs.toFixed(2) : '';
-}
-
-// ================================================================
-// SAVE TO ERPNEXT
-// Inserts an LCS Service Agreement Quote record using exact fieldnames
-// ================================================================
-function saveToErpNext() {
-  const custName = document.getElementById('customer_name').value.trim();
-  if (!custName) { alert('Please enter a Customer / Company Name.'); return; }
-
-  // Build equipment_items child table
-  // Child DocType: LCS Service Agreement Quote Item
-  // Confirmed child columns: location_dept, scale_type, difficulty, make, model, qty, unit_price, extended_price
-  const equipment_items = units.map(u => ({
-    location_dept:  u.location_dept || '',
-    scale_type:     u.scale_type    || '',
-    difficulty:     u.difficulty    || 'Normal',
-    make:           u.make          || '',
-    model:          u.model         || '',
-    qty:            u.qty           || 1,
-    unit_price:     u.unit_price    || 0,
-    extended_price: (u.unit_price||0) * (u.qty||1),
-    // serial_no is NOT a confirmed child table column — stored in internal_notes instead
-  }));
-
-  // Append serial numbers to internal_notes since serial_no is not a child column
-  let intNotes = document.getElementById('internal_notes').value.trim();
-  if (units.some(u => u.sn)) {
-    intNotes += (intNotes ? '\n\n' : '') + 'SERIAL NUMBERS:\n' +
-      units.map((u,i) => `${i+1}. ${u.scale_type} ${u.make} ${u.model} — S/N: ${u.sn||'(not recorded)'}`).join('\n');
+  var totalHrs=0, breakdown='';
+  for(var i=0;i<units.length;i++){
+    var u=units[i];
+    var sel=document.getElementById('ms-'+u.id); if(!sel)continue;
+    var opt=sel.options[sel.selectedIndex];
+    var base=parseFloat(opt?opt.getAttribute('data-hrs'):0)||0; if(!base)continue;
+    var disc=parseFloat(sel.getAttribute('data-disc'))||1.0;
+    var iMod=0;
+    var icbs=document.querySelectorAll('#im-'+u.id+' .imod:checked');
+    for(var j=0;j<icbs.length;j++) iMod+=parseFloat(icbs[j].value);
+    var adj=(base*disc)*siteMult*(1+gMod+iMod);
+    totalHrs+=adj;
+    var lbl=(u.location_dept||[u.scale_type,u.make,u.model].filter(Boolean).join(' '));
+    breakdown+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(214,228,247,.1);font-size:.77rem;">'+
+      '<span style="color:var(--lbl);">'+esc(lbl)+(u.sn?' (S/N '+esc(u.sn)+')'):'')+'</span>'+
+      '<span style="color:white;font-weight:600;">'+adj.toFixed(2)+' hrs <span style="color:var(--gold);font-size:.7rem;">'+fmt(adj*hr)+'</span></span></div>';
+    var mb=document.getElementById('mb-'+u.id);if(mb)mb.textContent=(base*disc).toFixed(2)+' hrs';
+    var ma=document.getElementById('ma-'+u.id);if(ma)ma.textContent=adj.toFixed(2)+' hrs';
+    var mc=document.getElementById('mc-'+u.id);if(mc)mc.textContent=fmt(adj*hr);
   }
 
-  const perVisit = units.reduce((s, u) => s + (u.unit_price||0)*(u.qty||1), 0);
+  var perVisit=0;
+  for(var k=0;k<units.length;k++) perVisit+=(units[k].unit_price||0)*(units[k].qty||1);
+  var vpy=getVPY(), annual=perVisit*vpy;
+  var laborCost=totalHrs*hr;
+  var margin=perVisit>0&&laborCost>0?Math.round((perVisit-laborCost)/perVisit*100)+'%':'-';
 
-  const doc = {
-    doctype:          'LCS Service Agreement Quote',
-    // naming series is set by the DocType naming rule automatically
-    status:           'Draft',
-    quote_date:       document.getElementById('quote_date').value,
-    valid_until:      document.getElementById('valid_until').value || null,
-    sales_rep:        document.getElementById('sales_rep').value.trim(),
-    // Customer & Contact
-    customer_name:    custName,
-    service_address:  document.getElementById('service_address').value.trim(),
-    city_state_zip:   document.getElementById('city_state_zip').value.trim(),
-    contact_name:     document.getElementById('contact_name').value.trim(),
-    contact_phone:    document.getElementById('contact_phone').value.trim(),
-    contact_email:    document.getElementById('contact_email').value.trim(),
-    alt_contact:      document.getElementById('alt_contact').value.trim(),
-    alt_phone:        document.getElementById('alt_phone').value.trim(),
-    capacity_class:   document.getElementById('capacity_class').value,
-    // Service Schedule
-    schedule_type:    document.getElementById('schedule_type').value,
-    interval_months:  parseInt(document.getElementById('interval_months').value) || 12,
-    // Equipment child table
-    equipment_items,
-    // Pricing Summary — auto-calculated by DocType, but set here too
-    price_per_service: perVisit,
-    // Rate Schedule
-    rate_regular:     parseFloat(document.getElementById('rate_regular').value) || 0,
-    rate_overtime:    parseFloat(document.getElementById('rate_overtime').value) || 0,
-    rate_holiday:     parseFloat(document.getElementById('rate_holiday').value) || 0,
-    rates_valid_until:document.getElementById('rates_valid_until').value || null,
-    est_man_hours:    parseFloat(document.getElementById('est_man_hours').value) || null,
-    plan_service:     document.getElementById('plan_service').checked ? 1 : 0,
-    // Terms & Internal
-    terms:            document.getElementById('terms').value.trim(),
-    internal_notes:   intNotes,
+  var el;
+  el=document.getElementById('sumBreak');if(el)el.innerHTML=breakdown||'<div style="font-size:.76rem;color:rgba(214,228,247,.45);font-style:italic;text-align:center;padding:6px;">Select MLU tasks to see breakdown.</div>';
+  el=document.getElementById('sumHrs'); if(el)el.textContent=totalHrs.toFixed(2);
+  el=document.getElementById('sumLbr'); if(el)el.textContent=fmt(laborCost);
+  el=document.getElementById('sumMgn'); if(el)el.textContent=margin;
+  el=document.getElementById('sumPV');  if(el)el.textContent=fmt(perVisit);
+  el=document.getElementById('sumVPY'); if(el)el.textContent=vpy%1===0?vpy:vpy.toFixed(1);
+  el=document.getElementById('sumAnn'); if(el)el.textContent=fmt(annual);
+  el=document.getElementById('sumTot'); if(el)el.textContent=fmt(perVisit);
+  el=document.getElementById('lbrBadge');if(el)el.textContent=totalHrs.toFixed(2)+' hrs';
+  el=document.getElementById('est_man_hours');if(el&&!el._edited)el.value=totalHrs>0?totalHrs.toFixed(2):'';
+}
+
+// ─── SAVE ────────────────────────────────────────────
+function saveDraft() {
+  dbg('saveDraft called');
+  var cust = fv('customer_name').trim();
+  if (!cust) { alert('Please enter a Customer / Company Name.'); return; }
+  var eq = units.map(function(u){return{location_dept:u.location_dept||'',scale_type:u.scale_type||'',difficulty:u.difficulty||'Normal',make:u.make||'',model:u.model||'',qty:u.qty||1,unit_price:u.unit_price||0,extended_price:(u.unit_price||0)*(u.qty||1)};});
+  var notes = fv('internal_notes');
+  if (units.some(function(u){return u.sn;})) {
+    notes += (notes?'\n\n':'')+'SERIAL NUMBERS:\n'+units.map(function(u,i){return(i+1)+'. '+u.scale_type+' '+u.make+' '+u.model+' - S/N: '+(u.sn||'(not recorded)');}).join('\n');
+  }
+  var perVisit=0; for(var k=0;k<units.length;k++) perVisit+=(units[k].unit_price||0)*(units[k].qty||1);
+  var doc = {
+    doctype:'LCS Service Agreement Quote', status:'Draft',
+    quote_date:fv('quote_date'), valid_until:fv('valid_until')||null,
+    sales_rep:fv('sales_rep'), customer_name:cust,
+    service_address:fv('service_address'), city_state_zip:fv('city_state_zip'),
+    contact_name:fv('contact_name'), contact_phone:fv('contact_phone'), contact_email:fv('contact_email'),
+    alt_contact:fv('alt_contact'), alt_phone:fv('alt_phone'),
+    capacity_class:fv('capacity_class'), schedule_type:fv('schedule_type'),
+    interval_months:parseInt(fv('interval_months'))||12,
+    equipment_items:eq, price_per_service:perVisit,
+    rate_regular:parseFloat(fv('rate_regular'))||0, rate_overtime:parseFloat(fv('rate_overtime'))||0,
+    rate_holiday:parseFloat(fv('rate_holiday'))||0, rates_valid_until:fv('rates_valid_until')||null,
+    est_man_hours:parseFloat(fv('est_man_hours'))||null,
+    plan_service:document.getElementById('plan_service').checked?1:0,
+    terms:fv('terms'), internal_notes:notes
   };
-
-  frappe.dom.freeze('Saving LCS Service Agreement Quote…');
-  frappe.call({
-    method: 'frappe.client.insert',
-    args:   { doc },
-    callback(r) {
+  dbg('doc built, frappe available: ' + (typeof frappe !== 'undefined'));
+  if (typeof frappe !== 'undefined') {
+    frappe.dom.freeze('Saving...');
+    frappe.call({method:'frappe.client.insert',args:{doc:doc},callback:function(r){
       frappe.dom.unfreeze();
       if (!r.exc && r.message) {
-        const name = r.message.name;
-        document.getElementById('docNum').textContent     = name;
-        document.getElementById('statusPill').textContent = 'Saved — Draft';
-        document.getElementById('statusPill').className   = 'status-pill status-saved';
-        document.getElementById('savedDocName').textContent = name;
-        const lnk = document.getElementById('savedDocLink');
-        lnk.href  = '/app/lcs-service-agreement-quote/' + name;
-        document.getElementById('erpLink').href = lnk.href;
-        document.getElementById('savedLink').style.display = 'inline';
-        document.getElementById('savedBanner').classList.add('show');
+        var n = r.message.name;
+        dbg('Saved: ' + n);
+        document.getElementById('savedName').textContent = n;
+        document.getElementById('savedLink').href = '/app/lcs-service-agreement-quote/'+n;
+        document.getElementById('savedBan').classList.add('show');
         localStorage.removeItem(LS_KEY);
-        document.getElementById('savedBanner').scrollIntoView({behavior:'smooth', block:'nearest'});
       } else {
-        frappe.msgprint({
-          title:    'Save Error',
-          indicator:'red',
-          message:  'Could not save the LCS Service Agreement Quote. Check the browser console for details. ' +
-                    'Common causes: required fields missing, child table fieldname mismatch, or permissions.'
-        });
+        dbg('Save failed: ' + JSON.stringify(r.exc||'unknown'));
+        frappe.msgprint({title:'Save Error',indicator:'red',message:'Could not save. Check console for details.'});
       }
-    }
-  });
+    }});
+  } else {
+    dbg('No frappe - standalone mode');
+    alert('Standalone preview:\nCustomer: '+cust+'\nEquipment: '+eq.length+' rows\nPer-visit: '+fmt(perVisit));
+  }
 }
 
-// ================================================================
-// LOCALSTORAGE AUTOSAVE
-// ================================================================
-let _autosaveTimer = null;
-
-function collectSnapshot() {
-  return {
-    svcMode,
-    sales_rep:        fv('sales_rep'),
-    quote_date:       fv('quote_date'),
-    valid_until:      fv('valid_until'),
-    customer_name:    fv('customer_name'),
-    capacity_class:   fv('capacity_class'),
-    service_address:  fv('service_address'),
-    city_state_zip:   fv('city_state_zip'),
-    contact_name:     fv('contact_name'),
-    contact_phone:    fv('contact_phone'),
-    contact_email:    fv('contact_email'),
-    alt_contact:      fv('alt_contact'),
-    alt_phone:        fv('alt_phone'),
-    schedule_type:    fv('schedule_type'),
-    interval_months:  fv('interval_months'),
-    rate_regular:     fv('rate_regular'),
-    rate_overtime:    fv('rate_overtime'),
-    rate_holiday:     fv('rate_holiday'),
-    rates_valid_until:fv('rates_valid_until'),
-    est_man_hours:    fv('est_man_hours'),
-    plan_service:     document.getElementById('plan_service')?.checked || false,
-    terms:            fv('terms'),
-    internal_notes:   fv('internal_notes'),
-    hourlyRate:       fv('hourlyRate'),
-    siteScore:        fv('siteScore'),
-    units:            units.slice(),
-    ts:               Date.now(),
-  };
-}
-
-function fv(id) { return document.getElementById(id)?.value ?? ''; }
-
-function autosave() {
-  clearTimeout(_autosaveTimer);
-  _autosaveTimer = setTimeout(() => {
+// ─── AUTOSAVE ────────────────────────────────────────
+var _at = null;
+function autoSave() {
+  if (_at) clearTimeout(_at);
+  _at = setTimeout(function(){
     try {
-      const snap = collectSnapshot();
-      if (!snap.customer_name && units.length === 0) return;
+      var snap = {v:4,svcMode:svcMode,units:units.slice(),ts:Date.now()};
+      var fields = ['sales_rep','quote_date','valid_until','customer_name','capacity_class','service_address','city_state_zip','contact_name','contact_phone','contact_email','alt_contact','alt_phone','schedule_type','interval_months','rate_regular','rate_overtime','rate_holiday','rates_valid_until','terms','internal_notes','hrRate','siteScore'];
+      for (var i=0;i<fields.length;i++) snap[fields[i]] = fv(fields[i]);
+      snap.plan_service = document.getElementById('plan_service').checked;
+      if (!snap.customer_name && !snap.units.length) return;
       localStorage.setItem(LS_KEY, JSON.stringify(snap));
-      document.getElementById('lastSaveTime').textContent =
-        new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
-      const bar = document.getElementById('autosaveBar');
-      bar.classList.add('show');
-      setTimeout(() => bar.classList.remove('show'), 2400);
-    } catch(e) {}
-  }, 800);
+      var bar = document.getElementById('asbar');
+      if (bar) { bar.classList.add('show'); setTimeout(function(){bar.classList.remove('show');},2000); }
+    } catch(e) { dbg('autosave error: '+e.message); }
+  }, 1000);
 }
 
-function checkRestore() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const snap = JSON.parse(raw);
-    if (snap.customer_name && (Date.now() - snap.ts) < 30 * 24 * 60 * 60 * 1000)
-      document.getElementById('restoreBanner').classList.add('show');
-  } catch(e) {}
-}
-
-function restoreDraft() {
-  try {
-    const snap = JSON.parse(localStorage.getItem(LS_KEY));
-    if (!snap) return;
-    document.getElementById('restoreBanner').classList.remove('show');
-    setMode(snap.svcMode || 'cal');
-    const simpleFields = ['sales_rep','quote_date','valid_until','customer_name','service_address',
-      'city_state_zip','contact_name','contact_phone','contact_email','alt_contact','alt_phone',
-      'schedule_type','interval_months','rate_regular','rate_overtime','rate_holiday',
-      'rates_valid_until','est_man_hours','terms','internal_notes','hourlyRate','siteScore'];
-    simpleFields.forEach(id => { const el=document.getElementById(id); if(el && snap[id]!=null) el.value=snap[id]; });
-    if (snap.capacity_class) setCapacity(snap.capacity_class);
-    if (snap.plan_service != null) {
-      const cb = document.getElementById('plan_service'); if(cb) cb.checked = snap.plan_service;
-    }
-    if (snap.units?.length) {
-      units   = snap.units.map(u => ({...u}));
-      unitIdC = Math.max(...units.map(u => u.id), 0) + 1;
-      renderEq();
-    }
-    onSchedChange(); calc();
-  } catch(e) { alert('Could not restore draft: ' + e.message); }
-}
-
-function clearDraft() {
-  localStorage.removeItem(LS_KEY);
-  document.getElementById('restoreBanner').classList.remove('show');
-}
-
+// ─── CLEAR ───────────────────────────────────────────
 function clearForm() {
-  if (!confirm('Clear all data and start over?')) return;
-  clearDraft();
-  units = []; unitIdC = 1;
-  document.querySelectorAll('input[type=text],input[type=email],input[type=tel],textarea').forEach(el=>el.value='');
-  document.querySelectorAll('input[type=number]').forEach(el=>{
-    if(el.id==='hourlyRate') el.value=165;
-    else if(el.id==='siteScore') el.value=15;
-    else if(el.id==='rate_regular') el.value=115.00;
-    else if(el.id==='rate_overtime') el.value=172.50;
-    else if(el.id==='rate_holiday') el.value=230.00;
-    else el.value='';
-  });
-  document.getElementById('plan_service').checked=false;
-  document.getElementById('savedBanner').classList.remove('show');
-  setCapacity('Light Capacity');
+  if (!confirm('Clear all data?')) return;
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
+  units = []; uid = 1;
+  var inputs = document.querySelectorAll('input[type=text],input[type=email],input[type=tel],textarea');
+  for (var i=0;i<inputs.length;i++) inputs[i].value='';
+  document.getElementById('rate_regular').value = 115;
+  document.getElementById('rate_overtime').value = 172.50;
+  document.getElementById('rate_holiday').value = 230;
+  document.getElementById('hrRate').value = 165;
+  document.getElementById('siteScore').value = 15;
+  document.getElementById('plan_service').checked = false;
+  document.getElementById('savedBan').classList.remove('show');
+  document.getElementById('terms').value = DEFAULT_TERMS;
+  setCap('Light Capacity');
   setMode('cal');
-  document.getElementById('interval_months').value=12;
-  document.querySelector('.sched-btn.active')?.classList.remove('active');
-  document.querySelectorAll('.sched-btn')[3]?.classList.add('active');
-  document.getElementById('terms').value = DEFAULT_TERMS;
+  setSched(12);
   addUnit(); addUnit(); addUnit();
-  onSchedChange(); calc();
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+// ─── WIRE EVENTS ─────────────────────────────────────
+// Use event delegation on the whole document for all dynamic content
+document.addEventListener('click', function(e) {
+  var t = e.target;
+  // mode buttons
+  if (t.id==='mCal')  { setMode('cal');  return; }
+  if (t.id==='mPm')   { setMode('pm');   return; }
+  if (t.id==='mBoth') { setMode('both'); return; }
+  // capacity
+  if (t.id==='cLight') { setCap('Light Capacity'); return; }
+  if (t.id==='cHeavy') { setCap('Heavy Capacity'); return; }
+  // schedule presets
+  if (t.id==='sb1')  { setSched(1);  return; }
+  if (t.id==='sb3')  { setSched(3);  return; }
+  if (t.id==='sb6')  { setSched(6);  return; }
+  if (t.id==='sb12') { setSched(12); return; }
+  if (t.id==='sb24') { setSched(24); return; }
+  // add unit
+  if (t.id==='addUnitBtn')  { addUnit(); return; }
+  if (t.id==='addIdentBtn') { addIdentical(); return; }
+  // delete unit (button or its svg/path child)
+  var delBtn = t.closest ? t.closest('.delbtn') : null;
+  if (!delBtn && t.className === 'delbtn') delBtn = t;
+  if (delBtn && delBtn.getAttribute('data-id')) { removeUnit(parseInt(delBtn.getAttribute('data-id'))); return; }
+  // action buttons
+  if (t.id==='clearBtn') { clearForm(); return; }
+  if (t.id==='printBtn') { window.print(); return; }
+  if (t.id==='saveBtn')  { saveDraft(); return; }
+});
 
-// ================================================================
-// DEFAULT TERMS CONSTANT (moved out of Jinja — hardcoded)
-// ================================================================
-const DEFAULT_TERMS = `Left Coast Scales will inspect and test with certified weights and standards all assets listed above, according to the schedule stated above.
-All units will be tested with approved standards in accordance with NIST Handbook 44 tolerances set forth by the National Institute of Standards and Technology.
-Upon completion of all "as found" and "as left" conditions of your assets will be provided after the completion of inspection. All reports and certifications are stored digitally for future reference.
-Any additional services required that are beyond the scope mentioned above, including repairs, parts, installation, and labor, will be performed with your authorization at our agreed-upon labor rates. A certified and trained technician will perform all work.
-Emergency service will be billed using the enclosed rate schedule. This includes mechanic time, travel time, and mileage.
-This agreement will renew automatically at the end of the duration listed. A written notice is required to terminate this service agreement, and must be sent to us at least 30 days prior to the next scheduled service.`;
-  addUnit(); addUnit(); addUnit();
-  onSchedChange(); calc();
-}
+document.addEventListener('change', function(e) {
+  var t = e.target;
+  // schedule type dropdown
+  if (t.id==='schedule_type') { onSchedType(); return; }
+  // interval months
+  if (t.id==='interval_months') { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
+  // equipment table selects/inputs
+  if (t.classList && t.classList.contains('eqtype')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
+  if (t.classList && t.classList.contains('eqdiff')) { onEqChange(parseInt(t.getAttribute('data-id'))); return; }
+  // MLU task select
+  if (t.id && t.id.indexOf('ms-')===0) { onMLUChange(parseInt(t.id.replace('ms-',''))); return; }
+  // global modifiers
+  if (t.classList && t.classList.contains('gmod')) { calc(); return; }
+  // item modifiers
+  if (t.classList && t.classList.contains('imod')) { calc(); return; }
+  // siteScore
+  if (t.id==='siteScore') { calc(); return; }
+  // hrRate
+  if (t.id==='hrRate') { calc(); return; }
+  autoSave();
+});
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+document.addEventListener('input', function(e) {
+  var t = e.target;
+  if (t.id==='interval_months') { var b=document.getElementById('schedBadge');if(b)b.textContent=getSchedLabel(); calc(); return; }
+  if (t.id==='siteScore')   { calc(); return; }
+  if (t.id==='hrRate')      { calc(); return; }
+  if (t.id==='est_man_hours') { t._edited=true; return; }
+  // eq table inputs
+  if (t.classList && (t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc')||t.classList.contains('eqqty')||t.classList.contains('eqprice'))) {
+    onEqChange(parseInt(t.getAttribute('data-id'))); return;
+  }
+  autoSave();
+});
 
-// ================================================================
-// INIT
-// ================================================================
+// ─── INIT ────────────────────────────────────────────
 (function init() {
-  // Set today's date and valid-until (30 days)
-  const today  = new Date();
-  const fmtD   = d => d.toISOString().split('T')[0];
-  const exp    = new Date(today); exp.setDate(exp.getDate() + 30);
-  document.getElementById('quote_date').value  = fmtD(today);
-  document.getElementById('valid_until').value = fmtD(exp);
-
-  // Update header date display
-  document.getElementById('docDate').textContent =
-    today.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-
-  // Update doc number year
-  document.getElementById('docNum').textContent = 'LCS-SAQ-' + today.getFullYear() + '-NEW';
-
-  // Populate default terms
+  dbg('init started');
+  var today = new Date();
+  var pad = function(d){return d.toISOString().split('T')[0];};
+  document.getElementById('quote_date').value = pad(today);
+  var exp = new Date(today); exp.setDate(exp.getDate()+30);
+  document.getElementById('valid_until').value = pad(exp);
   document.getElementById('terms').value = DEFAULT_TERMS;
-
-  // Try to pre-fill sales rep from Frappe session (available when logged in via portal)
-  try {
-    if (typeof frappe !== 'undefined' && frappe.session && frappe.session.user !== 'Guest') {
-      frappe.call({
-        method: 'frappe.client.get',
-        args: { doctype: 'User', name: frappe.session.user },
-        callback(r) {
-          if (r.message) {
-            document.getElementById('sales_rep').value = r.message.full_name || frappe.session.user;
-          }
-        }
-      });
-    }
-  } catch(e) {}
-
-  // Mark est_man_hours as auto-fillable until manually edited
-  const emh = document.getElementById('est_man_hours');
-  if (emh) emh.addEventListener('input', () => { emh._manuallyEdited = true; });
-
-  // Use event delegation for autosave — one listener on the document
-  // This covers dynamically-created equipment rows without re-wiring
-  let _autosaveDebounce = null;
-  document.addEventListener('input',  () => { clearTimeout(_autosaveDebounce); _autosaveDebounce = setTimeout(autosave, 800); });
-  document.addEventListener('change', () => { clearTimeout(_autosaveDebounce); _autosaveDebounce = setTimeout(autosave, 800); });
-  setInterval(autosave, 30000);
-
-  // Default schedule badge
-  onSchedChange();
-
-  // Add default 3 equipment rows
+  setSched(12);
   addUnit(); addUnit(); addUnit();
-
-  // Check for restorable localStorage draft
-  checkRestore();
-  calc();
+  // Try to get sales rep name from Frappe session
+  if (typeof frappe !== 'undefined') {
+    dbg('frappe available, getting user');
+    try {
+      frappe.call({method:'frappe.client.get',args:{doctype:'User',name:frappe.session.user},callback:function(r){
+        if(r&&r.message) document.getElementById('sales_rep').value = r.message.full_name||'';
+        dbg('user loaded: '+(r&&r.message?r.message.full_name:'n/a'));
+      }});
+    } catch(e) { dbg('frappe user load error: '+e.message); }
+  } else {
+    dbg('frappe not available (standalone mode)');
+  }
+  dbg('init complete - ' + units.length + ' units ready');
 })();
 </script>
-
-</div><!-- end .saq-page -->
 </body>
 </html>
