@@ -1,18 +1,16 @@
-{% extends "templates/web.html" %}
-{% block page_content %}
-{# ================================================================
-   LCS Service Agreement Quote
-   Route: /service-agreement-quote
-   File: beveren_fsm/field_service_management/www/service-agreement-quote.html
-   Controller: service-agreement-quote.py
-
-   DocType target: LCS Service Agreement Quote
-   Child table:    LCS Service Agreement Quote Item  (fieldname: equipment_items)
-
-   All frappe.call() methods reference actual fieldnames confirmed
-   from the DocType field list screenshot.
-   ================================================================ #}
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LCS Service Agreement Quote — Left Coast Scales</title>
+<!--
+  beveren_fsm/www/service-agreement-quote.html
+  beveren_fsm/www/service-agreement-quote.py
+  Route: /service-agreement-quote
+  DocType: LCS Service Agreement Quote
+  Child:   LCS Service Agreement Quote Item (equipment_items)
+-->
 <style>
 /* ===== LCS BRAND TOKENS ===== */
 :root {
@@ -357,6 +355,8 @@
   .rate-grid { grid-template-columns: 1fr; }
 }
 </style>
+</head>
+<body style="background:#F0F4F8;">
 
 <div class="saq-page">
 
@@ -368,7 +368,7 @@
     <p>Field Service &amp; Calibration &mdash; Complete this form to generate a Service Agreement Quote</p>
   </div>
   <div class="saq-meta">
-    <div class="saq-docnum" id="docNum">LCS-SAQ-{{ frappe.utils.nowdate()[:4] }}-NEW</div>
+    <div class="saq-docnum" id="docNum">LCS-SAQ-NEW</div>
     <div class="saq-docdate" id="docDate"></div>
   </div>
 </header>
@@ -426,15 +426,15 @@
     <div class="fg g4">
       <div class="fld">
         <label>Sales rep <span class="req">*</span></label>
-        <input type="text" id="sales_rep" value="{{ sales_rep_name }}" placeholder="Full name">
+        <input type="text" id="sales_rep" placeholder="Full name">
       </div>
       <div class="fld">
         <label>Quote date <span class="req">*</span></label>
-        <input type="date" id="quote_date" value="{{ today }}">
+        <input type="date" id="quote_date">
       </div>
       <div class="fld">
         <label>Valid until</label>
-        <input type="date" id="valid_until" value="{{ valid_until }}">
+        <input type="date" id="valid_until">
       </div>
       <div class="fld">
         <label>Service type</label>
@@ -698,17 +698,17 @@
           <div class="fld">
             <label>Regular hours ($/hr — 1 hr min)</label>
             <!-- fieldname: rate_regular -->
-            <input type="number" id="rate_regular" value="{{ default_rate_regular }}" min="0" step="0.50">
+            <input type="number" id="rate_regular" value="115.00" min="0" step="0.50">
           </div>
           <div class="fld">
             <label>Overtime hours ($/hr — 1 hr min)</label>
             <!-- fieldname: rate_overtime -->
-            <input type="number" id="rate_overtime" value="{{ default_rate_overtime }}" min="0" step="0.50">
+            <input type="number" id="rate_overtime" value="172.50" min="0" step="0.50">
           </div>
           <div class="fld">
             <label>Sundays &amp; holidays ($/hr — 2 hr min)</label>
             <!-- fieldname: rate_holiday -->
-            <input type="number" id="rate_holiday" value="{{ default_rate_holiday }}" min="0" step="0.50">
+            <input type="number" id="rate_holiday" value="230.00" min="0" step="0.50">
           </div>
         </div>
       </div>
@@ -747,7 +747,7 @@
     <div class="fg g1 last">
       <div class="fld">
         <!-- fieldname: terms -->
-        <textarea id="terms" style="min-height:160px;">{{ default_terms }}</textarea>
+        <textarea id="terms" style="min-height:160px;"></textarea>
       </div>
     </div>
   </div>
@@ -1368,9 +1368,9 @@ function clearForm() {
   document.querySelectorAll('input[type=number]').forEach(el=>{
     if(el.id==='hourlyRate') el.value=165;
     else if(el.id==='siteScore') el.value=15;
-    else if(el.id==='rate_regular') el.value={{ default_rate_regular }};
-    else if(el.id==='rate_overtime') el.value={{ default_rate_overtime }};
-    else if(el.id==='rate_holiday') el.value={{ default_rate_holiday }};
+    else if(el.id==='rate_regular') el.value=115.00;
+    else if(el.id==='rate_overtime') el.value=172.50;
+    else if(el.id==='rate_holiday') el.value=230.00;
     else el.value='';
   });
   document.getElementById('plan_service').checked=false;
@@ -1380,7 +1380,23 @@ function clearForm() {
   document.getElementById('interval_months').value=12;
   document.querySelector('.sched-btn.active')?.classList.remove('active');
   document.querySelectorAll('.sched-btn')[3]?.classList.add('active');
-  document.getElementById('terms').value = `{{ default_terms }}`;
+  document.getElementById('terms').value = DEFAULT_TERMS;
+  addUnit(); addUnit(); addUnit();
+  onSchedChange(); calc();
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ================================================================
+// DEFAULT TERMS CONSTANT (moved out of Jinja — hardcoded)
+// ================================================================
+const DEFAULT_TERMS = `Left Coast Scales will inspect and test with certified weights and standards all assets listed above, according to the schedule stated above.
+All units will be tested with approved standards in accordance with NIST Handbook 44 tolerances set forth by the National Institute of Standards and Technology.
+Upon completion of all "as found" and "as left" conditions of your assets will be provided after the completion of inspection. All reports and certifications are stored digitally for future reference.
+Any additional services required that are beyond the scope mentioned above, including repairs, parts, installation, and labor, will be performed with your authorization at our agreed-upon labor rates. A certified and trained technician will perform all work.
+Emergency service will be billed using the enclosed rate schedule. This includes mechanic time, travel time, and mileage.
+This agreement will renew automatically at the end of the duration listed. A written notice is required to terminate this service agreement, and must be sent to us at least 30 days prior to the next scheduled service.`;
   addUnit(); addUnit(); addUnit();
   onSchedChange(); calc();
 }
@@ -1392,25 +1408,61 @@ function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFr
 // INIT
 // ================================================================
 (function init() {
-  const today = new Date();
+  // Set today's date and valid-until (30 days)
+  const today  = new Date();
+  const fmtD   = d => d.toISOString().split('T')[0];
+  const exp    = new Date(today); exp.setDate(exp.getDate() + 30);
+  document.getElementById('quote_date').value  = fmtD(today);
+  document.getElementById('valid_until').value = fmtD(exp);
+
+  // Update header date display
   document.getElementById('docDate').textContent =
-    today.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  // est_man_hours: mark as auto-filled unless manually edited
+    today.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+
+  // Update doc number year
+  document.getElementById('docNum').textContent = 'LCS-SAQ-' + today.getFullYear() + '-NEW';
+
+  // Populate default terms
+  document.getElementById('terms').value = DEFAULT_TERMS;
+
+  // Try to pre-fill sales rep from Frappe session (available when logged in via portal)
+  try {
+    if (typeof frappe !== 'undefined' && frappe.session && frappe.session.user !== 'Guest') {
+      frappe.call({
+        method: 'frappe.client.get',
+        args: { doctype: 'User', name: frappe.session.user },
+        callback(r) {
+          if (r.message) {
+            document.getElementById('sales_rep').value = r.message.full_name || frappe.session.user;
+          }
+        }
+      });
+    }
+  } catch(e) {}
+
+  // Mark est_man_hours as auto-fillable until manually edited
   const emh = document.getElementById('est_man_hours');
   if (emh) emh.addEventListener('input', () => { emh._manuallyEdited = true; });
+
   // Wire autosave on all inputs
-  document.querySelectorAll('input,select,textarea').forEach(el => {
+  document.querySelectorAll('input, select, textarea').forEach(el => {
     el.addEventListener('change', autosave);
-    el.addEventListener('input', autosave);
+    el.addEventListener('input',  autosave);
   });
   setInterval(autosave, 30000);
+
   // Default schedule badge
   onSchedChange();
+
   // Add default 3 equipment rows
   addUnit(); addUnit(); addUnit();
-  // Check for restore
+
+  // Check for restorable localStorage draft
   checkRestore();
   calc();
 })();
 </script>
-{% endblock %}
+
+</div><!-- end .saq-page -->
+</body>
+</html>
