@@ -891,8 +891,11 @@ function boot() {
   dbg('boot complete — ' + units.length + ' units, buttons ready');
 }
 
-// Run via frappe.ready if in Frappe portal, else on DOMContentLoaded
-if (typeof frappe !== 'undefined' && frappe.ready) {
+// Frappe www/ portal pages load jQuery — use $(document).ready
+// frappe.ready() is desk-only and does not fire on www/ pages
+if (typeof $ !== 'undefined') {
+  $(document).ready(boot);
+} else if (typeof frappe !== 'undefined' && frappe.ready) {
   frappe.ready(boot);
 } else {
   document.addEventListener('DOMContentLoaded', boot);
