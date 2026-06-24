@@ -328,12 +328,11 @@ window.csrf_token = '{{ csrf_token }}';
           <th style="min-width:100px;">Serial no.</th>
           <th style="min-width:100px;">Location/Dept</th>
           <th style="min-width:85px;">Difficulty</th>
-          <th style="min-width:80px;">Capacity (lb) <span class="req">*</span></th>
-          <th style="width:42px;">Qty</th>
-          <th class="int-col" style="min-width:65px;">MLU hrs</th>
-          <th style="min-width:85px;">Unit price ($)</th>
-          <th style="min-width:80px;">Extended</th>
-          <th style="width:24px;"></th>
+          <th style="min-width:75px;">Cap. (lb)</th>
+          <th class="int-col" style="min-width:60px;">MLU hrs</th>
+          <th class="int-col" style="min-width:85px;">Unit price ($)</th>
+          <th style="min-width:80px;">Price/visit</th>
+          <th style="width:52px;"></th>
         </tr></thead>
         <tbody id="eqBody"></tbody>
       </table>
@@ -342,6 +341,69 @@ window.csrf_token = '{{ csrf_token }}';
       <button class="btn btn-ghost" id="addUnitBtn">+ Add unit</button>
       <button class="btn btn-ghost" id="addIdentBtn">+ Add identical units...</button>
       <span style="font-size:.67rem;color:var(--muted);margin-left:4px;align-self:center;">Each unit = own row + serial number</span>
+    </div>
+  </div>
+</div>
+
+<!-- ZONE & ADDITIONAL CHARGES -->
+<div class="card">
+  <div class="card-hd"><h2>Zone Charge &amp; Additional Charges</h2></div>
+  <div class="card-bd">
+    <!-- Zone Charge -->
+    <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+      <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Zone Charge</h3>
+      <div class="fg g3 last">
+        <div class="f">
+          <label>Zone number</label>
+          <select id="zoneNum">
+            <option value="">No zone charge</option>
+            <option value="1">Zone 1</option>
+            <option value="2">Zone 2</option>
+            <option value="3">Zone 3</option>
+            <option value="4">Zone 4</option>
+            <option value="5">Zone 5</option>
+            <option value="6">Zone 6</option>
+          </select>
+        </div>
+        <div class="f">
+          <label>Zone charge amount</label>
+          <input type="number" id="zoneChargeAmt" value="0" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled from zone selection">
+          <div class="hint" id="zoneItemCode"></div>
+        </div>
+        <div class="f">
+          <label>Zone item code</label>
+          <input type="text" id="zoneItemCodeDisplay" readonly style="background:var(--gbg);font-size:.75rem;color:var(--muted);" placeholder="e.g. SRV-TRAVEL-Z3LC">
+        </div>
+      </div>
+    </div>
+    <!-- Additional Charges -->
+    <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;">Additional Charges</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <input type="checkbox" id="chCerts" style="accent-color:var(--crimson);width:14px;height:14px;">
+        <label for="chCerts" style="font-size:.78rem;flex:1;cursor:pointer;">Smarter Certs</label>
+        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCerts" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <input type="checkbox" id="chShipping" style="accent-color:var(--crimson);width:14px;height:14px;">
+        <label for="chShipping" style="font-size:.78rem;flex:1;cursor:pointer;">Shipping Recovery</label>
+        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShipping" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <input type="checkbox" id="chShop" style="accent-color:var(--crimson);width:14px;height:14px;">
+        <label for="chShop" style="font-size:.78rem;flex:1;cursor:pointer;">Shop Supplies</label>
+        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShop" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <input type="checkbox" id="chCheckin" style="accent-color:var(--crimson);width:14px;height:14px;">
+        <label for="chCheckin" style="font-size:.78rem;flex:1;cursor:pointer;">Check In/Out Time</label>
+        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCheckin" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <input type="checkbox" id="chMisc" style="accent-color:var(--crimson);width:14px;height:14px;">
+        <label for="chMisc" style="font-size:.78rem;flex:1;cursor:pointer;">Misc Charge</label>
+        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vMisc" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -361,11 +423,14 @@ window.csrf_token = '{{ csrf_token }}';
 <!-- SUMMARY -->
 <div class="sum">
   <h3>Customer-Facing Pricing</h3>
+  <div class="pr"><span class="l">Equipment service subtotal</span><span class="v" id="sumEquip">$0.00</span></div>
+  <div class="pr"><span class="l">Zone charge</span><span class="v" id="sumZone">—</span></div>
+  <div class="pr"><span class="l">Additional charges</span><span class="v" id="sumAddl">—</span></div>
   <div class="pr"><span class="l">Price per service visit</span><span class="v" id="sumPV">$0.00</span></div>
   <div class="pr"><span class="l">Visits per year (<span id="sumSchedLbl">Annual</span>)</span><span class="v" id="sumVPY">1</span></div>
   <div class="pr ann"><span class="l">Extended annual price</span><span class="v" id="sumAnn">$0.00</span></div>
   <div style="border-top:1px solid rgba(214,228,247,.2);margin:10px 0;padding-top:10px;">
-    <h3 style="margin-bottom:8px;">Internal Costing Summary (not printed)</h3>
+    <h3 style="margin-bottom:8px;">Internal Costing (not printed)</h3>
     <div class="pr"><span class="l">Total estimated hours / visit</span><span class="v" id="sumHrs">0.00 hrs</span></div>
     <div class="pr"><span class="l">Internal labor cost / visit</span><span class="v" id="sumLbr">$0.00</span></div>
     <div class="pr"><span class="l">Gross margin</span><span class="v" id="sumMgn">—</span></div>
@@ -704,16 +769,28 @@ function buildMonthGrid(){
 // ════════════════════════════════════════════
 function addUnit(pre) {
   var id = uid++;
-  units.push(pre||{id:id,scale_type:'Floor scale',make:'',model:'',sn:'',location_dept:'',difficulty:'Normal',capacity_lb:1000,qty:1,unit_price:0,_override:false,_multiDiscount:false});
+  units.push(pre||{id:id,scale_type:'Floor scale',make:'',model:'',sn:'',location_dept:'',difficulty:'Normal',capacity_lb:'',unit_price:0,_override:false,_multiDiscount:false});
   renderEq();
 }
 function addIdentical() {
-  var n=parseInt(prompt('How many identical units?'));
-  if(!n||n<2) return;
-  var raw=prompt('Comma-separated serial numbers (leave blank to fill later):');
-  var sns=raw?raw.split(',').map(function(s){return s.trim();}):'';
-  for(var i=0;i<n;i++){
-    units.push({id:uid++,scale_type:'Floor scale',make:'',model:'',sn:sns?sns[i]||'':'',location_dept:'',difficulty:'Normal',capacity_lb:1000,qty:1,unit_price:0,_override:false,_multiDiscount:false});
+  if (!units.length) { alert('Add at least one unit first — identical units are copied from the last row.'); return; }
+  var n = parseInt(prompt('How many additional identical units? (copies all fields from last row except serial number)'));
+  if (!n || n < 1) return;
+  var src = units[units.length - 1];
+  for (var i = 0; i < n; i++) {
+    units.push({
+      id: uid++,
+      scale_type:    src.scale_type,
+      make:          src.make,
+      model:         src.model,
+      sn:            '',           // blank — salesperson fills each
+      location_dept: src.location_dept,
+      difficulty:    src.difficulty,
+      capacity_lb:   src.capacity_lb,
+      unit_price:    0,            // recalculated after render
+      _override:     false,
+      _multiDiscount:false
+    });
   }
   renderEq();
 }
@@ -731,8 +808,6 @@ function readUnit(id) {
   u.location_dept = tr.querySelector('input.eqloc').value;
   u.difficulty    = tr.querySelector('select.eqdiff').value;
   u.capacity_lb   = parseFloat(tr.querySelector('input.eqcap').value)||0;
-  u.qty           = parseFloat(tr.querySelector('input.eqqty').value)||1;
-  // Unit price — check if manually overridden
   var upEl = tr.querySelector('input.equp');
   var newUp = parseFloat(upEl.value)||0;
   if (Math.abs(newUp - u.unit_price) > 0.005 && upEl._touched) {
@@ -753,9 +828,8 @@ function onUnitPriceChange(id) {
   upEl._touched=true;
   u._override=true;
   u.unit_price=parseFloat(upEl.value)||0;
-  // Update extended
   var extEl=document.getElementById('ext-'+id);
-  if(extEl) extEl.textContent=fmt(u.unit_price*u.qty);
+  if(extEl) extEl.textContent=u.unit_price>0?fmt(u.unit_price):'-';
   calcSummary();
 }
 function updateMultiDiscounts() {
@@ -769,21 +843,19 @@ function updateMultiDiscounts() {
 function recalcUnit(id) {
   var u=getUnit(id); if(!u) return;
   if(u._override) {
-    // Just update extended price
     var extEl=document.getElementById('ext-'+id);
-    if(extEl) extEl.textContent=u.unit_price>0?fmt(u.unit_price*u.qty):'-';
+    if(extEl) extEl.textContent=u.unit_price>0?fmt(u.unit_price):'-';
     return;
   }
   var result=calcMLU(u);
   u.unit_price=result.unitPrice;
-  // Update UI cells
   var tr=document.getElementById('eq-'+id); if(!tr) return;
   var hrsEl=tr.querySelector('.hrs-cell');
   var upEl=tr.querySelector('input.equp');
   var extEl=document.getElementById('ext-'+id);
-  if(hrsEl) hrsEl.textContent=result.hrs.toFixed(2)+' h';
+  if(hrsEl) hrsEl.textContent=result.hrs>0?result.hrs.toFixed(2)+' h':'-';
   if(upEl && !upEl._touched) upEl.value=result.unitPrice>0?result.unitPrice.toFixed(2):'';
-  if(extEl) extEl.textContent=result.unitPrice>0?fmt(result.unitPrice*u.qty):'-';
+  if(extEl) extEl.textContent=result.unitPrice>0?fmt(result.unitPrice):'-';
 }
 function recalcAllUnits() {
   updateMultiDiscounts();
@@ -798,11 +870,10 @@ function renderEq() {
     var u=units[i];
     var result=u._override?{hrs:0,unitPrice:u.unit_price}:calcMLU(u);
     if(!u._override) u.unit_price=result.unitPrice;
-    var ext=(u.unit_price||0)*(u.qty||1);
     var typeOpts=SCALE_TYPES.map(function(t){return '<option'+(t===u.scale_type?' selected':'')+'>'+esc(t)+'</option>';}).join('');
     var diffOpts=DIFF_OPTS.map(function(d){return '<option'+(d===u.difficulty?' selected':'')+'>'+d+'</option>';}).join('');
     var snBdr=u.sn?'':'style="border-color:var(--crimson);"';
-    var discTag=u._multiDiscount?'<span style="font-size:.6rem;background:#FBF5E0;color:#7A5E00;border-radius:10px;padding:1px 5px;display:block;margin-top:2px;">85% multi</span>':'';
+    var discTag=u._multiDiscount?'<span style="font-size:.58rem;background:#FBF5E0;color:#7A5E00;border-radius:10px;padding:1px 5px;display:block;">85%</span>':'';
     var tr=document.createElement('tr');
     tr.id='eq-'+u.id;
     tr.innerHTML=
@@ -813,12 +884,14 @@ function renderEq() {
       '<td><input type="text" class="eqsn" id="sn-'+u.id+'" data-id="'+u.id+'" value="'+esc(u.sn)+'" placeholder="S/N *" '+snBdr+'></td>'+
       '<td><input type="text" class="eqloc" data-id="'+u.id+'" value="'+esc(u.location_dept)+'" placeholder="Dock 3"></td>'+
       '<td><select class="eqdiff" data-id="'+u.id+'">'+diffOpts+'</select></td>'+
-      '<td><input type="number" class="eqcap" data-id="'+u.id+'" value="'+(u.capacity_lb||'')+'" min="0" placeholder="1000" style="text-align:right;"></td>'+
-      '<td><input type="number" class="eqqty" data-id="'+u.id+'" value="'+(u.qty||1)+'" min="1" style="width:40px;text-align:center;"></td>'+
-      '<td class="hrs-cell">'+(result.hrs>0?result.hrs.toFixed(2)+' h':'-')+'</td>'+
-      '<td><input type="number" class="equp" data-id="'+u.id+'" value="'+(u.unit_price>0?u.unit_price.toFixed(2):'')+'" min="0" step="0.01" placeholder="Auto" style="text-align:right;'+(u._override?'border-color:var(--gold);':'')+'" title="'+(u._override?'Manually overridden':'Auto-calculated from MLU')+'" ></td>'+
-      '<td class="ext-cell" id="ext-'+u.id+'">'+(ext>0?fmt(ext):'-')+'</td>'+
-      '<td><button class="delbtn" data-id="'+u.id+'"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>';
+      '<td><input type="number" class="eqcap" data-id="'+u.id+'" value="'+(u.capacity_lb||'')+'" min="0" placeholder="lb" style="text-align:right;"></td>'+
+      '<td class="hrs-cell int-cell">'+(result.hrs>0?result.hrs.toFixed(2)+' h':'-')+'</td>'+
+      '<td class="int-cell"><input type="number" class="equp" data-id="'+u.id+'" value="'+(u.unit_price>0?u.unit_price.toFixed(2):'')+'" min="0" step="0.01" placeholder="Auto" style="text-align:right;'+(u._override?'border-color:var(--gold);':'')+'" title="'+(u._override?'Manually overridden':'Auto-calculated from MLU')+'"></td>'+
+      '<td class="ext-cell" id="ext-'+u.id+'">'+(u.unit_price>0?fmt(u.unit_price):'-')+'</td>'+
+      '<td style="display:flex;gap:3px;">'+
+        '<button class="delbtn" data-id="'+u.id+'" title="Remove"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'+
+        '<button class="dupbtn" data-id="'+u.id+'" title="Copy this row as template for identical units" style="width:24px;height:24px;border-radius:4px;background:var(--lbl);border:1px solid var(--gbdr);color:var(--steel);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">+</button>'+
+      '</td>';
     tb.appendChild(tr);
   }
   document.getElementById('eqBadge').textContent=units.length+(units.length===1?' unit':' units');
@@ -837,26 +910,48 @@ function calcSummary() {
   var sv=document.getElementById('scoreVal'); if(sv) sv.textContent=score;
   var tl=document.getElementById('tierLbl'); if(tl){tl.textContent=tierTxt;tl.style.cssText='padding:1px 7px;border-radius:20px;font-weight:700;font-size:.67rem;'+tierCls;}
 
-  var perVisit=0, totalHrs=0;
+  // Equipment subtotal (one unit per row, no qty)
+  var equipTotal=0, totalHrs=0;
   for(var k=0;k<units.length;k++){
     var u=units[k];
-    perVisit+=(u.unit_price||0)*(u.qty||1);
-    if(!u._override){
-      var r=calcMLU(u); totalHrs+=r.hrs*(u.qty||1);
-    }
+    equipTotal+=(u.unit_price||0);
+    if(!u._override){ var r=calcMLU(u); totalHrs+=r.hrs; }
   }
+
+  // Zone charge
+  var zoneAmt=parseFloat(fv('zoneChargeAmt'))||0;
+
+  // Additional charges
+  var addlTotal=0;
+  var addlDefs=[
+    {cb:'chCerts',   vl:'vCerts'},
+    {cb:'chShipping',vl:'vShipping'},
+    {cb:'chShop',    vl:'vShop'},
+    {cb:'chCheckin', vl:'vCheckin'},
+    {cb:'chMisc',    vl:'vMisc'}
+  ];
+  for(var a=0;a<addlDefs.length;a++){
+    var cbEl=document.getElementById(addlDefs[a].cb);
+    var vlEl=document.getElementById(addlDefs[a].vl);
+    if(cbEl&&cbEl.checked&&vlEl) addlTotal+=parseFloat(vlEl.value)||0;
+  }
+
+  var perVisit=equipTotal+zoneAmt+addlTotal;
   var vpy=getVPY(), annual=perVisit*vpy;
   var laborCost=totalHrs*hr;
   var margin=perVisit>0&&laborCost>0?Math.round((perVisit-laborCost)/perVisit*100)+'%':'-';
 
   var el;
-  el=document.getElementById('sumPV');  if(el) el.textContent=fmt(perVisit);
-  el=document.getElementById('sumVPY'); if(el) el.textContent=vpy%1===0?vpy:vpy.toFixed(1);
-  el=document.getElementById('sumAnn'); if(el) el.textContent=fmt(annual);
-  el=document.getElementById('sumHrs'); if(el) el.textContent=totalHrs.toFixed(2)+' hrs';
-  el=document.getElementById('sumLbr'); if(el) el.textContent=fmt(laborCost);
-  el=document.getElementById('sumMgn'); if(el) el.textContent=margin;
-  el=document.getElementById('sumTot'); if(el) el.textContent=fmt(perVisit);
+  el=document.getElementById('sumEquip'); if(el) el.textContent=fmt(equipTotal);
+  el=document.getElementById('sumZone');  if(el) el.textContent=zoneAmt>0?fmt(zoneAmt):'—';
+  el=document.getElementById('sumAddl');  if(el) el.textContent=addlTotal>0?fmt(addlTotal):'—';
+  el=document.getElementById('sumPV');    if(el) el.textContent=fmt(perVisit);
+  el=document.getElementById('sumVPY');   if(el) el.textContent=vpy%1===0?vpy:vpy.toFixed(1);
+  el=document.getElementById('sumAnn');   if(el) el.textContent=fmt(annual);
+  el=document.getElementById('sumHrs');   if(el) el.textContent=totalHrs.toFixed(2)+' hrs';
+  el=document.getElementById('sumLbr');   if(el) el.textContent=fmt(laborCost);
+  el=document.getElementById('sumMgn');   if(el) el.textContent=margin;
+  el=document.getElementById('sumTot');   if(el) el.textContent=fmt(perVisit);
   updateSchedBadge();
 }
 
@@ -961,17 +1056,98 @@ function clearForm(){
   document.getElementById('hrRate').value=165;
   document.getElementById('siteScore').value=15;
   document.getElementById('plan_service').checked=false;
+  // Zone
+  document.getElementById('zoneNum').value='';
+  document.getElementById('zoneChargeAmt').value=0;
+  document.getElementById('zoneItemCodeDisplay').value='';
+  // Additional charges
+  var cbs=['chCerts','chShipping','chShop','chCheckin','chMisc'];
+  for(var i=0;i<cbs.length;i++){ var c=document.getElementById(cbs[i]); if(c) c.checked=false; }
+  document.getElementById('vCerts').value=25;
+  document.getElementById('vShipping').value=25;
+  document.getElementById('vShop').value=25;
+  document.getElementById('vCheckin').value=0;
+  document.getElementById('vMisc').value=0;
   document.getElementById('savedBan').classList.remove('show');
   document.getElementById('terms').value=DEFAULT_TERMS;
   setCap('Light Capacity');
   setMode('cal');
   setSched(12);
-  addUnit();addUnit();addUnit();
+  renderEq();
+  calcSummary();
 }
 
 // ════════════════════════════════════════════
-// BOOT — runs after DOM is ready
+// ZONE CHARGE LOOKUP
+// Looks up price from ERPNext Item based on zone + capacity class
+// Item codes: SRV-TRAVEL-Z1LC, SRV-TRAVEL-Z1HC ... SRV-TRAVEL-Z6LC, SRV-TRAVEL-Z6HC
 // ════════════════════════════════════════════
+function lookupZone() {
+  var zone = fv('zoneNum');
+  var cap  = fv('capacity_class'); // 'Light Capacity' or 'Heavy Capacity'
+  if (!zone) {
+    document.getElementById('zoneChargeAmt').value = 0;
+    document.getElementById('zoneItemCodeDisplay').value = '';
+    document.getElementById('zoneChargeAmt').readOnly = true;
+    calcSummary();
+    return;
+  }
+  var suffix = cap === 'Heavy Capacity' ? 'HC' : 'LC';
+  var itemCode = 'SRV-TRAVEL-Z' + zone + suffix;
+  document.getElementById('zoneItemCodeDisplay').value = itemCode;
+  dbg('Looking up zone: ' + itemCode);
+  if (typeof frappe !== 'undefined') {
+    frappe.call({
+      method: 'frappe.client.get_value',
+      args: { doctype: 'Item Price', filters: { item_code: itemCode, selling: 1 }, fieldname: 'price_list_rate' },
+      callback: function(r) {
+        var price = (r && r.message && r.message.price_list_rate) ? r.message.price_list_rate : 0;
+        document.getElementById('zoneChargeAmt').value = price > 0 ? price.toFixed(2) : '';
+        document.getElementById('zoneChargeAmt').readOnly = price > 0;
+        if (!price) {
+          // If no Item Price found, allow manual entry
+          document.getElementById('zoneChargeAmt').readOnly = false;
+          document.getElementById('zoneChargeAmt').placeholder = 'Price not found — enter manually';
+          dbg('Zone price not found for ' + itemCode + ' — manual entry enabled');
+        } else {
+          dbg('Zone price: $' + price + ' for ' + itemCode);
+        }
+        calcSummary();
+      }
+    });
+  } else {
+    // Standalone mode — allow manual entry
+    document.getElementById('zoneChargeAmt').readOnly = false;
+    document.getElementById('zoneChargeAmt').placeholder = 'Enter manually (ERPNext not available)';
+    dbg('Standalone mode — enter zone charge manually');
+    calcSummary();
+  }
+}
+
+// ════════════════════════════════════════════
+// DUPLICATE UNIT (copy all fields from a row, blank serial)
+// ════════════════════════════════════════════
+function duplicateUnit(srcId) {
+  var src = getUnit(srcId); if (!src) return;
+  var n = parseInt(prompt('How many additional identical units to add?\n(All fields copied from row ' + (units.indexOf(src)+1) + ', serial number left blank)'));
+  if (!n || n < 1) return;
+  for (var i = 0; i < n; i++) {
+    units.push({
+      id:            uid++,
+      scale_type:    src.scale_type,
+      make:          src.make,
+      model:         src.model,
+      sn:            '',
+      location_dept: src.location_dept,
+      difficulty:    src.difficulty,
+      capacity_lb:   src.capacity_lb,
+      unit_price:    0,
+      _override:     false,
+      _multiDiscount:false
+    });
+  }
+  renderEq();
+}
 function boot(){
   dbg('boot started');
 
@@ -982,7 +1158,7 @@ function boot(){
   document.getElementById('valid_until').value=fmtD(exp);
   document.getElementById('terms').value=DEFAULT_TERMS;
   setSched(12);
-  addUnit();addUnit();addUnit();
+  // Form starts empty — salesperson adds units manually
 
   // EVENT DELEGATION — all clicks
   document.addEventListener('click',function(e){
@@ -1002,6 +1178,10 @@ function boot(){
     var db=t.closest?t.closest('.delbtn'):null;
     if(!db&&t.className==='delbtn')db=t;
     if(db&&db.getAttribute('data-id')){removeUnit(parseInt(db.getAttribute('data-id')));return;}
+    // Duplicate row button
+    var dupb=t.closest?t.closest('.dupbtn'):null;
+    if(!dupb&&t.className==='dupbtn')dupb=t;
+    if(dupb&&dupb.getAttribute('data-id')){duplicateUnit(parseInt(dupb.getAttribute('data-id')));return;}
     if(t.id==='clearBtn'){clearForm();return;}
     if(t.id==='printBtn'){window.print();return;}
     if(t.id==='saveBtn') {saveDraft();return;}
@@ -1015,6 +1195,13 @@ function boot(){
     if(t.id==='siteScore'){calcSummary();return;}
     if(t.id==='hrRate'){recalcAllUnits();return;}
     if(t.classList&&t.classList.contains('gmod')){recalcAllUnits();return;}
+    // Zone charge
+    if(t.id==='zoneNum'){lookupZone();return;}
+    if(t.id==='capacity_class'){lookupZone();return;}
+    if(t.id==='zoneChargeAmt'){calcSummary();return;}
+    // Additional charges
+    if(t.id==='chCerts'||t.id==='chShipping'||t.id==='chShop'||t.id==='chCheckin'||t.id==='chMisc'){calcSummary();return;}
+    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'){calcSummary();return;}
     // Equipment table
     var id=parseInt(t.getAttribute('data-id'));
     if(t.classList&&(t.classList.contains('eqtype')||t.classList.contains('eqdiff'))){onEqChange(id);return;}
@@ -1028,18 +1215,19 @@ function boot(){
     if(t.id==='siteScore'){calcSummary();return;}
     if(t.id==='hrRate'){recalcAllUnits();return;}
     if(t.id==='interval_months'){updateSchedBadge();calcSummary();return;}
+    if(t.id==='zoneChargeAmt'){calcSummary();return;}
+    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'){calcSummary();return;}
     var id=parseInt(t.getAttribute('data-id'));
     if(t.classList&&(t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc'))){
       readUnit(id);autoSave();return;
     }
     if(t.classList&&t.classList.contains('eqcap')){onEqChange(id);return;}
-    if(t.classList&&t.classList.contains('eqqty')){onEqChange(id);return;}
     if(t.classList&&t.classList.contains('equp')){t._touched=true;onUnitPriceChange(id);return;}
     autoSave();
   });
 
   setInterval(autoSave,30000);
-  dbg('boot complete — '+units.length+' units ready');
+  dbg('boot complete — ready');
 }
 
 // Call boot() directly — script is at bottom of body, DOM is parsed
