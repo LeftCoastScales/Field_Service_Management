@@ -405,15 +405,9 @@
 
 <!-- SERVICE MODE TOGGLE -->
 <div class="mode-bar">
-  <label class="mode-opt sel-cal" id="modeOptCal">
-    <input type="radio" name="svcMode" value="cal" checked onchange="setMode('cal')"> Calibration
-  </label>
-  <label class="mode-opt" id="modeOptPm">
-    <input type="radio" name="svcMode" value="pm" onchange="setMode('pm')"> Preventive Maintenance (PM)
-  </label>
-  <label class="mode-opt" id="modeOptBoth">
-    <input type="radio" name="svcMode" value="both" onchange="setMode('both')"> Calibration + PM
-  </label>
+  <div class="mode-opt sel-cal" id="modeOptCal" onclick="setMode('cal')">Calibration</div>
+  <div class="mode-opt" id="modeOptPm" onclick="setMode('pm')">Preventive Maintenance (PM)</div>
+  <div class="mode-opt" id="modeOptBoth" onclick="setMode('both')">Calibration + PM</div>
 </div>
 
 <!-- ── SECTION 1: QUOTE INFO ── -->
@@ -540,27 +534,37 @@
   </div>
   <div class="card-body">
     <div class="sched-presets">
-      <button class="sched-btn" onclick="setSched(1,'Month',this)">Monthly</button>
-      <button class="sched-btn" onclick="setSched(3,'Month',this)">Quarterly</button>
-      <button class="sched-btn" onclick="setSched(6,'Month',this)">Semi-annual</button>
-      <button class="sched-btn active" onclick="setSched(12,'Month',this)">Annual</button>
-      <button class="sched-btn" onclick="setSched(24,'Month',this)">Every 2 years</button>
+      <button class="sched-btn" onclick="setSched(1,this)">Monthly</button>
+      <button class="sched-btn" onclick="setSched(3,this)">Quarterly</button>
+      <button class="sched-btn" onclick="setSched(6,this)">Semi-annual</button>
+      <button class="sched-btn active" onclick="setSched(12,this)">Annual</button>
+      <button class="sched-btn" onclick="setSched(24,this)">Every 2 years</button>
     </div>
     <div class="fg g2 last">
       <div class="fld">
         <label>Schedule type <span class="req">*</span></label>
-        <!-- fieldname: schedule_type -->
-        <select id="schedule_type" onchange="calc()">
-          <option value="Interval" selected>Interval</option>
-          <option value="Fixed Monthly">Fixed Monthly</option>
+        <!-- fieldname: schedule_type
+             Interval     = every N months (use Interval (Months) field below)
+             Fixed Monthly = specific calendar months (e.g. Jan, Apr, Aug) -->
+        <select id="schedule_type" onchange="onSchedTypeChange()">
+          <option value="Interval" selected>Interval — every N months</option>
+          <option value="Fixed Monthly">Fixed Monthly — specific months of year</option>
         </select>
       </div>
-      <div class="fld">
+      <div class="fld" id="intervalField">
         <label>Interval (months) <span class="req">*</span></label>
         <!-- fieldname: interval_months -->
         <input type="number" id="interval_months" value="12" min="1" max="24" oninput="onSchedChange()">
         <div class="hint">e.g. 3 = quarterly, 6 = semi-annual, 12 = annual</div>
       </div>
+    </div>
+    <!-- Fixed months selector — shown only when schedule_type = Fixed Monthly -->
+    <div id="fixedMonthsField" style="display:none;margin-top:10px;">
+      <label style="font-size:0.68rem;font-weight:600;color:var(--text-mid);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">
+        Select the months service is scheduled
+      </label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="monthCheckboxes"></div>
+      <div class="hint" style="margin-top:6px;">e.g. January + April + July + October = quarterly on fixed months</div>
     </div>
   </div>
 </div>
@@ -905,10 +909,10 @@ function setMode(m) {
   svcMode = m;
   const labels = {cal:'Calibration', pm:'Preventive Maintenance (PM)', both:'Calibration + PM'};
   document.getElementById('svc_type_display').value = labels[m];
-  ['Cal','Pm','Both'].forEach(x => {
-    const el = document.getElementById('modeOpt' + x);
-    if (el) el.className = 'mode-opt' + (x.toLowerCase() === m ? ' sel-' + m : '');
-  });
+  // Reset all, then activate the selected one
+  document.getElementById('modeOptCal').className  = 'mode-opt' + (m === 'cal'  ? ' sel-cal'  : '');
+  document.getElementById('modeOptPm').className   = 'mode-opt' + (m === 'pm'   ? ' sel-pm'   : '');
+  document.getElementById('modeOptBoth').className = 'mode-opt' + (m === 'both' ? ' sel-cal'  : '');
   renderMLU(); calc();
 }
 
@@ -922,14 +926,46 @@ function setCapacity(val) {
 }
 
 // ================================================================
-// SCHEDULE PRESETS
+// SCHEDULE PRESETS & TYPE
 // ================================================================
-function setSched(months, unit, btn) {
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+function buildMonthCheckboxes() {
+  const wrap = document.getElementById('monthCheckboxes');
+  if (!wrap || wrap.children.length) return; // already built
+  MONTHS.forEach((m, i) => {
+    const lbl = document.createElement('label');
+    lbl.style.cssText = 'display:flex;align-items:center;gap:5px;padding:5px 10px;background:white;border:1px solid var(--gray-bdr);border-radius:20px;font-size:0.75rem;cursor:pointer;user-select:none;';
+    lbl.innerHTML = `<input type="checkbox" value="${i+1}" style="accent-color:var(--crimson);"> ${m}`;
+    lbl.querySelector('input').addEventListener('change', calc);
+    wrap.appendChild(lbl);
+  });
+}
+
+function onSchedTypeChange() {
+  const isFixed = document.getElementById('schedule_type').value === 'Fixed Monthly';
+  document.getElementById('intervalField').style.display    = isFixed ? 'none' : '';
+  document.getElementById('fixedMonthsField').style.display = isFixed ? 'block' : 'none';
+  if (isFixed) buildMonthCheckboxes();
+  // clear preset active state when switching to Fixed Monthly
+  if (isFixed) document.querySelectorAll('.sched-btn').forEach(b => b.classList.remove('active'));
+  onSchedChange();
+}
+
+function setSched(months, btn) {
+  // Switch to Interval mode
+  document.getElementById('schedule_type').value = 'Interval';
+  document.getElementById('intervalField').style.display    = '';
+  document.getElementById('fixedMonthsField').style.display = 'none';
+  // Set the interval value
   document.getElementById('interval_months').value = months;
+  // Update preset button active state
   document.querySelectorAll('.sched-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   onSchedChange();
 }
+
 function onSchedChange() {
   document.getElementById('schedBadge').textContent = getSchedLabel();
   calc();
@@ -1163,8 +1199,6 @@ function calc() {
   // Auto-fill est_man_hours from MLU calc
   const emh = document.getElementById('est_man_hours');
   if (emh && !emh._manuallyEdited) emh.value = totalHrs > 0 ? totalHrs.toFixed(2) : '';
-
-  autosave();
 }
 
 // ================================================================
@@ -1444,11 +1478,11 @@ function fmt(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFr
   const emh = document.getElementById('est_man_hours');
   if (emh) emh.addEventListener('input', () => { emh._manuallyEdited = true; });
 
-  // Wire autosave on all inputs
-  document.querySelectorAll('input, select, textarea').forEach(el => {
-    el.addEventListener('change', autosave);
-    el.addEventListener('input',  autosave);
-  });
+  // Use event delegation for autosave — one listener on the document
+  // This covers dynamically-created equipment rows without re-wiring
+  let _autosaveDebounce = null;
+  document.addEventListener('input',  () => { clearTimeout(_autosaveDebounce); _autosaveDebounce = setTimeout(autosave, 800); });
+  document.addEventListener('change', () => { clearTimeout(_autosaveDebounce); _autosaveDebounce = setTimeout(autosave, 800); });
   setInterval(autosave, 30000);
 
   // Default schedule badge
