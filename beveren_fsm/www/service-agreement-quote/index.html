@@ -700,7 +700,7 @@ function calc() {
     totalHrs+=adj;
     var lbl=(u.location_dept||[u.scale_type,u.make,u.model].filter(Boolean).join(' '));
     breakdown+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(214,228,247,.1);font-size:.77rem;">'+
-      '<span style="color:var(--lbl);">'+esc(lbl)+(u.sn?' (S/N '+esc(u.sn)+')'):'')+'</span>'+
+      '<span style="color:var(--lbl);">'+esc(lbl)+(u.sn?' (S/N '+esc(u.sn)+')':'')+'</span>'+
       '<span style="color:white;font-weight:600;">'+adj.toFixed(2)+' hrs <span style="color:var(--gold);font-size:.7rem;">'+fmt(adj*hr)+'</span></span></div>';
     var mb=document.getElementById('mb-'+u.id);if(mb)mb.textContent=(base*disc).toFixed(2)+' hrs';
     var ma=document.getElementById('ma-'+u.id);if(ma)ma.textContent=adj.toFixed(2)+' hrs';
