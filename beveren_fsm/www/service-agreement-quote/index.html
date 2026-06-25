@@ -845,12 +845,43 @@ function calcSummary() {
   var sv=document.getElementById('scoreVal'); if(sv) sv.textContent=score;
   var tl=document.getElementById('tierLbl'); if(tl){tl.textContent=tierTxt;tl.style.cssText='padding:1px 7px;border-radius:20px;font-weight:700;font-size:.67rem;'+tierCls;}
 
-  // Equipment subtotal (one unit per row, no qty)
+  // Equipment subtotal — apply 1-hour minimum to total labor (not including travel)
   var equipTotal=0, totalHrs=0;
   for(var k=0;k<units.length;k++){
     var u=units[k];
-    equipTotal+=(u.unit_price||0);
     if(!u._override){ var r=calcMLU(u); totalHrs+=r.hrs; }
+  }
+  // Apply 1-hour minimum to total job labor
+  var minApplied = false;
+  if(totalHrs > 0 && totalHrs < 1.0){
+    totalHrs = 1.0;
+    minApplied = true;
+  }
+  // Recalculate equipment prices — if minimum applied, scale unit prices proportionally
+  for(var k=0;k<units.length;k++){
+    var u=units[k];
+    if(!u._override){
+      var r=calcMLU(u);
+      var unitHrs = r.hrs;
+      if(minApplied && r.hrs > 0){
+        // Scale this unit's hours proportionally to meet the 1-hr minimum
+        var rawTotal = 0;
+        for(var j=0;j<units.length;j++) if(!units[j]._override) rawTotal += calcMLU(units[j]).hrs;
+        unitHrs = rawTotal > 0 ? (r.hrs / rawTotal) * 1.0 : 1.0 / units.length;
+      }
+      var hr2 = parseFloat(fv('hrRate'))||165;
+      u.unit_price = unitHrs * hr2;
+      equipTotal += u.unit_price;
+      // Update the displayed unit price in the table
+      var upEl = document.querySelector('#eq-'+u.id+' input.equp');
+      var extEl = document.getElementById('ext-'+u.id);
+      var hrsEl = document.querySelector('#eq-'+u.id+' .hrs-cell');
+      if(upEl && !upEl._touched) upEl.value = u.unit_price.toFixed(2);
+      if(extEl) extEl.textContent = u.unit_price > 0 ? fmt(u.unit_price) : '-';
+      if(hrsEl) hrsEl.textContent = unitHrs.toFixed(2) + ' h';
+    } else {
+      equipTotal += (u.unit_price || 0);
+    }
   }
 
   // Zone total (flat fee + travel time cost)
@@ -884,7 +915,7 @@ function calcSummary() {
   el=document.getElementById('sumPV');    if(el) el.textContent=fmt(perVisit);
   el=document.getElementById('sumVPY');   if(el) el.textContent=vpy%1===0?vpy:vpy.toFixed(1);
   el=document.getElementById('sumAnn');   if(el) el.textContent=fmt(annual);
-  el=document.getElementById('sumHrs');   if(el) el.textContent=totalHrs.toFixed(2)+' hrs';
+  el=document.getElementById('sumHrs');   if(el) el.textContent=totalHrs.toFixed(2)+' hrs'+(minApplied?' (1 hr min)':'');
   el=document.getElementById('sumLbr');   if(el) el.textContent=fmt(laborCost);
   el=document.getElementById('sumMgn');   if(el) el.textContent=margin;
   el=document.getElementById('sumTot');   if(el) el.textContent=fmt(perVisit);
