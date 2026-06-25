@@ -331,7 +331,6 @@ window.csrf_token = '{{ csrf_token }}';
           <th style="min-width:100px;">Serial no.</th>
           <th style="min-width:100px;">Location/Dept</th>
           <th style="min-width:85px;">Difficulty</th>
-          <th style="min-width:75px;">Cap. (lb)</th>
           <th class="int-col" style="min-width:60px;">MLU hrs</th>
           <th class="int-col" style="min-width:85px;">Unit price ($)</th>
           <th style="min-width:80px;">Price/visit</th>
@@ -487,149 +486,6 @@ window.csrf_token = '{{ csrf_token }}';
 </div><!-- .pg -->
 <script>
 // ════════════════════════════════════════════
-// MLU LOOKUP TABLE — from actual MLU Labor Standard DocType
-// Structure: mlu[scaleTypeKey][mode] = function(capacityLb) -> hours
-// ════════════════════════════════════════════
-var MLU_LOOKUP = {
-
-  'bench': {
-    'cal': function(lb) {
-      if (lb <= 30)   return 0.20;
-      if (lb <= 60)   return 0.25;
-      if (lb <= 100)  return 0.28;
-      if (lb <= 300)  return 0.30;
-      if (lb <= 500)  return 0.30;
-      return 0.38; // >500
-    },
-    'pm': function(lb) { return 0.38; }
-  },
-
-  'floor': {
-    'cal': function(lb) {
-      if (lb <= 1000)  return 0.38;
-      if (lb <= 5000)  return 0.50;
-      if (lb <= 10000) return 0.63;
-      if (lb <= 20000) return 0.75;
-      return 1.00; // >20000
-    },
-    'pm': function(lb) {
-      if (lb <= 5000)  return 0.63;
-      if (lb <= 10000) return 0.88;
-      return 1.25; // >20000
-    }
-  },
-
-  'platform': {
-    'cal': function(lb) {
-      if (lb <= 1000) return 0.38; // low-profile
-      if (lb <= 5000) return 0.50;
-      if (lb <= 10000) return 0.63;
-      return 0.75;
-    },
-    'pm': function(lb) {
-      if (lb <= 5000)  return 0.63;
-      if (lb <= 10000) return 0.88;
-      return 1.25;
-    }
-  },
-
-  'drum': {
-    'cal': function(lb) { return 0.30; },
-    'pm':  function(lb) { return 0.38; }
-  },
-
-  'pallet': {
-    'cal': function(lb) {
-      if (lb <= 5000) return 0.50;
-      return 0.63; // 3000-10000
-    },
-    'pm': function(lb) { return 0.75; }
-  },
-
-  'forklift': {
-    'cal': function(lb) { return 0.75; },
-    'pm':  function(lb) { return 1.00; }
-  },
-
-  'crane': {
-    'cal': function(lb) {
-      if (lb <= 5000)  return 0.50;
-      if (lb <= 20000) return 0.50;
-      if (lb <= 50000) return 0.75;
-      return 1.25;
-    },
-    'pm': function(lb) { return 0.75; }
-  },
-
-  'hopper': {
-    'cal': function(lb) {
-      if (lb <= 5000)   return 0.50;
-      if (lb <= 25000)  return 0.75;
-      if (lb <= 100000) return 1.00;
-      return 2.00;
-    },
-    'pm': function(lb) {
-      if (lb <= 25000)  return 1.00;
-      if (lb <= 100000) return 1.50;
-      return 2.50;
-    }
-  },
-
-  'truck': {
-    'cal': function(lb) {
-      // lb converted from tons mentally — enter in lb
-      if (lb <= 60000)  return 1.50;  // up to ~30 T
-      if (lb <= 200000) return 1.75;  // 50-100 T
-      return 3.00; // >100 T
-    },
-    'pm': function(lb) {
-      if (lb <= 100000) return 2.50;
-      return 3.00;
-    }
-  },
-
-  'axle': {
-    'cal': function(lb) {
-      if (lb <= 30000) return 0.75; // single platform
-      return 1.00; // tandem
-    },
-    'pm': function(lb) { return 1.25; }
-  },
-
-  'conveyor': {
-    'cal': function(lb) { return 1.00; },
-    'pm':  function(lb) { return 1.50; }
-  },
-
-  'checkweigher': {
-    'cal': function(lb) { return 0.75; },
-    'pm':  function(lb) { return 1.00; }
-  },
-
-  'bench_counting': {
-    'cal': function(lb) {
-      if (lb <= 60)  return 0.20;
-      if (lb <= 150) return 0.25;
-      return 0.38;
-    },
-    'pm': function(lb) { return 0.38; }
-  },
-
-  'retail': {
-    'cal': function(lb) { return 0.38; },
-    'pm':  function(lb) { return 0.38; }
-  },
-
-  'analytical': {
-    'cal': function(lb) { return 0.38; },
-    'pm':  function(lb) { return 0.50; }
-  },
-
-  'moisture': {
-    'cal': function(lb) { return 0.38; },
-    'pm':  function(lb) { return 0.50; }
-  }
-};
 
 // DIFFICULTY MODIFIERS (added on top of base hours)
 var DIFF_MOD = {
@@ -641,28 +497,71 @@ var DIFF_MOD = {
   'Elevated Platform':0.20
 };
 
-// Map scale type dropdown values to MLU keys
-var SCALE_TYPE_MAP = {
-  'Bench scale':            'bench',
-  'Floor scale':            'floor',
-  'Platform scale':         'platform',
-  'Drum scale':             'drum',
-  'Pallet jack scale':      'pallet',
-  'Forklift scale':         'forklift',
-  'Crane scale / hanging':  'crane',
-  'Tank / hopper':          'hopper',
-  'Truck scale / axle':     'truck',
-  'Axle scale':             'axle',
-  'Conveyor / in-motion':   'conveyor',
-  'Checkweigher':           'checkweigher',
-  'Counting scale':         'bench_counting',
-  'Retail POS scale':       'retail',
-  'Analytical / precision': 'analytical',
-  'Moisture analyzer':      'moisture',
-  'Other':                  null
-};
+// Exact scale_type values from LCS Service Agreement Quote Item DocType
+var SCALE_TYPES = [
+  '',
+  'Bench Scale — 0–30 lb',
+  'Bench Scale — 31–100 lb',
+  'Bench Scale — 101–250 lb',
+  'Bench Scale — NTEP / Legal-for-Trade',
+  'Bench Scale — Washdown (IP65/69K)',
+  'Counting Scale — 0–30 lb',
+  'Counting Scale — 31–100 lb',
+  'Counting Scale — Dual-Range',
+  'Retail / Price-Computing Scale',
+  'Floor Scale — 0–1,000 lb',
+  'Floor Scale — 1,001–5,000 lb',
+  'Floor Scale — 5,001–10,000 lb',
+  'Floor Scale — 10,001–20,000 lb',
+  'Floor Scale — Pit-Mounted (add-on)',
+  'Pallet Jack Scale',
+  'Pallet Jack Scale — Wireless',
+  'Tank / Hopper Scale — Single Vessel',
+  'Tank / Hopper Scale — Multi-Vessel',
+  'Conveyor / Belt Scale',
+  'Animal / Livestock Scale',
+  'Truck Scale — Steel Deck, Above Ground',
+  'Truck Scale — Steel Deck, Pit Mounted',
+  'Truck Scale — Portable / Axle Pad',
+  'Onboard Truck Weighing System',
+  'Crane / Overhead Scale',
+  'Rail Scale',
+  'Mixer / Batch Scale',
+  'Other (see Notes)'
+];
 
-var SCALE_TYPES = Object.keys(SCALE_TYPE_MAP);
+// MLU hours lookup by scale_type exact value
+// Returns {cal: hrs, pm: hrs} for each type
+var MLU_BY_TYPE = {
+  'Bench Scale — 0–30 lb':                  {cal:0.20, pm:0.38},
+  'Bench Scale — 31–100 lb':                {cal:0.25, pm:0.38},
+  'Bench Scale — 101–250 lb':               {cal:0.28, pm:0.38},
+  'Bench Scale — NTEP / Legal-for-Trade':   {cal:0.38, pm:0.38},
+  'Bench Scale — Washdown (IP65/69K)':      {cal:0.38, pm:0.50},
+  'Counting Scale — 0–30 lb':               {cal:0.20, pm:0.38},
+  'Counting Scale — 31–100 lb':             {cal:0.25, pm:0.38},
+  'Counting Scale — Dual-Range':            {cal:0.38, pm:0.38},
+  'Retail / Price-Computing Scale':         {cal:0.38, pm:0.38},
+  'Floor Scale — 0–1,000 lb':              {cal:0.38, pm:0.63},
+  'Floor Scale — 1,001–5,000 lb':          {cal:0.50, pm:0.63},
+  'Floor Scale — 5,001–10,000 lb':         {cal:0.63, pm:0.88},
+  'Floor Scale — 10,001–20,000 lb':        {cal:0.75, pm:1.25},
+  'Floor Scale — Pit-Mounted (add-on)':    {cal:0.25, pm:0.25},
+  'Pallet Jack Scale':                      {cal:0.50, pm:0.75},
+  'Pallet Jack Scale — Wireless':           {cal:0.63, pm:0.75},
+  'Tank / Hopper Scale — Single Vessel':    {cal:0.75, pm:1.00},
+  'Tank / Hopper Scale — Multi-Vessel':     {cal:1.00, pm:1.50},
+  'Conveyor / Belt Scale':                  {cal:1.00, pm:1.50},
+  'Animal / Livestock Scale':               {cal:0.50, pm:0.75},
+  'Truck Scale — Steel Deck, Above Ground': {cal:1.50, pm:2.50},
+  'Truck Scale — Steel Deck, Pit Mounted':  {cal:2.00, pm:3.00},
+  'Truck Scale — Portable / Axle Pad':      {cal:0.75, pm:1.00},
+  'Onboard Truck Weighing System':          {cal:1.25, pm:1.50},
+  'Crane / Overhead Scale':                 {cal:0.75, pm:1.00},
+  'Rail Scale':                             {cal:2.00, pm:3.00},
+  'Mixer / Batch Scale':                    {cal:1.00, pm:1.50},
+  'Other (see Notes)':                      {cal:1.00, pm:1.00}
+};
 var DIFF_OPTS   = ['Normal','In Pit','Confined Space','Washdown','Hazardous','Elevated Platform'];
 var MONTHS      = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 var SCHED_MAP   = {'1':12,'3':4,'6':2,'12':1,'24':0.5};
@@ -709,27 +608,17 @@ function calcMLU(u) {
   var gcbs = document.querySelectorAll('.gmod:checked');
   for (var g=0; g<gcbs.length; g++) gMod += parseFloat(gcbs[g].value);
 
-  var key  = SCALE_TYPE_MAP[u.scale_type] || null;
-  var mode = svcMode === 'both' ? 'cal' : svcMode; // both = use cal hours as base
+  var entry   = MLU_BY_TYPE[u.scale_type];
   var baseHrs = 0;
-
-  if (key && MLU_LOOKUP[key] && MLU_LOOKUP[key][mode]) {
-    var lb = parseFloat(u.capacity_lb) || 0;
-    baseHrs = MLU_LOOKUP[key][mode](lb);
-    // PM+Cal = add both
-    if (svcMode === 'both' && MLU_LOOKUP[key]['pm']) {
-      var pmHrs = MLU_LOOKUP[key]['pm'](lb);
-      baseHrs = baseHrs + pmHrs;
-    }
+  if (entry) {
+    if (svcMode === 'cal')  baseHrs = entry.cal;
+    else if (svcMode === 'pm')   baseHrs = entry.pm;
+    else                         baseHrs = entry.cal + entry.pm;
   }
 
-  // Difficulty modifier (percentage on top)
-  var diffMod = DIFF_MOD[u.difficulty] || 0;
-
-  // Multi-unit discount: 2nd+ unit of same type gets 85%
+  var diffMod  = DIFF_MOD[u.difficulty] || 0;
   var discount = u._multiDiscount ? 0.85 : 1.0;
-
-  var adjHrs = baseHrs * discount * siteMult * (1 + gMod + diffMod);
+  var adjHrs   = baseHrs * discount * siteMult * (1 + gMod + diffMod);
   var unitPrice = adjHrs * hr;
 
   return { hrs: adjHrs, unitPrice: unitPrice };
@@ -810,7 +699,7 @@ function buildMonthGrid(){
 // ════════════════════════════════════════════
 function addUnit(pre) {
   var id = uid++;
-  units.push(pre||{id:id,scale_type:'Floor scale',make:'',model:'',sn:'',location_dept:'',difficulty:'Normal',capacity_lb:'',unit_price:0,_override:false,_multiDiscount:false});
+  units.push(pre||{id:id,scale_type:'Floor scale',make:'',model:'',sn:'',location_dept:'',difficulty:'Normal',unit_price:0,_override:false,_multiDiscount:false});
   renderEq();
 }
 function addIdentical() {
@@ -827,7 +716,7 @@ function addIdentical() {
       sn:            '',           // blank — salesperson fills each
       location_dept: src.location_dept,
       difficulty:    src.difficulty,
-      capacity_lb:   src.capacity_lb,
+      
       unit_price:    0,            // recalculated after render
       _override:     false,
       _multiDiscount:false
@@ -848,7 +737,6 @@ function readUnit(id) {
   u.sn            = tr.querySelector('input.eqsn').value;
   u.location_dept = tr.querySelector('input.eqloc').value;
   u.difficulty    = tr.querySelector('select.eqdiff').value;
-  u.capacity_lb   = parseFloat(tr.querySelector('input.eqcap').value)||0;
   var upEl = tr.querySelector('input.equp');
   var newUp = parseFloat(upEl.value)||0;
   if (Math.abs(newUp - u.unit_price) > 0.005 && upEl._touched) {
@@ -876,8 +764,9 @@ function onUnitPriceChange(id) {
 function updateMultiDiscounts() {
   var typeSeen = {};
   for (var i = 0; i < units.length; i++) {
-    // Discount key = scale type + capacity — same model at different capacity is a different service
-    var key = units[i].scale_type + '|' + (units[i].capacity_lb || '0');
+    // scale_type already includes capacity (e.g. "Floor Scale — 0–1,000 lb")
+    // so it's the natural discount grouping key
+    var key = units[i].scale_type;
     typeSeen[key] = (typeSeen[key] || 0) + 1;
     units[i]._multiDiscount = typeSeen[key] > 1;
   }
@@ -931,7 +820,6 @@ function renderEq() {
       '<td><input type="text" class="eqsn" id="sn-'+u.id+'" data-id="'+u.id+'" value="'+esc(u.sn)+'" placeholder="S/N *" '+snBdr+'></td>'+
       '<td><input type="text" class="eqloc" data-id="'+u.id+'" value="'+esc(u.location_dept)+'" placeholder="Dock 3"></td>'+
       '<td><select class="eqdiff" data-id="'+u.id+'">'+diffOpts+'</select></td>'+
-      '<td><input type="number" class="eqcap" data-id="'+u.id+'" value="'+(u.capacity_lb||'')+'" min="0" placeholder="lb" style="text-align:right;"></td>'+
       '<td class="hrs-cell int-cell">'+(result.hrs>0?result.hrs.toFixed(2)+' h':'-')+'</td>'+
       '<td class="int-cell"><input type="number" class="equp" data-id="'+u.id+'" value="'+(u.unit_price>0?u.unit_price.toFixed(2):'')+'" min="0" step="0.01" placeholder="Auto" style="text-align:right;'+(u._override?'border-color:var(--gold);':'')+'" title="'+(u._override?'Manually overridden':'Auto-calculated from MLU')+'"></td>'+
       '<td class="ext-cell" id="ext-'+u.id+'">'+(u.unit_price>0?fmt(u.unit_price):'-')+'</td>'+
@@ -1009,6 +897,12 @@ function calcSummary() {
 function saveDraft() {
   var cust=fv('customer_name').trim();
   if(!cust){alert('Please enter a Customer / Company Name.');return;}
+  if(units.length === 0){alert('Please add at least one piece of equipment before saving.');return;}
+  // Check all units have a serial number
+  var missingSN = units.filter(function(u){return !u.sn;});
+  if(missingSN.length > 0){
+    if(!confirm(missingSN.length + ' unit(s) are missing serial numbers. Save anyway?')) return;
+  }
   var eq=units.map(function(u){
     return{location_dept:u.location_dept||'',scale_type:u.scale_type||'',
       difficulty:u.difficulty||'Normal',make:u.make||'',model:u.model||'',
@@ -1311,7 +1205,7 @@ function duplicateUnit(srcId) {
       sn:            '',
       location_dept: src.location_dept,
       difficulty:    src.difficulty,
-      capacity_lb:   src.capacity_lb,
+      
       unit_price:    0,
       _override:     false,
       _multiDiscount:false
@@ -1397,7 +1291,7 @@ function boot(){
     if(t.classList&&(t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc'))){
       readUnit(id);autoSave();return;
     }
-    if(t.classList&&t.classList.contains('eqcap')){onEqChange(id);return;}
+    
     if(t.classList&&t.classList.contains('equp')){t._touched=true;onUnitPriceChange(id);return;}
     autoSave();
   });
