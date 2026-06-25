@@ -717,6 +717,8 @@ function setCap(val) {
   document.getElementById('capacity_class').value = val;
   document.getElementById('cLight').className = 'co'+(val==='Light Capacity'?' on-l':'');
   document.getElementById('cHeavy').className = 'co'+(val==='Heavy Capacity'?' on-h':'');
+  // Re-lookup zone price since item code changes with capacity class (LC vs HC)
+  if (fv('zoneNum')) lookupZone();
 }
 
 // ════════════════════════════════════════════
@@ -1099,18 +1101,25 @@ function lookupZone() {
   if (typeof frappe !== 'undefined') {
     frappe.call({
       method: 'frappe.client.get_value',
-      args: { doctype: 'Item Price', filters: { item_code: itemCode, selling: 1 }, fieldname: 'price_list_rate' },
+      args: {
+        doctype: 'Item Price',
+        filters: { item_code: itemCode, price_list: 'Standard Selling' },
+        fieldname: 'price_list_rate'
+      },
       callback: function(r) {
         var price = (r && r.message && r.message.price_list_rate) ? r.message.price_list_rate : 0;
-        document.getElementById('zoneChargeAmt').value = price > 0 ? price.toFixed(2) : '';
-        document.getElementById('zoneChargeAmt').readOnly = price > 0;
-        if (!price) {
-          // If no Item Price found, allow manual entry
-          document.getElementById('zoneChargeAmt').readOnly = false;
-          document.getElementById('zoneChargeAmt').placeholder = 'Price not found — enter manually';
-          dbg('Zone price not found for ' + itemCode + ' — manual entry enabled');
-        } else {
+        var amtEl = document.getElementById('zoneChargeAmt');
+        if (price > 0) {
+          amtEl.value = price.toFixed(2);
+          amtEl.readOnly = true;
+          amtEl.style.background = 'var(--gbg)';
           dbg('Zone price: $' + price + ' for ' + itemCode);
+        } else {
+          amtEl.value = '';
+          amtEl.readOnly = false;
+          amtEl.style.background = 'white';
+          amtEl.placeholder = 'Price not found — enter manually';
+          dbg('No price found for ' + itemCode + ' in Standard Selling — manual entry enabled');
         }
         calcSummary();
       }
