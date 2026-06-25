@@ -1100,14 +1100,19 @@ function lookupZone() {
   dbg('Looking up zone: ' + itemCode);
   if (typeof frappe !== 'undefined') {
     frappe.call({
-      method: 'frappe.client.get_value',
+      method: 'frappe.client.get_list',
       args: {
         doctype: 'Item Price',
-        filters: { item_code: itemCode, price_list: 'Standard Selling' },
-        fieldname: 'price_list_rate'
+        filters: [
+          ['item_code', '=', itemCode],
+          ['price_list', '=', 'Standard Selling']
+        ],
+        fields: ['item_code', 'price_list_rate', 'price_list'],
+        limit_page_length: 1
       },
       callback: function(r) {
-        var price = (r && r.message && r.message.price_list_rate) ? r.message.price_list_rate : 0;
+        dbg('Zone lookup response: ' + JSON.stringify(r));
+        var price = (r && r.message && r.message.length > 0) ? r.message[0].price_list_rate : 0;
         var amtEl = document.getElementById('zoneChargeAmt');
         if (price > 0) {
           amtEl.value = price.toFixed(2);
@@ -1118,8 +1123,8 @@ function lookupZone() {
           amtEl.value = '';
           amtEl.readOnly = false;
           amtEl.style.background = 'white';
-          amtEl.placeholder = 'Price not found — enter manually';
-          dbg('No price found for ' + itemCode + ' in Standard Selling — manual entry enabled');
+          amtEl.placeholder = 'Not found — enter manually';
+          dbg('No Item Price found for ' + itemCode + ' — check Item Price list and permissions');
         }
         calcSummary();
       }
