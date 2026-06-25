@@ -874,11 +874,12 @@ function onUnitPriceChange(id) {
   calcSummary();
 }
 function updateMultiDiscounts() {
-  var typeSeen={};
-  for(var i=0;i<units.length;i++){
-    var t=units[i].scale_type;
-    typeSeen[t]=(typeSeen[t]||0)+1;
-    units[i]._multiDiscount = typeSeen[t]>1;
+  var typeSeen = {};
+  for (var i = 0; i < units.length; i++) {
+    // Discount key = scale type + capacity — same model at different capacity is a different service
+    var key = units[i].scale_type + '|' + (units[i].capacity_lb || '0');
+    typeSeen[key] = (typeSeen[key] || 0) + 1;
+    units[i]._multiDiscount = typeSeen[key] > 1;
   }
 }
 function recalcUnit(id) {
@@ -1040,26 +1041,27 @@ function saveDraft() {
     terms:fv('terms'),internal_notes:notes
   };
   dbg('Saving...');
-  // Use FormData + cmd parameter — the correct format for Frappe portal POSTs
-  var formData = new FormData();
-  formData.append('cmd', 'frappe.client.insert');
-  formData.append('doc', JSON.stringify(doc));
-  formData.append('csrf_token', window.csrf_token || '');
+  var token = getCsrfToken();
+  dbg('CSRF token: ' + (token ? token.substring(0,12)+'...' : 'MISSING'));
 
   fetch('/api/method/frappe.client.insert', {
     method: 'POST',
     headers: {
-      'X-Frappe-CSRF-Token': window.csrf_token || '',
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': token,
       'X-Requested-With': 'XMLHttpRequest'
     },
-    body: formData
+    body: JSON.stringify({ doc: doc })
   })
   .then(function(res){
-    if (!res.ok) { dbg('HTTP error: ' + res.status + ' ' + res.statusText); }
+    dbg('HTTP status: ' + res.status);
+    if (res.status === 417) {
+      dbg('417 — CSRF token rejected. Cookie: ' + document.cookie.substring(0,80));
+    }
     return res.json();
   })
   .then(function(data) {
-    dbg('Save response: ' + JSON.stringify(data).substring(0, 120));
+    dbg('Save response: ' + JSON.stringify(data).substring(0, 150));
     if (data.message && data.message.name) {
       var n = data.message.name;
       dbg('Saved: ' + n);
@@ -1070,12 +1072,12 @@ function saveDraft() {
       document.getElementById('savedBan').scrollIntoView({behavior:'smooth', block:'nearest'});
     } else {
       dbg('Save failed: ' + JSON.stringify(data).substring(0, 300));
-      alert('Could not save. Check the debug bar for details.\n\nCommon causes: required fields missing, child table fieldname mismatch.');
+      alert('Could not save. Debug bar has details.');
     }
   })
   .catch(function(err) {
     dbg('Save error: ' + err.message);
-    alert('Network error saving quote: ' + err.message);
+    alert('Network error: ' + err.message);
   });
 }
 
@@ -1142,8 +1144,13 @@ function clearForm(){
   calcSummary();
 }
 
-// ════════════════════════════════════════════
-// FETCH SERVICE-LABOR RATE ON LOAD
+function getCsrfToken() {
+  // Always read fresh from cookie — window.csrf_token can go stale
+  var match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+  if (match) return decodeURIComponent(match[1]);
+  // Fall back to the injected value
+  return window.csrf_token || '';
+}
 // Sets loaded hourly rate from Service-Labor item Standard Selling price
 // Then derives T&M rates from it
 // ════════════════════════════════════════════
