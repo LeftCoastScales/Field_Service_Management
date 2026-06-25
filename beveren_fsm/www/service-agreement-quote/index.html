@@ -995,25 +995,34 @@ function saveDraft() {
     terms:fv('terms'),internal_notes:notes
   };
   dbg('Saving...');
-  if(typeof frappe!=='undefined'){
-    frappe.dom.freeze('Saving...');
-    frappe.call({method:'frappe.client.insert',args:{doc:doc},callback:function(r){
-      frappe.dom.unfreeze();
-      if(!r.exc&&r.message){
-        var n=r.message.name;
-        dbg('Saved: '+n);
-        document.getElementById('savedName').textContent=n;
-        document.getElementById('savedLink').href='/app/lcs-service-agreement-quote/'+n;
-        document.getElementById('savedBan').classList.add('show');
-        localStorage.removeItem(LS_KEY);
-      } else {
-        dbg('Save error');
-        frappe.msgprint({title:'Save Error',indicator:'red',message:'Could not save. Check the browser console for details.'});
-      }
-    }});
-  } else {
-    alert('Standalone: Customer='+cust+', Units='+eq.length+', Per-visit='+fmt(perVisit));
-  }
+  fetch('/api/method/frappe.client.insert', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': window.csrf_token || ''
+    },
+    body: JSON.stringify({ doc: doc })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data) {
+    dbg('Save response: ' + JSON.stringify(data).substring(0, 120));
+    if (data.message && data.message.name) {
+      var n = data.message.name;
+      dbg('Saved: ' + n);
+      document.getElementById('savedName').textContent = n;
+      document.getElementById('savedLink').href = '/app/lcs-service-agreement-quote/' + n;
+      document.getElementById('savedBan').classList.add('show');
+      localStorage.removeItem(LS_KEY);
+      document.getElementById('savedBan').scrollIntoView({behavior:'smooth', block:'nearest'});
+    } else {
+      dbg('Save failed: ' + JSON.stringify(data).substring(0, 200));
+      alert('Could not save. Check the debug bar for details.\n\nCommon causes: required fields missing, child table fieldname mismatch.');
+    }
+  })
+  .catch(function(err) {
+    dbg('Save error: ' + err.message);
+    alert('Network error saving quote: ' + err.message);
+  });
 }
 
 // ════════════════════════════════════════════
@@ -1098,44 +1107,51 @@ function lookupZone() {
   var itemCode = 'SRV-TRAVEL-Z' + zone + suffix;
   document.getElementById('zoneItemCodeDisplay').value = itemCode;
   dbg('Looking up zone: ' + itemCode);
-  if (typeof frappe !== 'undefined') {
-    frappe.call({
-      method: 'frappe.client.get_list',
-      args: {
-        doctype: 'Item Price',
-        filters: [
-          ['item_code', '=', itemCode],
-          ['price_list', '=', 'Standard Selling']
-        ],
-        fields: ['item_code', 'price_list_rate', 'price_list'],
-        limit_page_length: 1
-      },
-      callback: function(r) {
-        dbg('Zone lookup response: ' + JSON.stringify(r));
-        var price = (r && r.message && r.message.length > 0) ? r.message[0].price_list_rate : 0;
-        var amtEl = document.getElementById('zoneChargeAmt');
-        if (price > 0) {
-          amtEl.value = price.toFixed(2);
-          amtEl.readOnly = true;
-          amtEl.style.background = 'var(--gbg)';
-          dbg('Zone price: $' + price + ' for ' + itemCode);
-        } else {
-          amtEl.value = '';
-          amtEl.readOnly = false;
-          amtEl.style.background = 'white';
-          amtEl.placeholder = 'Not found — enter manually';
-          dbg('No Item Price found for ' + itemCode + ' — check Item Price list and permissions');
-        }
-        calcSummary();
-      }
-    });
-  } else {
-    // Standalone mode — allow manual entry
-    document.getElementById('zoneChargeAmt').readOnly = false;
-    document.getElementById('zoneChargeAmt').placeholder = 'Enter manually (ERPNext not available)';
-    dbg('Standalone mode — enter zone charge manually');
+  // Portal pages use fetch + csrf_token, not frappe.call
+  var itemCode2 = itemCode; // capture for closure
+  fetch('/api/method/frappe.client.get_list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': window.csrf_token || ''
+    },
+    body: JSON.stringify({
+      doctype: 'Item Price',
+      filters: [
+        ['item_code', '=', itemCode2],
+        ['price_list', '=', 'Standard Selling']
+      ],
+      fields: ['item_code', 'price_list_rate'],
+      limit_page_length: 1
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data) {
+    dbg('Zone response: ' + JSON.stringify(data).substring(0, 120));
+    var rows = data.message || [];
+    var price = rows.length > 0 ? (parseFloat(rows[0].price_list_rate) || 0) : 0;
+    var amtEl = document.getElementById('zoneChargeAmt');
+    if (price > 0) {
+      amtEl.value = price.toFixed(2);
+      amtEl.readOnly = true;
+      amtEl.style.background = 'var(--gbg)';
+      dbg('Zone price: $' + price + ' for ' + itemCode2);
+    } else {
+      amtEl.value = '';
+      amtEl.readOnly = false;
+      amtEl.style.background = 'white';
+      amtEl.placeholder = 'Not found — enter manually';
+      dbg('No price found for ' + itemCode2);
+    }
     calcSummary();
-  }
+  })
+  .catch(function(err) {
+    dbg('Zone fetch error: ' + err.message);
+    var amtEl = document.getElementById('zoneChargeAmt');
+    amtEl.readOnly = false;
+    amtEl.style.background = 'white';
+    calcSummary();
+  });
 }
 
 // ════════════════════════════════════════════
