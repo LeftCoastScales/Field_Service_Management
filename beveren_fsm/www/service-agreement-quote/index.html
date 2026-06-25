@@ -182,8 +182,8 @@ window.csrf_token = '{{ csrf_token }}';
       <div class="fg g4" style="margin-bottom:10px;">
         <div class="f">
           <label>Loaded hourly rate ($/hr)</label>
-          <input type="number" id="hrRate" value="165" min="0" step="1">
-          <div class="itag">Drives auto-calculated unit prices below</div>
+          <input type="number" id="hrRate" value="" min="0" step="0.50" placeholder="Fetching from Service-Labor...">
+          <div class="itag">Auto-fetched from Service-Labor item · Drives MLU unit prices</div>
         </div>
         <div class="f">
           <label>Site difficulty (10–50)</label>
@@ -195,17 +195,20 @@ window.csrf_token = '{{ csrf_token }}';
         </div>
         <div class="f">
           <label>Regular T&amp;M rate ($/hr)</label>
-          <input type="number" id="rate_regular" value="115.00" min="0" step="0.50">
+          <input type="number" id="rate_regular" value="" min="0" step="0.50" placeholder="Auto-filled from loaded rate">
+          <div class="hint">Editable — overtime and holiday rates update automatically</div>
         </div>
         <div class="f">
           <label>Overtime T&amp;M rate ($/hr)</label>
-          <input type="number" id="rate_overtime" value="172.50" min="0" step="0.50">
+          <input type="number" id="rate_overtime" value="" min="0" step="0.50" readonly style="background:var(--gbg);">
+          <div class="hint">Regular × 1.5 (auto-calculated)</div>
         </div>
       </div>
       <div class="fg g4 last">
         <div class="f">
           <label>Sunday &amp; holiday rate ($/hr)</label>
-          <input type="number" id="rate_holiday" value="230.00" min="0" step="0.50">
+          <input type="number" id="rate_holiday" value="" min="0" step="0.50" readonly style="background:var(--gbg);">
+          <div class="hint">Regular × 2.0 (auto-calculated)</div>
         </div>
         <div class="f">
           <label>Rates valid until</label>
@@ -349,60 +352,96 @@ window.csrf_token = '{{ csrf_token }}';
 <div class="card">
   <div class="card-hd"><h2>Zone Charge &amp; Additional Charges</h2></div>
   <div class="card-bd">
-    <!-- Zone Charge -->
+    <!-- Zone / Travel -->
     <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
-      <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Zone Charge</h3>
-      <div class="fg g3 last">
+      <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Zone &amp; Travel</h3>
+      <div class="fg g4" style="margin-bottom:8px;">
         <div class="f">
           <label>Zone number</label>
           <select id="zoneNum">
             <option value="">No zone charge</option>
-            <option value="1">Zone 1</option>
-            <option value="2">Zone 2</option>
-            <option value="3">Zone 3</option>
-            <option value="4">Zone 4</option>
-            <option value="5">Zone 5</option>
-            <option value="6">Zone 6</option>
+            <option value="1">Zone 1 — office/shop (no travel time)</option>
+            <option value="2">Zone 2 — 1 hr travel</option>
+            <option value="3">Zone 3 — 2 hrs travel</option>
+            <option value="4">Zone 4 — 3 hrs travel</option>
+            <option value="5">Zone 5 — 4 hrs travel</option>
+            <option value="6">Zone 6 — 5 hrs travel</option>
           </select>
         </div>
         <div class="f">
-          <label>Zone charge amount</label>
-          <input type="number" id="zoneChargeAmt" value="0" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled from zone selection">
-          <div class="hint" id="zoneItemCode"></div>
+          <label>Flat zone fee</label>
+          <input type="number" id="zoneChargeAmt" value="" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled from ERPNext">
+          <div class="hint" id="zoneItemCodeHint"></div>
         </div>
+        <div class="f">
+          <label>Travel time (hrs)</label>
+          <input type="number" id="zoneTravelHrs" value="0" min="0" step="0.5" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);">
+          <div class="hint">Zone − 1 hours (Zone 1 = 0)</div>
+        </div>
+        <div class="f">
+          <label>Travel time cost</label>
+          <input type="number" id="zoneTravelCost" value="0" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);">
+          <div class="hint">Travel hrs × loaded rate</div>
+        </div>
+      </div>
+      <div class="fg g2 last">
         <div class="f">
           <label>Zone item code</label>
           <input type="text" id="zoneItemCodeDisplay" readonly style="background:var(--gbg);font-size:.75rem;color:var(--muted);" placeholder="e.g. SRV-TRAVEL-Z3LC">
+        </div>
+        <div class="f">
+          <label style="font-weight:700;color:var(--navy);">Total travel charge (added to per-visit price)</label>
+          <input type="number" id="zoneTotalCharge" value="0" min="0" step="0.01" readonly style="background:var(--navy);color:white;font-weight:700;font-size:.9rem;border-color:var(--navy);">
+          <div class="hint">Flat zone fee + travel time cost</div>
         </div>
       </div>
     </div>
     <!-- Additional Charges -->
     <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;">Additional Charges</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
-        <input type="checkbox" id="chCerts" style="accent-color:var(--crimson);width:14px;height:14px;">
-        <label for="chCerts" style="font-size:.78rem;flex:1;cursor:pointer;">Smarter Certs</label>
-        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCerts" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="checkbox" id="chCerts" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chCerts" style="font-size:.78rem;flex:1;cursor:pointer;">Smarter Certs</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCerts" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
-        <input type="checkbox" id="chShipping" style="accent-color:var(--crimson);width:14px;height:14px;">
-        <label for="chShipping" style="font-size:.78rem;flex:1;cursor:pointer;">Shipping Recovery</label>
-        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShipping" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="checkbox" id="chShipping" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chShipping" style="font-size:.78rem;flex:1;cursor:pointer;">Shipping Recovery</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShipping" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
-        <input type="checkbox" id="chShop" style="accent-color:var(--crimson);width:14px;height:14px;">
-        <label for="chShop" style="font-size:.78rem;flex:1;cursor:pointer;">Shop Supplies</label>
-        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShop" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="checkbox" id="chShop" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chShop" style="font-size:.78rem;flex:1;cursor:pointer;">Shop Supplies</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vShop" value="25" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
-        <input type="checkbox" id="chCheckin" style="accent-color:var(--crimson);width:14px;height:14px;">
-        <label for="chCheckin" style="font-size:.78rem;flex:1;cursor:pointer;">Check In/Out Time</label>
-        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCheckin" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="checkbox" id="chCheckin" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chCheckin" style="font-size:.78rem;flex:1;cursor:pointer;">Check In/Out Time</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vCheckin" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
-        <input type="checkbox" id="chMisc" style="accent-color:var(--crimson);width:14px;height:14px;">
-        <label for="chMisc" style="font-size:.78rem;flex:1;cursor:pointer;">Misc Charge</label>
-        <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vMisc" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="checkbox" id="chMisc" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chMisc" style="font-size:.78rem;flex:1;cursor:pointer;">Misc Charge 1</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vMisc" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
+        <input type="text" id="dMisc" placeholder="Description..." style="width:100%;padding:4px 7px;font-size:.76rem;border:1px solid var(--gbdr);border-radius:4px;background:white;">
+      </div>
+      <div style="padding:8px 10px;background:var(--gbg);border:1px solid var(--gbdr);border-radius:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="checkbox" id="chMisc2" style="accent-color:var(--crimson);width:14px;height:14px;">
+          <label for="chMisc2" style="font-size:.78rem;flex:1;cursor:pointer;">Misc Charge 2</label>
+          <div style="display:flex;align-items:center;gap:4px;"><span style="font-size:.75rem;color:var(--muted);">$</span><input type="number" id="vMisc2" value="0" min="0" step="1" style="width:65px;text-align:right;padding:4px 6px;font-size:.78rem;border:1px solid var(--gbdr);border-radius:4px;"></div>
+        </div>
+        <input type="text" id="dMisc2" placeholder="Description..." style="width:100%;padding:4px 7px;font-size:.76rem;border:1px solid var(--gbdr);border-radius:4px;background:white;">
       </div>
     </div>
   </div>
@@ -424,7 +463,7 @@ window.csrf_token = '{{ csrf_token }}';
 <div class="sum">
   <h3>Customer-Facing Pricing</h3>
   <div class="pr"><span class="l">Equipment service subtotal</span><span class="v" id="sumEquip">$0.00</span></div>
-  <div class="pr"><span class="l">Zone charge</span><span class="v" id="sumZone">—</span></div>
+  <div class="pr"><span class="l">Travel charge (zone fee + travel time)</span><span class="v" id="sumZone">—</span></div>
   <div class="pr"><span class="l">Additional charges</span><span class="v" id="sumAddl">—</span></div>
   <div class="pr"><span class="l">Price per service visit</span><span class="v" id="sumPV">$0.00</span></div>
   <div class="pr"><span class="l">Visits per year (<span id="sumSchedLbl">Annual</span>)</span><span class="v" id="sumVPY">1</span></div>
@@ -862,6 +901,11 @@ function recalcUnit(id) {
 function recalcAllUnits() {
   updateMultiDiscounts();
   for(var i=0;i<units.length;i++) recalcUnit(units[i].id);
+  // Recalc zone travel cost since it uses loaded rate
+  if (fv('zoneNum')) {
+    var flatFee = parseFloat(fv('zoneChargeAmt')) || 0;
+    updateZoneTotals(flatFee);
+  }
   calcSummary();
 }
 function renderEq() {
@@ -920,8 +964,8 @@ function calcSummary() {
     if(!u._override){ var r=calcMLU(u); totalHrs+=r.hrs; }
   }
 
-  // Zone charge
-  var zoneAmt=parseFloat(fv('zoneChargeAmt'))||0;
+  // Zone total (flat fee + travel time cost)
+  var zoneAmt=parseFloat(fv('zoneTotalCharge'))||0;
 
   // Additional charges
   var addlTotal=0;
@@ -930,7 +974,8 @@ function calcSummary() {
     {cb:'chShipping',vl:'vShipping'},
     {cb:'chShop',    vl:'vShop'},
     {cb:'chCheckin', vl:'vCheckin'},
-    {cb:'chMisc',    vl:'vMisc'}
+    {cb:'chMisc',    vl:'vMisc'},
+    {cb:'chMisc2',   vl:'vMisc2'}
   ];
   for(var a=0;a<addlDefs.length;a++){
     var cbEl=document.getElementById(addlDefs[a].cb);
@@ -1089,26 +1134,12 @@ function clearForm(){
 }
 
 // ════════════════════════════════════════════
-// ZONE CHARGE LOOKUP
-// Looks up price from ERPNext Item based on zone + capacity class
-// Item codes: SRV-TRAVEL-Z1LC, SRV-TRAVEL-Z1HC ... SRV-TRAVEL-Z6LC, SRV-TRAVEL-Z6HC
+// FETCH SERVICE-LABOR RATE ON LOAD
+// Sets loaded hourly rate from Service-Labor item Standard Selling price
+// Then derives T&M rates from it
 // ════════════════════════════════════════════
-function lookupZone() {
-  var zone = fv('zoneNum');
-  var cap  = fv('capacity_class'); // 'Light Capacity' or 'Heavy Capacity'
-  if (!zone) {
-    document.getElementById('zoneChargeAmt').value = 0;
-    document.getElementById('zoneItemCodeDisplay').value = '';
-    document.getElementById('zoneChargeAmt').readOnly = true;
-    calcSummary();
-    return;
-  }
-  var suffix = cap === 'Heavy Capacity' ? 'HC' : 'LC';
-  var itemCode = 'SRV-TRAVEL-Z' + zone + suffix;
-  document.getElementById('zoneItemCodeDisplay').value = itemCode;
-  dbg('Looking up zone: ' + itemCode);
-  // Portal pages use fetch + csrf_token, not frappe.call
-  var itemCode2 = itemCode; // capture for closure
+function fetchServiceLaborRate() {
+  dbg('Fetching Service-Labor price...');
   fetch('/api/method/frappe.client.get_list', {
     method: 'POST',
     headers: {
@@ -1118,39 +1149,133 @@ function lookupZone() {
     body: JSON.stringify({
       doctype: 'Item Price',
       filters: [
-        ['item_code', '=', itemCode2],
+        ['item_code', '=', 'Service-Labor'],
         ['price_list', '=', 'Standard Selling']
       ],
-      fields: ['item_code', 'price_list_rate'],
+      fields: ['price_list_rate'],
+      limit_page_length: 1
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data) {
+    var rows = data.message || [];
+    var price = rows.length > 0 ? parseFloat(rows[0].price_list_rate) || 0 : 0;
+    if (price > 0) {
+      document.getElementById('hrRate').value = price.toFixed(2);
+      document.getElementById('hrRate').placeholder = '';
+      updateTMRates(price);
+      recalcAllUnits();
+      dbg('Service-Labor rate: $' + price);
+    } else {
+      document.getElementById('hrRate').value = 165;
+      document.getElementById('hrRate').placeholder = '';
+      updateTMRates(165);
+      recalcAllUnits();
+      dbg('Service-Labor price not found — using default $165');
+    }
+  })
+  .catch(function(err) {
+    document.getElementById('hrRate').value = 165;
+    updateTMRates(165);
+    recalcAllUnits();
+    dbg('Service-Labor fetch error: ' + err.message + ' — using $165');
+  });
+}
+
+// Derive overtime and holiday from Regular T&M rate
+function updateTMRates(regularRate) {
+  var reg = parseFloat(regularRate) || 0;
+  var otEl  = document.getElementById('rate_overtime');
+  var holEl = document.getElementById('rate_holiday');
+  if (otEl)  otEl.value  = (reg * 1.5).toFixed(2);
+  if (holEl) holEl.value = (reg * 2.0).toFixed(2);
+}
+
+// When salesperson changes Regular T&M, re-derive overtime and holiday
+function onRegularRateChange() {
+  var reg = parseFloat(fv('rate_regular')) || 0;
+  updateTMRates(reg);
+}
+// Looks up price from ERPNext Item based on zone + capacity class
+// Item codes: SRV-TRAVEL-Z1LC, SRV-TRAVEL-Z1HC ... SRV-TRAVEL-Z6LC, SRV-TRAVEL-Z6HC
+// ════════════════════════════════════════════
+// ZONE TRAVEL CALCULATION
+// ════════════════════════════════════════════
+function updateZoneTotals(flatFee) {
+  var zone      = parseInt(fv('zoneNum')) || 0;
+  var hr        = parseFloat(fv('hrRate')) || 0;
+  var travelHrs = zone > 1 ? zone - 1 : 0;
+  var travelCost  = travelHrs * hr;
+  var totalTravel = flatFee + travelCost;
+  var thEl = document.getElementById('zoneTravelHrs');
+  var tcEl = document.getElementById('zoneTravelCost');
+  var ttEl = document.getElementById('zoneTotalCharge');
+  if (thEl) thEl.value = travelHrs;
+  if (tcEl) tcEl.value = travelCost.toFixed(2);
+  if (ttEl) ttEl.value = totalTravel.toFixed(2);
+  calcSummary();
+}
+
+function lookupZone() {
+  var zone = fv('zoneNum');
+  var cap  = fv('capacity_class');
+  if (!zone) {
+    document.getElementById('zoneChargeAmt').value = '';
+    document.getElementById('zoneItemCodeDisplay').value = '';
+    document.getElementById('zoneTravelHrs').value = 0;
+    document.getElementById('zoneTravelCost').value = 0;
+    document.getElementById('zoneTotalCharge').value = 0;
+    calcSummary();
+    return;
+  }
+  var suffix   = cap === 'Heavy Capacity' ? 'HC' : 'LC';
+  var itemCode = 'SRV-TRAVEL-Z' + zone + suffix;
+  document.getElementById('zoneItemCodeDisplay').value = itemCode;
+  // Set travel time immediately (doesn't need the fetch)
+  var travelHrs = parseInt(zone) > 1 ? parseInt(zone) - 1 : 0;
+  document.getElementById('zoneTravelHrs').value = travelHrs;
+  dbg('Looking up zone: ' + itemCode);
+  var ic = itemCode;
+  fetch('/api/method/frappe.client.get_list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': window.csrf_token || ''
+    },
+    body: JSON.stringify({
+      doctype: 'Item Price',
+      filters: [['item_code','=',ic],['price_list','=','Standard Selling']],
+      fields: ['item_code','price_list_rate'],
       limit_page_length: 1
     })
   })
   .then(function(res){ return res.json(); })
   .then(function(data) {
     dbg('Zone response: ' + JSON.stringify(data).substring(0, 120));
-    var rows = data.message || [];
+    var rows  = data.message || [];
     var price = rows.length > 0 ? (parseFloat(rows[0].price_list_rate) || 0) : 0;
     var amtEl = document.getElementById('zoneChargeAmt');
     if (price > 0) {
       amtEl.value = price.toFixed(2);
       amtEl.readOnly = true;
       amtEl.style.background = 'var(--gbg)';
-      dbg('Zone price: $' + price + ' for ' + itemCode2);
+      dbg('Zone price: $' + price + ' for ' + ic);
     } else {
       amtEl.value = '';
       amtEl.readOnly = false;
       amtEl.style.background = 'white';
       amtEl.placeholder = 'Not found — enter manually';
-      dbg('No price found for ' + itemCode2);
+      price = 0;
+      dbg('No price found for ' + ic + ' — manual entry enabled');
     }
-    calcSummary();
+    updateZoneTotals(price);
   })
   .catch(function(err) {
     dbg('Zone fetch error: ' + err.message);
     var amtEl = document.getElementById('zoneChargeAmt');
     amtEl.readOnly = false;
     amtEl.style.background = 'white';
-    calcSummary();
+    updateZoneTotals(0);
   });
 }
 
@@ -1189,6 +1314,8 @@ function boot(){
   document.getElementById('terms').value=DEFAULT_TERMS;
   setSched(12);
   // Form starts empty — salesperson adds units manually
+  // Fetch Service-Labor price to set loaded rate and T&M rates
+  fetchServiceLaborRate();
 
   // EVENT DELEGATION — all clicks
   document.addEventListener('click',function(e){
@@ -1228,10 +1355,12 @@ function boot(){
     // Zone charge
     if(t.id==='zoneNum'){lookupZone();return;}
     if(t.id==='capacity_class'){lookupZone();return;}
-    if(t.id==='zoneChargeAmt'){calcSummary();return;}
+    if(t.id==='zoneChargeAmt'){updateZoneTotals(parseFloat(fv('zoneChargeAmt'))||0);return;}
+    // T&M rate derivation
+    if(t.id==='rate_regular'){onRegularRateChange();return;}
     // Additional charges
-    if(t.id==='chCerts'||t.id==='chShipping'||t.id==='chShop'||t.id==='chCheckin'||t.id==='chMisc'){calcSummary();return;}
-    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'){calcSummary();return;}
+    if(t.id==='chCerts'||t.id==='chShipping'||t.id==='chShop'||t.id==='chCheckin'||t.id==='chMisc'||t.id==='chMisc2'){calcSummary();return;}
+    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'||t.id==='vMisc2'){calcSummary();return;}
     // Equipment table
     var id=parseInt(t.getAttribute('data-id'));
     if(t.classList&&(t.classList.contains('eqtype')||t.classList.contains('eqdiff'))){onEqChange(id);return;}
@@ -1245,8 +1374,9 @@ function boot(){
     if(t.id==='siteScore'){calcSummary();return;}
     if(t.id==='hrRate'){recalcAllUnits();return;}
     if(t.id==='interval_months'){updateSchedBadge();calcSummary();return;}
-    if(t.id==='zoneChargeAmt'){calcSummary();return;}
-    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'){calcSummary();return;}
+    if(t.id==='zoneChargeAmt'){updateZoneTotals(parseFloat(fv('zoneChargeAmt'))||0);return;}
+    if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'||t.id==='vMisc2'){calcSummary();return;}
+    if(t.id==='rate_regular'){onRegularRateChange();return;}
     var id=parseInt(t.getAttribute('data-id'));
     if(t.classList&&(t.classList.contains('eqmake')||t.classList.contains('eqmodel')||t.classList.contains('eqsn')||t.classList.contains('eqloc'))){
       readUnit(id);autoSave();return;
