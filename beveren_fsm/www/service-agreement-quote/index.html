@@ -1040,15 +1040,24 @@ function saveDraft() {
     terms:fv('terms'),internal_notes:notes
   };
   dbg('Saving...');
+  // Use FormData + cmd parameter — the correct format for Frappe portal POSTs
+  var formData = new FormData();
+  formData.append('cmd', 'frappe.client.insert');
+  formData.append('doc', JSON.stringify(doc));
+  formData.append('csrf_token', window.csrf_token || '');
+
   fetch('/api/method/frappe.client.insert', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'X-Frappe-CSRF-Token': window.csrf_token || ''
+      'X-Frappe-CSRF-Token': window.csrf_token || '',
+      'X-Requested-With': 'XMLHttpRequest'
     },
-    body: JSON.stringify({ doc: doc })
+    body: formData
   })
-  .then(function(res){ return res.json(); })
+  .then(function(res){
+    if (!res.ok) { dbg('HTTP error: ' + res.status + ' ' + res.statusText); }
+    return res.json();
+  })
   .then(function(data) {
     dbg('Save response: ' + JSON.stringify(data).substring(0, 120));
     if (data.message && data.message.name) {
@@ -1060,7 +1069,7 @@ function saveDraft() {
       localStorage.removeItem(LS_KEY);
       document.getElementById('savedBan').scrollIntoView({behavior:'smooth', block:'nearest'});
     } else {
-      dbg('Save failed: ' + JSON.stringify(data).substring(0, 200));
+      dbg('Save failed: ' + JSON.stringify(data).substring(0, 300));
       alert('Could not save. Check the debug bar for details.\n\nCommon causes: required fields missing, child table fieldname mismatch.');
     }
   })
