@@ -10,7 +10,7 @@
   "section",
   "col_break_1",
   "enabled",
-  "url",
+  "shortcut_url",
   "description",
   "col_break_2",
   "icon",
@@ -48,7 +48,7 @@
    "label": "Enabled"
   },
   {
-   "fieldname": "url",
+   "fieldname": "shortcut_url",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "URL",

@@ -48,7 +48,7 @@ def get_context(context):
     rows = frappe.get_all(
         "LCS Shortcut",
         filters={"enabled": 1},
-        fields=["name", "label", "section", "url", "description", "icon", "badge", "sort_order"],
+        fields=["name", "label", "section", "shortcut_url as url", "description", "icon", "badge", "sort_order"],
         order_by="section asc, sort_order asc, label asc",
     )
 
