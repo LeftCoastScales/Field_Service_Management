@@ -48,9 +48,13 @@ def get_context(context):
     rows = frappe.get_all(
         "LCS Shortcut",
         filters={"enabled": 1},
-        fields=["name", "label", "section", "shortcut_url as url", "description", "icon", "badge", "sort_order"],
+        fields=["name", "label", "section", "shortcut_url", "description", "icon", "badge", "sort_order"],
         order_by="section asc, sort_order asc, label asc",
     )
+
+    # Remap shortcut_url -> url for the template
+    for row in rows:
+        row["url"] = row.get("shortcut_url") or ""
 
     # --- Fetch all role restrictions in one query ---
     all_role_rows = frappe.get_all(
