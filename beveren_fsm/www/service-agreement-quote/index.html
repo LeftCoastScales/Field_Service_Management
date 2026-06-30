@@ -252,18 +252,11 @@ window.csrf_token = '{{ csrf_token }}';
   <div class="card-bd">
     <div class="fg g2">
       <div class="f"><label>Customer / Company name <span class="req">*</span></label><input type="text" id="customer_name" placeholder="Acme Produce, Inc."></div>
-      <div class="f">
-        <label>Capacity class <span class="req">*</span></label>
-        <div class="cap-row">
-          <div class="co on-l" id="cLight">Light (&lt;1,000 lb)</div>
-          <div class="co" id="cHeavy">Heavy (&gt;1,000 lb)</div>
-        </div>
-        <input type="hidden" id="capacity_class" value="Light Capacity">
-        <div class="hint">Light = &lt;1,000 lb test weight &nbsp;|&nbsp; Heavy = &gt;1,000 lb test weight</div>
-      </div>
-    </div>
-    <div class="fg g2">
       <div class="f"><label>Service address</label><input type="text" id="service_address" placeholder="123 Industrial Blvd, Suite 4B"></div>
+    </div>
+    <!-- capacity_class hidden — set by Vehicle 1 capacity in Zone section -->
+    <input type="hidden" id="capacity_class" value="Light Capacity">
+    <div class="fg g2">
       <div class="f"><label>City, State, ZIP</label><input type="text" id="city_state_zip" placeholder="Riverside, CA 92507"></div>
     </div>
     <div class="fg g3">
@@ -351,48 +344,101 @@ window.csrf_token = '{{ csrf_token }}';
 <div class="card">
   <div class="card-hd"><h2>Zone Charge &amp; Additional Charges</h2></div>
   <div class="card-bd">
-    <!-- Zone / Travel -->
-    <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
-      <h3 style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Zone &amp; Travel</h3>
-      <div class="fg g4" style="margin-bottom:8px;">
+
+    <!-- ZONE NUMBER — shared by both vehicles -->
+    <div class="fg g2" style="margin-bottom:10px;">
+      <div class="f">
+        <label>Zone number</label>
+        <select id="zoneNum">
+          <option value="">No zone charge</option>
+          <option value="1">Zone 1 — office/shop (no travel time)</option>
+          <option value="2">Zone 2 — 1 hr travel</option>
+          <option value="3">Zone 3 — 2 hrs travel</option>
+          <option value="4">Zone 4 — 3 hrs travel</option>
+          <option value="5">Zone 5 — 4 hrs travel</option>
+          <option value="6">Zone 6 — 5 hrs travel</option>
+        </select>
+        <div class="hint">Zone applies to all vehicles — same site</div>
+      </div>
+      <div class="f">
+        <label>Travel time per trip</label>
+        <input type="number" id="zoneTravelHrs" value="0" min="0" step="0.5" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);">
+        <div class="hint">Zone − 1 hours (Zone 1 = 0 hrs)</div>
+      </div>
+    </div>
+
+    <!-- VEHICLE 1 -->
+    <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;">Vehicle 1 — Primary</div>
+      <div class="fg g4 last">
         <div class="f">
-          <label>Zone number</label>
-          <select id="zoneNum">
-            <option value="">No zone charge</option>
-            <option value="1">Zone 1 — office/shop (no travel time)</option>
-            <option value="2">Zone 2 — 1 hr travel</option>
-            <option value="3">Zone 3 — 2 hrs travel</option>
-            <option value="4">Zone 4 — 3 hrs travel</option>
-            <option value="5">Zone 5 — 4 hrs travel</option>
-            <option value="6">Zone 6 — 5 hrs travel</option>
-          </select>
+          <label>Capacity class <span class="req">*</span></label>
+          <div class="cap-row">
+            <div class="co on-l" id="v1Light">Light (&lt;1,000 lb)</div>
+            <div class="co" id="v1Heavy">Heavy (&gt;1,000 lb)</div>
+          </div>
+          <div class="hint">Light = &lt;1,000 lb test weight</div>
         </div>
         <div class="f">
           <label>Flat zone fee</label>
-          <input type="number" id="zoneChargeAmt" value="" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled from ERPNext">
-          <div class="hint" id="zoneItemCodeHint"></div>
+          <input type="number" id="v1ZoneFee" value="" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled">
+          <div class="hint" id="v1ItemCode" style="font-size:.65rem;color:var(--muted);"></div>
         </div>
         <div class="f">
-          <label>Travel time (hrs)</label>
-          <input type="number" id="zoneTravelHrs" value="0" min="0" step="0.5" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);">
-          <div class="hint">Zone − 1 hours (Zone 1 = 0)</div>
+          <label>Return trips (qty)</label>
+          <input type="number" id="v1ReturnTrips" value="0" min="0" step="1">
+          <div class="hint">0 = primary only &nbsp;·&nbsp; 1 = 2× zone total</div>
         </div>
         <div class="f">
-          <label>Travel time cost</label>
-          <input type="number" id="zoneTravelCost" value="0" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);">
-          <div class="hint">Travel hrs × loaded rate</div>
+          <label style="font-weight:700;color:var(--navy);">V1 travel total</label>
+          <input type="number" id="v1Total" value="0" readonly style="background:var(--navy);color:white;font-weight:700;font-size:.88rem;border-color:var(--navy);">
+          <div class="hint" id="v1TotalHint">Zone fee × trips</div>
         </div>
       </div>
-      <div class="fg g2 last">
-        <div class="f">
-          <label>Zone item code</label>
-          <input type="text" id="zoneItemCodeDisplay" readonly style="background:var(--gbg);font-size:.75rem;color:var(--muted);" placeholder="e.g. SRV-TRAVEL-Z3LC">
+    </div>
+
+    <!-- VEHICLE 2 -->
+    <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <input type="checkbox" id="v2Enable" style="width:14px;height:14px;accent-color:var(--crimson);">
+        <span style="font-size:.72rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;">Vehicle 2 — Additional (optional)</span>
+      </div>
+      <div id="v2Fields" style="display:none;">
+        <div class="fg g4 last">
+          <div class="f">
+            <label>Capacity class</label>
+            <div class="cap-row">
+              <div class="co on-l" id="v2Light">Light (&lt;1,000 lb)</div>
+              <div class="co" id="v2Heavy">Heavy (&gt;1,000 lb)</div>
+            </div>
+            <div class="hint">Independent of Vehicle 1</div>
+          </div>
+          <div class="f">
+            <label>Flat zone fee</label>
+            <input type="number" id="v2ZoneFee" value="" min="0" step="0.01" readonly style="background:var(--gbg);font-weight:700;color:var(--navy);" placeholder="Auto-filled">
+            <div class="hint" id="v2ItemCode" style="font-size:.65rem;color:var(--muted);"></div>
+          </div>
+          <div class="f">
+            <label>Return trips (qty)</label>
+            <input type="number" id="v2ReturnTrips" value="0" min="0" step="1">
+            <div class="hint">0 = primary only &nbsp;·&nbsp; 1 = 2× zone total</div>
+          </div>
+          <div class="f">
+            <label style="font-weight:700;color:var(--navy);">V2 travel total</label>
+            <input type="number" id="v2Total" value="0" readonly style="background:var(--navy);color:white;font-weight:700;font-size:.88rem;border-color:var(--navy);">
+            <div class="hint" id="v2TotalHint">Zone fee × trips</div>
+          </div>
         </div>
-        <div class="f">
-          <label style="font-weight:700;color:var(--navy);">Total travel charge (added to per-visit price)</label>
-          <input type="number" id="zoneTotalCharge" value="0" min="0" step="0.01" readonly style="background:var(--navy);color:white;font-weight:700;font-size:.9rem;border-color:var(--navy);">
-          <div class="hint">Flat zone fee + travel time cost</div>
-        </div>
+      </div>
+    </div>
+
+    <!-- COMBINED TRAVEL TOTAL -->
+    <div class="fg g2" style="margin-bottom:12px;">
+      <div></div>
+      <div class="f">
+        <label style="font-weight:700;color:var(--crimson);">Total travel charge (all vehicles)</label>
+        <input type="number" id="zoneTotalCharge" value="0" readonly style="background:var(--crimson);color:white;font-weight:700;font-size:1rem;border-color:var(--crimson);">
+        <div class="hint" id="zoneTotalHint">V1 total + V2 total</div>
       </div>
     </div>
     <!-- Additional Charges -->
@@ -462,7 +508,7 @@ window.csrf_token = '{{ csrf_token }}';
 <div class="sum">
   <h3>Customer-Facing Pricing</h3>
   <div class="pr"><span class="l">Equipment service subtotal</span><span class="v" id="sumEquip">$0.00</span></div>
-  <div class="pr"><span class="l">Travel charge (zone fee + travel time)</span><span class="v" id="sumZone">—</span></div>
+  <div class="pr"><span class="l" id="sumZoneLbl">Travel charge (zone fee + travel time)</span><span class="v" id="sumZone">—</span></div>
   <div class="pr"><span class="l">Additional charges</span><span class="v" id="sumAddl">—</span></div>
   <div class="pr"><span class="l">Price per service visit</span><span class="v" id="sumPV">$0.00</span></div>
   <div class="pr"><span class="l">Visits per year (<span id="sumSchedLbl">Annual</span>)</span><span class="v" id="sumVPY">1</span></div>
@@ -641,12 +687,9 @@ function setMode(m) {
 // ════════════════════════════════════════════
 // CAPACITY CLASS
 // ════════════════════════════════════════════
+// setCap kept for DocType payload compatibility — driven by v1Cap now
 function setCap(val) {
   document.getElementById('capacity_class').value = val;
-  document.getElementById('cLight').className = 'co'+(val==='Light Capacity'?' on-l':'');
-  document.getElementById('cHeavy').className = 'co'+(val==='Heavy Capacity'?' on-h':'');
-  // Re-lookup zone price since item code changes with capacity class (LC vs HC)
-  if (fv('zoneNum')) lookupZone();
 }
 
 // ════════════════════════════════════════════
@@ -791,12 +834,9 @@ function recalcUnit(id) {
 function recalcAllUnits() {
   updateMultiDiscounts();
   for(var i=0;i<units.length;i++) recalcUnit(units[i].id);
-  // Recalc zone travel cost since it uses loaded rate
-  if (fv('zoneNum')) {
-    var flatFee = parseFloat(fv('zoneChargeAmt')) || 0;
-    updateZoneTotals(flatFee);
-  }
-  calcSummary();
+  // Recalc zone travel costs since they use loaded rate
+  if (fv('zoneNum')) lookupZone();
+  else calcSummary();
 }
 function renderEq() {
   var tb=document.getElementById('eqBody'); if(!tb) return;
@@ -886,6 +926,13 @@ function calcSummary() {
 
   // Zone total (flat fee + travel time cost)
   var zoneAmt=parseFloat(fv('zoneTotalCharge'))||0;
+  var v2on=document.getElementById('v2Enable').checked;
+  var zoneLbl=document.getElementById('sumZoneLbl');
+  if(zoneLbl){
+    if(!fv('zoneNum')) zoneLbl.textContent='Travel charge';
+    else if(v2on) zoneLbl.textContent='Travel charge (2 vehicles)';
+    else zoneLbl.textContent='Travel charge (zone fee + travel time)';
+  }
 
   // Additional charges
   var addlTotal=0;
@@ -1050,8 +1097,22 @@ function clearForm(){
   document.getElementById('plan_service').checked=false;
   // Zone
   document.getElementById('zoneNum').value='';
-  document.getElementById('zoneChargeAmt').value=0;
-  document.getElementById('zoneItemCodeDisplay').value='';
+  document.getElementById('zoneTravelHrs').value=0;
+  document.getElementById('zoneTotalCharge').value=0;
+  // V1
+  setV1Cap('Light Capacity');
+  document.getElementById('v1ZoneFee').value='';
+  document.getElementById('v1ReturnTrips').value=0;
+  document.getElementById('v1Total').value=0;
+  document.getElementById('v1ItemCode').textContent='';
+  // V2
+  document.getElementById('v2Enable').checked=false;
+  document.getElementById('v2Fields').style.display='none';
+  setV2Cap('Light Capacity');
+  document.getElementById('v2ZoneFee').value='';
+  document.getElementById('v2ReturnTrips').value=0;
+  document.getElementById('v2Total').value=0;
+  document.getElementById('v2ItemCode').textContent='';
   // Additional charges
   var cbs=['chCerts','chShipping','chShop','chCheckin','chMisc'];
   for(var i=0;i<cbs.length;i++){ var c=document.getElementById(cbs[i]); if(c) c.checked=false; }
@@ -1140,84 +1201,192 @@ function onRegularRateChange() {
 // Looks up price from ERPNext Item based on zone + capacity class
 // Item codes: SRV-TRAVEL-Z1LC, SRV-TRAVEL-Z1HC ... SRV-TRAVEL-Z6LC, SRV-TRAVEL-Z6HC
 // ════════════════════════════════════════════
-// ZONE TRAVEL CALCULATION
+// VEHICLE CAPACITY STATE
 // ════════════════════════════════════════════
-function updateZoneTotals(flatFee) {
-  var zone      = parseInt(fv('zoneNum')) || 0;
-  var hr        = parseFloat(fv('hrRate')) || 0;
-  var travelHrs = zone > 1 ? zone - 1 : 0;
-  var travelCost  = travelHrs * hr;
-  var totalTravel = flatFee + travelCost;
-  var thEl = document.getElementById('zoneTravelHrs');
-  var tcEl = document.getElementById('zoneTravelCost');
-  var ttEl = document.getElementById('zoneTotalCharge');
-  if (thEl) thEl.value = travelHrs;
-  if (tcEl) tcEl.value = travelCost.toFixed(2);
-  if (ttEl) ttEl.value = totalTravel.toFixed(2);
+var v1Cap = 'Light Capacity';
+var v2Cap = 'Light Capacity';
+
+function setV1Cap(val) {
+  v1Cap = val;
+  document.getElementById('v1Light').className = 'co' + (val === 'Light Capacity' ? ' on-l' : '');
+  document.getElementById('v1Heavy').className = 'co' + (val === 'Heavy Capacity' ? ' on-h' : '');
+  // Update hidden capacity_class for DocType payload
+  document.getElementById('capacity_class').value = val;
+  if (fv('zoneNum')) lookupZone();
+}
+
+function setV2Cap(val) {
+  v2Cap = val;
+  document.getElementById('v2Light').className = 'co' + (val === 'Light Capacity' ? ' on-l' : '');
+  document.getElementById('v2Heavy').className = 'co' + (val === 'Heavy Capacity' ? ' on-h' : '');
+  if (fv('zoneNum')) lookupZoneV2();
+}
+
+function onV2Enable() {
+  var enabled = document.getElementById('v2Enable').checked;
+  document.getElementById('v2Fields').style.display = enabled ? '' : 'none';
+  if (enabled && fv('zoneNum')) lookupZoneV2();
+  else {
+    document.getElementById('v2Total').value = 0;
+    recalcZoneTotal();
+  }
+}
+
+// ════════════════════════════════════════════
+// ZONE LOOKUP — fetch flat fee for a given item code
+// Returns promise resolving to price (number)
+// ════════════════════════════════════════════
+function fetchZonePrice(itemCode) {
+  return fetch('/api/method/frappe.client.get_list', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': getCsrfToken()
+    },
+    body: JSON.stringify({
+      doctype: 'Item Price',
+      filters: [['item_code','=',itemCode],['price_list','=','Standard Selling']],
+      fields: ['price_list_rate'],
+      limit_page_length: 1
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    var rows = data.message || [];
+    return rows.length > 0 ? (parseFloat(rows[0].price_list_rate)||0) : 0;
+  })
+  .catch(function(){ return 0; });
+}
+
+// ════════════════════════════════════════════
+// ZONE CALC — update vehicle totals
+// ════════════════════════════════════════════
+function calcVehicleTotal(flatFee, returnTrips) {
+  var zone     = parseInt(fv('zoneNum')) || 0;
+  var hr       = parseFloat(fv('hrRate')) || 0;
+  var travelHrs= zone > 1 ? zone - 1 : 0;
+  var tripCost = flatFee + (travelHrs * hr);
+  return tripCost * (1 + (parseInt(returnTrips)||0));
+}
+
+function recalcZoneTotal() {
+  var v1 = parseFloat(fv('v1Total')) || 0;
+  var v2 = document.getElementById('v2Enable').checked ? (parseFloat(fv('v2Total'))||0) : 0;
+  var total = v1 + v2;
+  document.getElementById('zoneTotalCharge').value = total.toFixed(2);
+
+  // Update hint
+  var hint = document.getElementById('zoneTotalHint');
+  if (hint) {
+    hint.textContent = document.getElementById('v2Enable').checked
+      ? 'V1: ' + fmt(v1) + '  +  V2: ' + fmt(v2)
+      : 'Vehicle 1 only';
+  }
   calcSummary();
 }
 
 function lookupZone() {
   var zone = fv('zoneNum');
-  var cap  = fv('capacity_class');
+  var hr   = parseFloat(fv('hrRate')) || 0;
+  var travelHrs = zone ? (parseInt(zone) > 1 ? parseInt(zone)-1 : 0) : 0;
+
+  // Update shared travel time display
+  document.getElementById('zoneTravelHrs').value = travelHrs;
+
   if (!zone) {
-    document.getElementById('zoneChargeAmt').value = '';
-    document.getElementById('zoneItemCodeDisplay').value = '';
-    document.getElementById('zoneTravelHrs').value = 0;
-    document.getElementById('zoneTravelCost').value = 0;
+    document.getElementById('v1ZoneFee').value = '';
+    document.getElementById('v1Total').value = 0;
+    document.getElementById('v1ItemCode').textContent = '';
+    document.getElementById('v2ZoneFee').value = '';
+    document.getElementById('v2Total').value = 0;
+    document.getElementById('v2ItemCode').textContent = '';
     document.getElementById('zoneTotalCharge').value = 0;
     calcSummary();
     return;
   }
-  var suffix   = cap === 'Heavy Capacity' ? 'HC' : 'LC';
-  var itemCode = 'SRV-TRAVEL-Z' + zone + suffix;
-  document.getElementById('zoneItemCodeDisplay').value = itemCode;
-  // Set travel time immediately (doesn't need the fetch)
-  var travelHrs = parseInt(zone) > 1 ? parseInt(zone) - 1 : 0;
-  document.getElementById('zoneTravelHrs').value = travelHrs;
-  dbg('Looking up zone: ' + itemCode);
-  var ic = itemCode;
-  fetch('/api/method/frappe.client.get_list', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Frappe-CSRF-Token': window.csrf_token || ''
-    },
-    body: JSON.stringify({
-      doctype: 'Item Price',
-      filters: [['item_code','=',ic],['price_list','=','Standard Selling']],
-      fields: ['item_code','price_list_rate'],
-      limit_page_length: 1
-    })
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data) {
-    dbg('Zone response: ' + JSON.stringify(data).substring(0, 120));
-    var rows  = data.message || [];
-    var price = rows.length > 0 ? (parseFloat(rows[0].price_list_rate) || 0) : 0;
-    var amtEl = document.getElementById('zoneChargeAmt');
-    if (price > 0) {
-      amtEl.value = price.toFixed(2);
-      amtEl.readOnly = true;
-      amtEl.style.background = 'var(--gbg)';
-      dbg('Zone price: $' + price + ' for ' + ic);
-    } else {
-      amtEl.value = '';
-      amtEl.readOnly = false;
-      amtEl.style.background = 'white';
-      amtEl.placeholder = 'Not found — enter manually';
-      price = 0;
-      dbg('No price found for ' + ic + ' — manual entry enabled');
+
+  var suffix1  = v1Cap === 'Heavy Capacity' ? 'HC' : 'LC';
+  var itemCode1= 'SRV-TRAVEL-Z' + zone + suffix1;
+  document.getElementById('v1ItemCode').textContent = itemCode1;
+  dbg('Zone lookup V1: ' + itemCode1);
+
+  fetchZonePrice(itemCode1).then(function(price1) {
+    var feeEl1 = document.getElementById('v1ZoneFee');
+    feeEl1.value = price1 > 0 ? price1.toFixed(2) : '';
+    feeEl1.readOnly = price1 > 0;
+    feeEl1.style.background = price1 > 0 ? 'var(--gbg)' : 'white';
+    if (!price1) { feeEl1.placeholder = 'Not found — enter manually'; }
+    var v1t = calcVehicleTotal(price1, fv('v1ReturnTrips'));
+    document.getElementById('v1Total').value = v1t.toFixed(2);
+    var h1 = document.getElementById('v1TotalHint');
+    if (h1) {
+      var trips1 = 1 + (parseInt(fv('v1ReturnTrips'))||0);
+      h1.textContent = fmt(price1 + travelHrs*hr) + ' × ' + trips1 + ' trip' + (trips1>1?'s':'');
     }
-    updateZoneTotals(price);
-  })
-  .catch(function(err) {
-    dbg('Zone fetch error: ' + err.message);
-    var amtEl = document.getElementById('zoneChargeAmt');
-    amtEl.readOnly = false;
-    amtEl.style.background = 'white';
-    updateZoneTotals(0);
+    dbg('V1 fee: $' + price1);
+    // Also refresh V2 if enabled
+    if (document.getElementById('v2Enable').checked) {
+      lookupZoneV2();
+    } else {
+      recalcZoneTotal();
+    }
   });
+}
+
+function lookupZoneV2() {
+  var zone = fv('zoneNum'); if (!zone) return;
+  var hr   = parseFloat(fv('hrRate')) || 0;
+  var travelHrs = parseInt(zone) > 1 ? parseInt(zone)-1 : 0;
+  var suffix2   = v2Cap === 'Heavy Capacity' ? 'HC' : 'LC';
+  var itemCode2 = 'SRV-TRAVEL-Z' + zone + suffix2;
+  document.getElementById('v2ItemCode').textContent = itemCode2;
+  dbg('Zone lookup V2: ' + itemCode2);
+
+  fetchZonePrice(itemCode2).then(function(price2) {
+    var feeEl2 = document.getElementById('v2ZoneFee');
+    feeEl2.value = price2 > 0 ? price2.toFixed(2) : '';
+    feeEl2.readOnly = price2 > 0;
+    feeEl2.style.background = price2 > 0 ? 'var(--gbg)' : 'white';
+    if (!price2) { feeEl2.placeholder = 'Not found — enter manually'; }
+    var v2t = calcVehicleTotal(price2, fv('v2ReturnTrips'));
+    document.getElementById('v2Total').value = v2t.toFixed(2);
+    var h2 = document.getElementById('v2TotalHint');
+    if (h2) {
+      var trips2 = 1 + (parseInt(fv('v2ReturnTrips'))||0);
+      h2.textContent = fmt(price2 + travelHrs*hr) + ' × ' + trips2 + ' trip' + (trips2>1?'s':'');
+    }
+    recalcZoneTotal();
+  });
+}
+
+function updateV1Trips() {
+  var fee = parseFloat(fv('v1ZoneFee')) || 0;
+  var v1t = calcVehicleTotal(fee, fv('v1ReturnTrips'));
+  document.getElementById('v1Total').value = v1t.toFixed(2);
+  var zone = parseInt(fv('zoneNum'))||0;
+  var hr   = parseFloat(fv('hrRate'))||0;
+  var th   = zone > 1 ? zone-1 : 0;
+  var h1   = document.getElementById('v1TotalHint');
+  if (h1) {
+    var trips1 = 1+(parseInt(fv('v1ReturnTrips'))||0);
+    h1.textContent = fmt(fee+th*hr)+' × '+trips1+' trip'+(trips1>1?'s':'');
+  }
+  recalcZoneTotal();
+}
+
+function updateV2Trips() {
+  var fee = parseFloat(fv('v2ZoneFee')) || 0;
+  var v2t = calcVehicleTotal(fee, fv('v2ReturnTrips'));
+  document.getElementById('v2Total').value = v2t.toFixed(2);
+  var zone = parseInt(fv('zoneNum'))||0;
+  var hr   = parseFloat(fv('hrRate'))||0;
+  var th   = zone > 1 ? zone-1 : 0;
+  var h2   = document.getElementById('v2TotalHint');
+  if (h2) {
+    var trips2 = 1+(parseInt(fv('v2ReturnTrips'))||0);
+    h2.textContent = fmt(fee+th*hr)+' × '+trips2+' trip'+(trips2>1?'s':'');
+  }
+  recalcZoneTotal();
 }
 
 // ════════════════════════════════════════════
@@ -1264,8 +1433,12 @@ function boot(){
     if(t.id==='mCal')  {setMode('cal');return;}
     if(t.id==='mPm')   {setMode('pm');return;}
     if(t.id==='mBoth') {setMode('both');return;}
-    if(t.id==='cLight'){setCap('Light Capacity');return;}
-    if(t.id==='cHeavy'){setCap('Heavy Capacity');return;}
+    // V1 capacity
+    if(t.id==='v1Light'){setV1Cap('Light Capacity');return;}
+    if(t.id==='v1Heavy'){setV1Cap('Heavy Capacity');return;}
+    // V2 capacity
+    if(t.id==='v2Light'){setV2Cap('Light Capacity');return;}
+    if(t.id==='v2Heavy'){setV2Cap('Heavy Capacity');return;}
     if(t.id==='sb1')   {setSched(1);return;}
     if(t.id==='sb3')   {setSched(3);return;}
     if(t.id==='sb6')   {setSched(6);return;}
@@ -1295,8 +1468,11 @@ function boot(){
     if(t.classList&&t.classList.contains('gmod')){recalcAllUnits();return;}
     // Zone charge
     if(t.id==='zoneNum'){lookupZone();return;}
-    if(t.id==='capacity_class'){lookupZone();return;}
-    if(t.id==='zoneChargeAmt'){updateZoneTotals(parseFloat(fv('zoneChargeAmt'))||0);return;}
+    if(t.id==='v2Enable'){onV2Enable();return;}
+    if(t.id==='v1ZoneFee'){updateV1Trips();return;}
+    if(t.id==='v2ZoneFee'){updateV2Trips();return;}
+    if(t.id==='v1ReturnTrips'){updateV1Trips();return;}
+    if(t.id==='v2ReturnTrips'){updateV2Trips();return;}
     // T&M rate derivation
     if(t.id==='rate_regular'){onRegularRateChange();return;}
     // Additional charges
@@ -1315,7 +1491,10 @@ function boot(){
     if(t.id==='siteScore'){calcSummary();return;}
     if(t.id==='hrRate'){recalcAllUnits();return;}
     if(t.id==='interval_months'){updateSchedBadge();calcSummary();return;}
-    if(t.id==='zoneChargeAmt'){updateZoneTotals(parseFloat(fv('zoneChargeAmt'))||0);return;}
+    if(t.id==='v1ZoneFee'){updateV1Trips();return;}
+    if(t.id==='v2ZoneFee'){updateV2Trips();return;}
+    if(t.id==='v1ReturnTrips'){updateV1Trips();return;}
+    if(t.id==='v2ReturnTrips'){updateV2Trips();return;}
     if(t.id==='vCerts'||t.id==='vShipping'||t.id==='vShop'||t.id==='vCheckin'||t.id==='vMisc'||t.id==='vMisc2'){calcSummary();return;}
     if(t.id==='rate_regular'){onRegularRateChange();return;}
     var id=parseInt(t.getAttribute('data-id'));
