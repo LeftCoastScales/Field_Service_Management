@@ -114,7 +114,6 @@ fixtures = [
 		"filters": [["employee_type", "=", "Full-time"]],
 	},
 
-	# LCS custom roles only — never exports built-in Frappe/ERPNext roles
 	# Only 4 custom roles needed — all others (Field Service User, Dispatcher,
 	# Crew Leader, Credit Manager, Fleet Manager, Quality Manager, Training Manager,
 	# Compliance Officer, Field Service Manager) already exist in this ERPNext instance.
@@ -136,24 +135,10 @@ fixtures = [
 		"filters": [["shift_type_name", "=", "LCS Standard"]],
 	},
 
-	# LCS User accounts — scoped to LCS email domains only
-	# User.name = email, so these can be fixture-imported safely.
-	# Role assignments are embedded in the roles child table on each record.
-	# Note: Employee and Shift Assignment use auto-generated naming series
-	# (HR-EMP-XXXXX) and cannot be fixture-imported — create those via the
-	# ERPNext HR module UI after this migration runs.
-	{
-		"dt": "User",
-		"filters": [
-			["email", "like", "%@leftcoastscales.com"],
-		],
-	},
-	{
-		"dt": "User",
-		"filters": [
-			["email", "like", "%@lcs-training.com"],
-		],
-	},
+	# "dt": "User" intentionally excluded.
+	# User role assignments are operational data — keeping them in fixtures
+	# would overwrite any Desk changes on every deploy.
+	# Initial role assignments are handled via ERPNext Data Import (one-time).
 ]
 
 
