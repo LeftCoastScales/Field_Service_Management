@@ -5,11 +5,20 @@
 www/tech.py
 
 Controller for the /tech route — the LCS Field Tech PWA shell. Requires
-a logged-in session (Frappe Cloud handles the login redirect for guests
-automatically via no_cache + the standard portal login flow) and requires
-the user to have a linked Employee record, since every whitelisted API
-in field_service_management.api.tech_pwa assumes one exists.
+a logged-in session and a linked Employee record, since every whitelisted
+API in field_service_management.api.tech_pwa assumes one exists.
+
+Also resolves the *current* built JS/CSS filenames from Vite's build
+manifest (asset-manifest.json, copied alongside sw.js/manifest.json in
+this same www/tech/ folder at build time) rather than hardcoding them.
+Frappe serves /assets/... with long-lived cache headers on the
+assumption that filenames change whenever content does — hashed
+filenames are what make that assumption true, and reading them from the
+manifest means tech.html never needs manual updates after a rebuild.
 """
+
+import json
+import os
 
 import frappe
 
@@ -30,4 +39,21 @@ def get_context(context):
 	context.no_breadcrumbs = True
 	context.no_header = True
 	context.employee = employee
+
+	manifest = _load_asset_manifest()
+	entry = manifest.get("index.html", {})
+	context.tech_js = entry.get("file")
+	context.tech_css = entry.get("css", [])
 	return context
+
+
+def _load_asset_manifest() -> dict:
+	manifest_path = frappe.get_app_path("beveren_fsm", "www", "tech", "asset-manifest.json")
+	if not os.path.exists(manifest_path):
+		frappe.log_error(
+			title="Tech PWA asset manifest missing",
+			message=f"Expected {manifest_path} — did the frontend build output get committed?",
+		)
+		return {}
+	with open(manifest_path) as f:
+		return json.load(f)
