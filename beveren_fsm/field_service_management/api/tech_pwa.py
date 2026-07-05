@@ -22,21 +22,32 @@ def _current_employee() -> str:
     return employee
 
 
+def _current_service_technician() -> str:
+    """
+    Service Technician Item.service_technician links to the Service
+    Technician DocType, not directly to Employee — Service Technician
+    has its own `employee` field one hop further out. Every appointment
+    assignment check has to go through this, not _current_employee().
+    """
+    employee = _current_employee()
+    technician = frappe.db.get_value("Service Technician", {"employee": employee}, "name")
+    if not technician:
+        frappe.throw(
+            "No Service Technician record is linked to your Employee record. Contact the office.",
+        )
+    return technician
+
+
 @frappe.whitelist()
 def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> list[dict]:
     """Today's (or a given range's) Service Appointments assigned to the logged-in technician."""
-    employee = _current_employee()
+    service_technician = _current_service_technician()
     from_date = from_date or nowdate()
     to_date = to_date or from_date
 
-    # Find appointments this Employee is assigned to via the child table
-    # directly, rather than assuming what Service Appointment calls that
-    # child-table field internally — Service Technician Item's own fields
-    # (`service_technician`, `parent`) are confirmed, its parent's fieldname
-    # isn't.
     tech_rows = frappe.get_all(
         "Service Technician Item",
-        filters={"service_technician": employee},
+        filters={"service_technician": service_technician},
         fields=["parent"],
     )
     appointment_names = list({r.parent for r in tech_rows})
@@ -67,8 +78,8 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
 @frappe.whitelist()
 def get_job_detail(appointment: str) -> dict:
     """Full detail for a single appointment: notes, status, customer."""
-    employee = _current_employee()
-    _assert_assigned(appointment, employee)
+    service_technician = _current_service_technician()
+    _assert_assigned(appointment, service_technician)
 
     doc = frappe.get_doc("Service Appointment", appointment)
 
@@ -88,9 +99,9 @@ def get_job_detail(appointment: str) -> dict:
     }
 
 
-def _assert_assigned(appointment: str, employee: str) -> None:
+def _assert_assigned(appointment: str, service_technician: str) -> None:
     assigned = frappe.db.exists(
-        "Service Technician Item", {"parent": appointment, "service_technician": employee}
+        "Service Technician Item", {"parent": appointment, "service_technician": service_technician}
     )
     if not assigned:
         frappe.throw("You are not assigned to this appointment.", frappe.PermissionError)
@@ -99,8 +110,7 @@ def _assert_assigned(appointment: str, employee: str) -> None:
 @frappe.whitelist()
 def update_notes(appointment: str, customer_notes: str = "", internal_notes: str = "") -> dict:
     """Writes customer-facing and internal-only notes for an appointment."""
-    employee = _current_employee()
-    _assert_assigned(appointment, employee)
+    _assert_assigned(appointment, _current_service_technician())
 
     doc = frappe.get_doc("Service Appointment", appointment)
     doc.db_set("customer_notes", customer_notes, update_modified=True)
@@ -120,8 +130,7 @@ def upload_job_photo() -> dict:
 
     appointment = frappe.form_dict.get("appointment")
     caption = frappe.form_dict.get("caption", "")
-    employee = _current_employee()
-    _assert_assigned(appointment, employee)
+    _assert_assigned(appointment, _current_service_technician())
 
     file_doc = upload_file()  # saves the uploaded file, returns a File doc
 
