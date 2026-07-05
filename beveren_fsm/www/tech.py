@@ -48,7 +48,11 @@ def get_context(context):
 
 
 def _load_asset_manifest() -> dict:
-	manifest_path = frappe.get_app_path("beveren_fsm", "www", "tech", "asset-manifest.json")
+	# Resolved relative to this file rather than via frappe.get_app_path —
+	# tech.py and its sibling tech/asset-manifest.json always sit next to
+	# each other on disk no matter where Frappe has this app installed,
+	# so this can't drift the way an app-name-based lookup can.
+	manifest_path = os.path.join(os.path.dirname(__file__), "tech", "asset-manifest.json")
 	if not os.path.exists(manifest_path):
 		frappe.log_error(
 			title="Tech PWA asset manifest missing",
