@@ -34,6 +34,7 @@ fixtures = [
 	"LCS Scale Model",
 	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
 	"LCS Vehicle",
+	{"dt": "Custom Field", "filters": [["name", "like", "Service Appointment-%notes"]]},
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 
 	# Custom Fields for Service Order links and Service Area extensions (Phase 2D)

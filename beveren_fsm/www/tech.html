@@ -1,0 +1,32 @@
+{# www/tech.html
+
+   Standalone app shell — deliberately does NOT extend templates/web.html,
+   so there's no Frappe site chrome around the technician app. Built
+   JS/CSS is committed to beveren_fsm/beveren_fsm/public/tech/ and served
+   at /assets/beveren_fsm/tech/... . The manifest, service worker, and
+   icons are served as literal files from this same www/tech/ folder so
+   the service worker's default scope covers /tech/ (see vite.config.js
+   comment for why that split exists). #}
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+	<meta name="theme-color" content="#002050" />
+	<title>LCS Field Tech</title>
+	<link rel="manifest" href="/tech/manifest.json" />
+	<link rel="apple-touch-icon" href="/tech/icons/icon-192.png" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+	<link rel="stylesheet" href="/assets/beveren_fsm/tech/tech.css" />
+</head>
+<body>
+	<div id="root"></div>
+
+	{# frappe's csrf_token cookie is already present on any authenticated
+	   page load, so src/api/client.js reads it straight from the cookie,
+	   exactly as the SAQ portal form does. Service worker registration
+	   happens inside main.jsx (bundled into tech.js below), not here. #}
+	<script type="module" src="/assets/beveren_fsm/tech/tech.js"></script>
+</body>
+</html>
