@@ -102,11 +102,12 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
     tech_rows = frappe.get_all(
         "Service Technician Item",
         filters={"service_technician": service_technician},
-        fields=["parent"],
+        fields=["parent", "custom_is_crew_leader"],
     )
     appointment_names = list({r.parent for r in tech_rows})
     if not appointment_names:
         return []
+    crew_leader_by_appointment = {r.parent: bool(r.custom_is_crew_leader) for r in tech_rows}
 
     appointments = frappe.get_list(
         "Service Appointment",
@@ -125,6 +126,7 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
             "site_address": address_by_order.get(a.service_order),
             "scheduled_start": a.scheduled_start_datetime,
             "status": a.status,
+            "is_crew_leader": crew_leader_by_appointment.get(a.name, False),
         }
         for a in appointments
     ]
@@ -138,6 +140,12 @@ def get_job_detail(appointment: str) -> dict:
 
     doc = frappe.get_doc("Service Appointment", appointment)
 
+    is_crew_leader = bool(frappe.db.get_value(
+        "Service Technician Item",
+        {"parent": appointment, "service_technician": service_technician},
+        "custom_is_crew_leader",
+    ))
+
     return {
         "name": doc.name,
         "customer_name": doc.customer,
@@ -146,10 +154,10 @@ def get_job_detail(appointment: str) -> dict:
         "status": doc.status,
         "customer_notes": doc.get("customer_notes"),
         "internal_notes": doc.get("internal_notes"),
-        # Crew-leader flag and parts list need their real fieldnames
-        # confirmed before wiring up — left as safe defaults for now so
-        # this endpoint doesn't 500 on an unverified column.
-        "is_crew_leader": False,
+        "is_crew_leader": is_crew_leader,
+        # Parts list needs its real fieldname confirmed before wiring up —
+        # left as a safe default for now so this endpoint doesn't 500 on
+        # an unverified column.
         "parts": [],
     }
 
