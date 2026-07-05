@@ -1,20 +1,24 @@
 [
   {
     "doctype": "Custom Field",
+    "name": "Service Appointment-customer_notes",
     "dt": "Service Appointment",
     "fieldname": "customer_notes",
     "label": "Customer Notes",
     "fieldtype": "Text",
     "insert_after": "status",
-    "description": "Visible on the customer-facing service report. Entered by the technician in the Tech PWA."
+    "description": "Visible on the customer-facing service report. Entered by the technician in the Tech PWA.",
+    "owner": "Administrator"
   },
   {
     "doctype": "Custom Field",
+    "name": "Service Appointment-internal_notes",
     "dt": "Service Appointment",
     "fieldname": "internal_notes",
     "label": "Internal Notes",
     "fieldtype": "Text",
     "insert_after": "customer_notes",
-    "description": "Office/dispatch only. Never included on customer-facing documents."
+    "description": "Office/dispatch only. Never included on customer-facing documents.",
+    "owner": "Administrator"
   }
 ]
