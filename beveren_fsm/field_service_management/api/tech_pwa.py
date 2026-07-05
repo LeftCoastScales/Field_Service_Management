@@ -38,6 +38,60 @@ def _current_service_technician() -> str:
     return technician
 
 
+def _format_address(fields: dict) -> str | None:
+    """Joins Address doctype fields into a single display/Maps-query-friendly line."""
+    parts = [
+        fields.get("address_line1"),
+        fields.get("address_line2"),
+        fields.get("city"),
+        fields.get("state"),
+        fields.get("pincode"),
+    ]
+    parts = [p for p in parts if p]
+    return ", ".join(parts) if parts else None
+
+
+def _site_addresses_for_orders(service_order_names: list[str]) -> dict[str, str | None]:
+    """
+    Batched version for list views: Service Order -> Address in two
+    bulk queries instead of one round-trip per appointment. Address is
+    reached via Service Order.customer_address (a Link), not the mixed
+    contact/address text block in Service Order.address_details.
+    """
+    service_order_names = [n for n in service_order_names if n]
+    if not service_order_names:
+        return {}
+
+    orders = frappe.get_all(
+        "Service Order",
+        filters={"name": ("in", service_order_names)},
+        fields=["name", "customer_address"],
+    )
+    order_to_address = {o.name: o.customer_address for o in orders if o.customer_address}
+    address_names = list(set(order_to_address.values()))
+    if not address_names:
+        return {}
+
+    addresses = frappe.get_all(
+        "Address",
+        filters={"name": ("in", address_names)},
+        fields=["name", "address_line1", "address_line2", "city", "state", "pincode"],
+    )
+    address_lookup = {a.name: _format_address(a) for a in addresses}
+
+    return {
+        order_name: address_lookup.get(address_name)
+        for order_name, address_name in order_to_address.items()
+    }
+
+
+def _site_address_for_order(service_order_name: str | None) -> str | None:
+    """Single-lookup version for get_job_detail."""
+    if not service_order_name:
+        return None
+    return _site_addresses_for_orders([service_order_name]).get(service_order_name)
+
+
 @frappe.whitelist()
 def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> list[dict]:
     """Today's (or a given range's) Service Appointments assigned to the logged-in technician."""
@@ -60,14 +114,15 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
             "name": ("in", appointment_names),
             "scheduled_start_datetime": ("between", [f"{from_date} 00:00:00", f"{to_date} 23:59:59"]),
         },
-        fields=["name", "customer", "status", "scheduled_start_datetime"],
+        fields=["name", "customer", "status", "scheduled_start_datetime", "service_order"],
         order_by="scheduled_start_datetime asc",
     )
+    address_by_order = _site_addresses_for_orders([a.service_order for a in appointments])
     return [
         {
             "name": a.name,
             "customer_name": a.customer,  # Customer's name field doubles as its display title
-            "site_address": None,  # not stored on Service Appointment — see README follow-up
+            "site_address": address_by_order.get(a.service_order),
             "scheduled_start": a.scheduled_start_datetime,
             "status": a.status,
         }
@@ -86,7 +141,7 @@ def get_job_detail(appointment: str) -> dict:
     return {
         "name": doc.name,
         "customer_name": doc.customer,
-        "site_address": None,  # not stored on Service Appointment — see README follow-up
+        "site_address": _site_address_for_order(doc.get("service_order")),
         "scheduled_start": doc.scheduled_start_datetime,
         "status": doc.status,
         "customer_notes": doc.get("customer_notes"),
