@@ -29,64 +29,68 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
     from_date = from_date or nowdate()
     to_date = to_date or from_date
 
-    Appointment = frappe.qb.DocType("Service Appointment")
-    TechItem = frappe.qb.DocType("Service Technician Item")
+    # Find appointments this Employee is assigned to via the child table
+    # directly, rather than assuming what Service Appointment calls that
+    # child-table field internally — Service Technician Item's own fields
+    # (`service_technician`, `parent`) are confirmed, its parent's fieldname
+    # isn't.
+    tech_rows = frappe.get_all(
+        "Service Technician Item",
+        filters={"service_technician": employee},
+        fields=["parent"],
+    )
+    appointment_names = list({r.parent for r in tech_rows})
+    if not appointment_names:
+        return []
 
-    query = (
-        frappe.qb.from_(Appointment)
-        .join(TechItem)
-        .on(TechItem.parent == Appointment.name)
-        .select(
-            Appointment.name,
-            Appointment.customer_name,
-            Appointment.site_address,
-            Appointment.scheduled_start,
-            Appointment.status,
-            TechItem.is_crew_leader,
-        )
-        .where(TechItem.employee == employee)
-        .where(Appointment.scheduled_date[from_date:to_date])
-        .orderby(Appointment.scheduled_start)
-    )
-    return frappe.get_list(
+    appointments = frappe.get_list(
         "Service Appointment",
-        filters={"name": ("in", [r.name for r in query.run(as_dict=True)])},
-        fields=[
-            "name", "customer_name", "site_address", "scheduled_start",
-            "status",
-        ],
+        filters={
+            "name": ("in", appointment_names),
+            "scheduled_start_datetime": ("between", [f"{from_date} 00:00:00", f"{to_date} 23:59:59"]),
+        },
+        fields=["name", "customer", "status", "scheduled_start_datetime"],
+        order_by="scheduled_start_datetime asc",
     )
+    return [
+        {
+            "name": a.name,
+            "customer_name": a.customer,  # Customer's name field doubles as its display title
+            "site_address": None,  # not stored on Service Appointment — see README follow-up
+            "scheduled_start": a.scheduled_start_datetime,
+            "status": a.status,
+        }
+        for a in appointments
+    ]
 
 
 @frappe.whitelist()
 def get_job_detail(appointment: str) -> dict:
-    """Full detail for a single appointment: notes, parts, equipment, crew role."""
+    """Full detail for a single appointment: notes, status, customer."""
     employee = _current_employee()
     _assert_assigned(appointment, employee)
 
     doc = frappe.get_doc("Service Appointment", appointment)
-    tech_row = next((r for r in doc.technicians if r.employee == employee), None)
 
     return {
         "name": doc.name,
-        "customer_name": doc.customer_name,
-        "site_address": doc.site_address,
-        "scheduled_start": doc.scheduled_start,
+        "customer_name": doc.customer,
+        "site_address": None,  # not stored on Service Appointment — see README follow-up
+        "scheduled_start": doc.scheduled_start_datetime,
         "status": doc.status,
         "customer_notes": doc.get("customer_notes"),
         "internal_notes": doc.get("internal_notes"),
-        "equipment_summary": doc.get("equipment_summary"),
-        "is_crew_leader": bool(tech_row and tech_row.is_crew_leader),
-        "parts": [
-            {"item_name": p.item_name, "qty": p.qty}
-            for p in doc.get("parts", [])
-        ],
+        # Crew-leader flag and parts list need their real fieldnames
+        # confirmed before wiring up — left as safe defaults for now so
+        # this endpoint doesn't 500 on an unverified column.
+        "is_crew_leader": False,
+        "parts": [],
     }
 
 
 def _assert_assigned(appointment: str, employee: str) -> None:
     assigned = frappe.db.exists(
-        "Service Technician Item", {"parent": appointment, "employee": employee}
+        "Service Technician Item", {"parent": appointment, "service_technician": employee}
     )
     if not assigned:
         frappe.throw("You are not assigned to this appointment.", frappe.PermissionError)
