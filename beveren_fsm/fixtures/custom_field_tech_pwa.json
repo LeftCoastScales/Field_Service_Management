@@ -1,6 +1,17 @@
 [
   {
     "doctype": "Custom Field",
+    "name": "Service Appointment-dispatch_instructions",
+    "dt": "Service Appointment",
+    "fieldname": "dispatch_instructions",
+    "label": "Dispatch Instructions",
+    "fieldtype": "Text",
+    "insert_after": "customer",
+    "description": "Written by the office/sales when scheduling this appointment. Read-only for the technician in the Tech PWA — this is not the Description field (which is shared boilerplate pulled from Service Type).",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
     "name": "Service Appointment-customer_notes",
     "dt": "Service Appointment",
     "fieldname": "customer_notes",

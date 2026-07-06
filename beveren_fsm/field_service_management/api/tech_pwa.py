@@ -152,6 +152,7 @@ def get_job_detail(appointment: str) -> dict:
         "site_address": _site_address_for_order(doc.get("service_order")),
         "scheduled_start": doc.scheduled_start_datetime,
         "status": doc.status,
+        "instructions": doc.get("dispatch_instructions"),  # office/sales-entered, read-only for the tech
         "customer_notes": doc.get("customer_notes"),
         "internal_notes": doc.get("internal_notes"),
         "is_crew_leader": is_crew_leader,
