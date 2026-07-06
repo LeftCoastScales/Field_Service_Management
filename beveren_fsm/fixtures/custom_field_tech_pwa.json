@@ -1,13 +1,24 @@
 [
   {
     "doctype": "Custom Field",
+    "name": "Service Order-dispatch_instructions",
+    "dt": "Service Order",
+    "fieldname": "dispatch_instructions",
+    "label": "Dispatch Instructions",
+    "fieldtype": "Text",
+    "insert_after": "service_request",
+    "description": "Auto-copied from the linked Service Request's Description the first time this Order is saved (if blank), and editable/appendable here afterward. Flows forward to Service Appointment automatically.",
+    "owner": "Administrator"
+  },
+  {
+    "doctype": "Custom Field",
     "name": "Service Appointment-dispatch_instructions",
     "dt": "Service Appointment",
     "fieldname": "dispatch_instructions",
     "label": "Dispatch Instructions",
     "fieldtype": "Text",
     "insert_after": "customer",
-    "description": "Written by the office/sales when scheduling this appointment. Read-only for the technician in the Tech PWA — this is not the Description field (which is shared boilerplate pulled from Service Type).",
+    "description": "Auto-copied from the linked Service Order's Dispatch Instructions the first time this Appointment is saved (if blank). Read-only for the technician in the Tech PWA — this is not the Description field (which is shared boilerplate pulled from Service Type).",
     "owner": "Administrator"
   },
   {

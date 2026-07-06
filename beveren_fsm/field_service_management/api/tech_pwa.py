@@ -268,3 +268,28 @@ def submit_time_action(action_type: str, at: str, job_ref: str | None = None, em
     log.needs_review_count = sum(1 for s in log.segments if s.flagged_for_review)
     log.save(ignore_permissions=True)
     return {"day_log": log.name, "day_state": log.day_state}
+
+
+# ---- doc_events hooks: carry dispatch instructions forward through the ----
+# ---- Service Request -> Service Order -> Service Appointment chain.    ----
+# Registered in hooks.py's doc_events, not whitelisted — these are internal
+# document lifecycle callbacks, not REST endpoints. Each only fills in the
+# field if it's still blank, so anything typed/edited at the Order level
+# is never silently overwritten by a later save.
+
+def copy_instructions_from_request(doc, method=None):
+    """Service Order.validate — pulls Service Request.description forward
+    into Service Order.dispatch_instructions the first time, if blank."""
+    if doc.get("service_request") and not doc.get("dispatch_instructions"):
+        source_description = frappe.db.get_value("Service Request", doc.service_request, "description")
+        if source_description:
+            doc.dispatch_instructions = source_description
+
+
+def copy_instructions_from_order(doc, method=None):
+    """Service Appointment.validate — same pattern, one hop further:
+    Service Order.dispatch_instructions -> Service Appointment.dispatch_instructions."""
+    if doc.get("service_order") and not doc.get("dispatch_instructions"):
+        source_instructions = frappe.db.get_value("Service Order", doc.service_order, "dispatch_instructions")
+        if source_instructions:
+            doc.dispatch_instructions = source_instructions

@@ -34,7 +34,21 @@ fixtures = [
 	"LCS Scale Model",
 	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
 	"LCS Vehicle",
-	{"dt": "Custom Field", "filters": [["name", "like", "Service Appointment-%notes"]]},
+	{
+		"dt": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"Service Appointment-customer_notes",
+					"Service Appointment-internal_notes",
+					"Service Appointment-dispatch_instructions",
+					"Service Order-dispatch_instructions",
+				],
+			]
+		],
+	},
 	# {"dt": "Workspace", "filters": {"name": "Service"}},
 
 	# Custom Fields for Service Order links and Service Area extensions (Phase 2D)
@@ -278,6 +292,12 @@ doc_events = {
 		"on_submit": [
 			"beveren_fsm.field_service_management.doctype.service_order.service_order.update_product_movement_on_submit",
 		],
+	},
+	"Service Order": {
+		"validate": "beveren_fsm.field_service_management.api.tech_pwa.copy_instructions_from_request",
+	},
+	"Service Appointment": {
+		"validate": "beveren_fsm.field_service_management.api.tech_pwa.copy_instructions_from_order",
 	},
 }
 
