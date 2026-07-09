@@ -150,18 +150,18 @@ frappe.ui.form.on("Service Order", {
   customer: function (frm) {
     frm.set_query("customer_address", function (doc) {
       return {
-        filters: {
-          link_doctype: "Customer",
-          link_name: doc.customer,
-        },
+        filters: [
+          ["Dynamic Link", "link_doctype", "=", "Customer"],
+          ["Dynamic Link", "link_name", "=", doc.customer],
+        ],
       };
     });
     frm.set_query("customer_contact", function (doc) {
       return {
-        filters: {
-          link_doctype: "Customer",
-          link_name: doc.customer,
-        },
+        filters: [
+          ["Dynamic Link", "link_doctype", "=", "Customer"],
+          ["Dynamic Link", "link_name", "=", doc.customer],
+        ],
       };
     });
   },
