@@ -5,6 +5,7 @@ import TimeTracker from './components/TimeTracker.jsx';
 import { syncNow } from './db/sync.js';
 import { getQueuedMutations } from './db/offlineStore.js';
 import * as api from './api/client.js';
+import { useTheme } from './hooks/useTheme.js';
 
 export default function App() {
   const [screen, setScreen] = useState('jobs'); // 'jobs' | 'jobDetail' | 'day'
@@ -13,6 +14,7 @@ export default function App() {
   const [capacity, setCapacity] = useState('light'); // resolved from employee/vehicle assignment server-side
   const [online, setOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
+  const [theme, toggleTheme] = useTheme();
 
   const refreshPending = useCallback(async () => {
     const q = await getQueuedMutations();
@@ -55,12 +57,23 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <h1>LCS Field Tech</h1>
-        <span
-          className={`sync-pill ${syncPillClass}`}
-          onClick={() => online && syncNow().then(refreshPending)}
-        >
-          ● {syncPillLabel}
-        </span>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? '☀' : '☾'}
+          </button>
+          <span
+            className={`sync-pill ${syncPillClass}`}
+            onClick={() => online && syncNow().then(refreshPending)}
+          >
+            ● {syncPillLabel}
+          </span>
+        </div>
       </header>
 
       <main className="app-main">

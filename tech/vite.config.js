@@ -19,6 +19,15 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.js',
+      // injectRegister must stay null: without it, Vite auto-generates
+      // registerSW.js and adds it to the service worker's precache list
+      // even though it's unused here (registration happens in main.jsx
+      // instead). If registerSW.js then isn't deployed alongside the
+      // rest of the built assets, every SW install fails silently with
+      // bad-precaching-response and nothing works right until someone
+      // notices the Console error. Cost a multi-day debugging session
+      // once already — don't remove this.
+      injectRegister: null,
       injectManifest: {
         globPatterns: ['**/*.{js,css}'],
       },

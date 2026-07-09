@@ -1,17 +1,42 @@
+/* Color tokens — LCS Brand & Style Guide v1.2, Section 3.3 (App Palette).
+   Light values are the :root defaults; dark values live in the
+   [data-theme="dark"] override block below. --lcs-bg-tint,
+   --lcs-success-tint, and --lcs-gold-tint are local extensions (light
+   fill tints for badges/fields) derived from the guide's tones but not
+   verbatim guide tokens themselves — the guide only defines the solid
+   semantic colors, not their tint variants. */
 :root {
-  --lcs-navy: #002050;
-  --lcs-crimson: #900010;
+  --lcs-navy: #002957;
+  --lcs-crimson: #941114;
   --lcs-gold: #c8a020;
-  --lcs-steel: #004080;
-  --lcs-light-blue: #d6e4f7;
-  --lcs-bg: #f4f6fa;
-  --lcs-surface: #ffffff;
-  --lcs-text: #12203a;
-  --lcs-text-muted: #5c6b82;
-  --lcs-border: #d9e0ea;
-  --lcs-success: #1f7a3d;
+  --lcs-steel: #00488e;
+  --lcs-bg: #ffffff;
+  --lcs-surface: #f7fafd;
+  --lcs-bg-tint: #e6e7e8; /* Cool Gray 2 — replaces v1.0's Light Blue */
+  --lcs-text: #1a1a1a;
+  --lcs-text-muted: #6b7280;
+  --lcs-border: #d0d1d3; /* Cool Gray 1 */
+  --lcs-success: #1e8a44;
+  --lcs-success-tint: #e2f3e6;
+  --lcs-gold-tint: #fff7ec;
   --radius: 10px;
   --tap-min: 48px; /* minimum touch target, gloved-hand friendly */
+}
+
+[data-theme="dark"] {
+  --lcs-navy: #3d5a85;
+  --lcs-crimson: #c94a5a;
+  --lcs-gold: #d9b84a;
+  --lcs-steel: #6699cc;
+  --lcs-bg: #0f1620;
+  --lcs-surface: #1b2735;
+  --lcs-bg-tint: #2a3b4d;
+  --lcs-text: #eceff3;
+  --lcs-text-muted: #9aa5b1;
+  --lcs-border: #2a3b4d;
+  --lcs-success: #3fb86a;
+  --lcs-success-tint: #163625;
+  --lcs-gold-tint: #2b2410;
 }
 
 * { box-sizing: border-box; }
@@ -56,6 +81,30 @@ button {
   font-weight: 700;
   letter-spacing: 0.2px;
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.theme-toggle:active { background: rgba(255, 255, 255, 0.28); }
 
 .sync-pill {
   font-size: 11px;
@@ -118,11 +167,11 @@ button {
   letter-spacing: 0.4px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--lcs-light-blue);
+  background: var(--lcs-bg-tint);
   color: var(--lcs-steel);
 }
 
-.job-status.completed { background: #e2f3e6; color: var(--lcs-success); }
+.job-status.completed { background: var(--lcs-success-tint); color: var(--lcs-success); }
 .job-status.in-progress { background: var(--lcs-gold); color: var(--lcs-navy); }
 
 .job-customer {
@@ -216,7 +265,7 @@ textarea.notes-field {
 }
 
 textarea.notes-field.internal {
-  background: #fff7ec;
+  background: var(--lcs-gold-tint);
   border-color: var(--lcs-gold);
 }
 
@@ -236,7 +285,7 @@ textarea.notes-field.internal {
   border-radius: 999px;
 }
 
-.tag.customer-visible { background: #e2f3e6; color: var(--lcs-success); }
+.tag.customer-visible { background: var(--lcs-success-tint); color: var(--lcs-success); }
 .tag.internal-only { background: var(--lcs-crimson); color: white; }
 
 .photo-grid {
@@ -251,7 +300,7 @@ textarea.notes-field.internal {
   aspect-ratio: 1;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--lcs-light-blue);
+  background: var(--lcs-bg-tint);
 }
 
 .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -292,7 +341,7 @@ textarea.notes-field.internal {
 }
 
 .modal-sheet {
-  background: white;
+  background: var(--lcs-surface);
   border-radius: 16px 16px 0 0;
   padding: 20px;
   width: 100%;
