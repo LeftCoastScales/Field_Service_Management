@@ -133,6 +133,22 @@ class ServiceOrder(Document):
 		appointment.insert()
 		return appointment.name
 
+	# ------------------------------------------------------------------
+	# Stub added to fix: 'ServiceOrder' object has no attribute
+	# 'process_item_selection'
+	#
+	# ERPNext's standard item-grid JS automatically calls this server
+	# method via run_doc_method whenever a child row has reserve_stock=1
+	# (a newer ERPNext stock-reservation feature). Service Order does not
+	# use ERPNext's stock reservation workflow — stock movement here is
+	# handled separately via the Stock Entry / Delivery Note dialogs in
+	# service_order.js — so this is a harmless no-op that just lets the
+	# automatic call succeed instead of throwing an AttributeError.
+	# ------------------------------------------------------------------
+	@frappe.whitelist()
+	def process_item_selection(self, item_idx=None):
+		return
+
 	def set_in_words(self):
 		from frappe.utils import money_in_words
 
