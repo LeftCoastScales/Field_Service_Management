@@ -2,7 +2,8 @@
  * offlineStore.js
  *
  * IndexedDB (via idb) wrapper providing:
- *  - jobs: cached "Today's Jobs" data for the logged-in technician
+ *  - jobs: cached individual job records for the logged-in technician
+ *  - jobLists: cached job list per selected period (Day/Week/Month/Quarter)
  *  - dayLog: the current chained-logic time tracking day log
  *  - notes: queued customer/internal note edits per appointment
  *  - photos: queued photo blobs per appointment, pending upload
@@ -15,13 +16,20 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'lcs-tech-pwa';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export async function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains('jobs')) {
         db.createObjectStore('jobs', { keyPath: 'name' }); // Service Appointment name
+      }
+      if (!db.objectStoreNames.contains('jobLists')) {
+        // Caches the exact list returned for a given period selection
+        // (Day/Week/Month/Quarter) so switching periods while offline
+        // shows the right last-known view instead of whatever period
+        // happened to be fetched most recently.
+        db.createObjectStore('jobLists', { keyPath: 'periodKey' });
       }
       if (!db.objectStoreNames.contains('dayLog')) {
         db.createObjectStore('dayLog', { keyPath: 'date' }); // one per calendar date
@@ -44,12 +52,23 @@ export async function getDB() {
 
 // ---- Jobs cache -----------------------------------------------------------
 
-export async function cacheJobs(jobs) {
+/**
+ * Caches a fetched job list both individually (for job-detail offline
+ * fallback, keyed by appointment name) and as a whole (for the list
+ * screen's offline fallback, keyed by the selected period).
+ */
+export async function cacheJobs(periodKey, jobs) {
   const db = await getDB();
-  const tx = db.transaction('jobs', 'readwrite');
-  await tx.store.clear();
-  for (const job of jobs) await tx.store.put(job);
+  const tx = db.transaction(['jobs', 'jobLists'], 'readwrite');
+  for (const job of jobs) await tx.objectStore('jobs').put(job);
+  await tx.objectStore('jobLists').put({ periodKey, jobs, cachedAt: new Date().toISOString() });
   await tx.done;
+}
+
+export async function getCachedJobList(periodKey) {
+  const db = await getDB();
+  const record = await db.get('jobLists', periodKey);
+  return record?.jobs || [];
 }
 
 export async function getCachedJobs() {
