@@ -1,28 +1,131 @@
 {
  "actions": [],
- "allow_rename": 1,
+ "allow_rename": 0,
+ "autoname": "naming_series:",
  "creation": "2025-01-25 03:17:15.184684",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "name1"
+  "naming_series",
+  "service_appointment",
+  "service_order",
+  "customer",
+  "column_break_1",
+  "submitted_by",
+  "submitted_at",
+  "section_break_checklist",
+  "checklist",
+  "section_break_notes",
+  "technician_notes"
  ],
  "fields": [
   {
-   "fieldname": "name1",
+   "default": "SR-.YYYY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SR-.YYYY.-"
+  },
+  {
+   "fieldname": "service_appointment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Service Appointment",
+   "options": "Service Appointment",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "service_appointment.service_order",
+   "fieldname": "service_order",
+   "fieldtype": "Link",
+   "label": "Service Order",
+   "options": "Service Order",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "service_appointment.customer",
+   "fieldname": "customer",
    "fieldtype": "Data",
-   "label": "Name"
+   "in_list_view": 1,
+   "label": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "label": "Submitted By",
+   "options": "Service Technician",
+   "read_only": 1
+  },
+  {
+   "fieldname": "submitted_at",
+   "fieldtype": "Datetime",
+   "label": "Submitted At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_checklist",
+   "fieldtype": "Section Break",
+   "label": "Checklist"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist Items",
+   "options": "LCS Service Report Checklist Item"
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "label": "Technician Notes"
+  },
+  {
+   "fieldname": "technician_notes",
+   "fieldtype": "Small Text",
+   "label": "Technician Notes"
   }
  ],
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
  "links": [],
- "modified": "2025-01-25 03:17:27.417345",
+ "modified": "2026-07-10 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Report",
  "owner": "Administrator",
  "permissions": [
   {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Field Service User",
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Field Service Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
@@ -32,10 +135,13 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "service_appointment"
 }

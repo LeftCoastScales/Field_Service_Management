@@ -194,6 +194,53 @@ button {
   margin: 20px 0 8px;
 }
 
+.accordion-section {
+  margin-top: 16px;
+  border-bottom: 1px solid var(--lcs-border);
+}
+
+.accordion-header {
+  width: 100%;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--lcs-text-muted);
+  cursor: pointer;
+}
+
+.accordion-chevron {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--lcs-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.accordion-chevron.open {
+  transform: rotate(90deg);
+}
+
+.accordion-badge {
+  margin-left: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--lcs-gold);
+}
+
+.accordion-body {
+  padding-bottom: 16px;
+}
+
 .btn {
   min-height: var(--tap-min);
   border-radius: var(--radius);

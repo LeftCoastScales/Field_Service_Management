@@ -156,11 +156,30 @@ def get_job_detail(appointment: str) -> dict:
         "customer_notes": doc.get("customer_notes"),
         "internal_notes": doc.get("internal_notes"),
         "is_crew_leader": is_crew_leader,
-        # Parts list needs its real fieldname confirmed before wiring up —
-        # left as a safe default for now so this endpoint doesn't 500 on
-        # an unverified column.
-        "parts": [],
+        "parts": _parts_for_appointment(doc),
     }
+
+
+def _parts_for_appointment(doc) -> list[dict]:
+    """
+    Service Appointment.items (child doctype Service Order Item) carries
+    both services and parts — same table shape as Service Order, since
+    appointments are created from an order's line items. is_service
+    distinguishes labor lines from actual parts so the PWA can filter or
+    label them differently if it wants to.
+    """
+    return [
+        {
+            "item_code": row.item_code,
+            "item_name": row.item_name,
+            "qty": row.qty,
+            "uom": row.uom,
+            "rate": row.rate,
+            "amount": row.amount,
+            "is_service": bool(row.is_service),
+        }
+        for row in (doc.get("items") or [])
+    ]
 
 
 def _assert_assigned(appointment: str, service_technician: str) -> None:
@@ -208,6 +227,107 @@ def upload_job_photo() -> dict:
     })
     photo.insert(ignore_permissions=False)
     return {"file_url": file_doc.file_url, "photo_name": photo.name}
+
+
+# ---- Service Report (digital checklist) ------------------------------------
+# Folds the earlier standalone CSR/Service Report concept into the Tech PWA,
+# scoped to Service Appointment instead of Service Order so it lives
+# alongside everything else on the job detail screen. One Service Report per
+# appointment; checklist items are pre-populated from the
+# LCS Service Report Checklist Template matching the appointment's Service
+# Order's Service Type, if one exists. Photos are NOT duplicated here — the
+# PWA's existing LCS Appointment Photo flow (upload_job_photo, above) already
+# covers that.
+
+def _service_report_for_appointment(appointment: str):
+    """Returns the existing Service Report for this appointment, if any."""
+    name = frappe.db.get_value("Service Report", {"service_appointment": appointment}, "name")
+    return frappe.get_doc("Service Report", name) if name else None
+
+
+def _serialize_service_report(doc) -> dict:
+    return {
+        "name": doc.name,
+        "docstatus": doc.docstatus,
+        "technician_notes": doc.get("technician_notes"),
+        "submitted_at": doc.get("submitted_at"),
+        "checklist": [
+            {
+                "checklist_item": row.checklist_item,
+                "response": row.response,
+                "notes": row.notes,
+            }
+            for row in doc.get("checklist") or []
+        ],
+    }
+
+
+@frappe.whitelist()
+def get_service_report(appointment: str) -> dict:
+    """
+    Returns the Service Report for this appointment, creating a new draft
+    (with checklist pre-populated from the Service Type's template, if one
+    exists) the first time a technician opens the Service Report screen
+    for this job.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    doc = _service_report_for_appointment(appointment)
+    if not doc:
+        doc = frappe.get_doc({"doctype": "Service Report", "service_appointment": appointment})
+        doc.insert(ignore_permissions=True)  # validate() populates the checklist from the template
+
+    return _serialize_service_report(doc)
+
+
+def _apply_checklist_updates(doc, checklist, technician_notes: str | None) -> None:
+    if checklist is not None:
+        if isinstance(checklist, str):
+            checklist = frappe.parse_json(checklist)
+        responses_by_item = {row.get("checklist_item"): row for row in checklist}
+        for row in doc.checklist:
+            update = responses_by_item.get(row.checklist_item)
+            if update:
+                row.response = update.get("response") or row.response
+                row.notes = update.get("notes", row.notes)
+    if technician_notes is not None:
+        doc.technician_notes = technician_notes
+
+
+@frappe.whitelist()
+def save_service_report(appointment: str, checklist=None, technician_notes: str | None = None) -> dict:
+    """Saves in-progress checklist responses and notes without submitting."""
+    _assert_assigned(appointment, _current_service_technician())
+
+    doc = _service_report_for_appointment(appointment)
+    if not doc:
+        frappe.throw("No Service Report exists yet for this appointment — call get_service_report first.")
+    if doc.docstatus != 0:
+        frappe.throw("This Service Report has already been submitted and can no longer be edited here.")
+
+    _apply_checklist_updates(doc, checklist, technician_notes)
+    doc.save(ignore_permissions=True)
+    return _serialize_service_report(doc)
+
+
+@frappe.whitelist()
+def submit_service_report(appointment: str, checklist=None, technician_notes: str | None = None) -> dict:
+    """Applies any final checklist/notes edits, then submits — a Service
+    Report is a completed-job audit record once submitted, not a draft."""
+    service_technician = _current_service_technician()
+    _assert_assigned(appointment, service_technician)
+
+    doc = _service_report_for_appointment(appointment)
+    if not doc:
+        frappe.throw("No Service Report exists yet for this appointment — call get_service_report first.")
+    if doc.docstatus != 0:
+        frappe.throw("This Service Report has already been submitted.")
+
+    _apply_checklist_updates(doc, checklist, technician_notes)
+    doc.submitted_by = service_technician
+    doc.flags.ignore_permissions = True
+    doc.submit()
+    return _serialize_service_report(doc)
 
 
 @frappe.whitelist()

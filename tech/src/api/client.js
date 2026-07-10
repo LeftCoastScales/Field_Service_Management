@@ -87,3 +87,24 @@ export function uploadPhoto({ appointmentName, blob, caption }) {
 export function whoAmI() {
   return request('/api/method/frappe.auth.get_logged_user');
 }
+
+/** Fetches (or creates, on first open) the Service Report for an appointment. */
+export function getServiceReport(appointmentName) {
+  return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_service_report?appointment=${encodeURIComponent(appointmentName)}`);
+}
+
+/** Saves in-progress checklist responses/notes without submitting. */
+export function saveServiceReport({ appointmentName, checklist, technicianNotes }) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.save_service_report', {
+    method: 'POST',
+    body: { appointment: appointmentName, checklist, technician_notes: technicianNotes },
+  });
+}
+
+/** Applies final edits and submits the Service Report — no further edits after this. */
+export function submitServiceReport({ appointmentName, checklist, technicianNotes }) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.submit_service_report', {
+    method: 'POST',
+    body: { appointment: appointmentName, checklist, technician_notes: technicianNotes },
+  });
+}

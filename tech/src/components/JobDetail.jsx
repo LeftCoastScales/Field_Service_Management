@@ -4,6 +4,8 @@ import { getCachedJob } from '../db/offlineStore.js';
 import TimeTracker from './TimeTracker.jsx';
 import NotesEditor from './NotesEditor.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
+import ServiceReport from './ServiceReport.jsx';
+import AccordionSection from './AccordionSection.jsx';
 
 export default function JobDetail({ appointmentName, employee, capacity, onBack }) {
   const [job, setJob] = useState(null);
@@ -51,22 +53,37 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
         )}
       </div>
 
-      <div className="section-label">Time Tracking</div>
-      <TimeTracker employee={employee} jobRef={appointmentName} capacity={capacity} />
+      {job.instructions && (
+        <div className="card" style={{ borderColor: 'var(--lcs-gold)', background: 'var(--lcs-gold-tint)' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px', color: 'var(--lcs-gold)', marginBottom: 6 }}>
+            Job Instructions — from office/sales
+          </div>
+          <p style={{ fontSize: 14, margin: 0, whiteSpace: 'pre-wrap', color: 'var(--lcs-text)' }}>{job.instructions}</p>
+        </div>
+      )}
 
-      <div className="section-label">Job Notes</div>
-      <NotesEditor
-        appointmentName={appointmentName}
-        initialCustomerNotes={job.customer_notes}
-        initialInternalNotes={job.internal_notes}
-      />
+      <AccordionSection title="Time Tracking" defaultOpen>
+        <TimeTracker employee={employee} jobRef={appointmentName} capacity={capacity} />
+      </AccordionSection>
 
-      <div className="section-label">Photos</div>
-      <PhotoUpload appointmentName={appointmentName} />
+      <AccordionSection title="Job Notes">
+        <NotesEditor
+          appointmentName={appointmentName}
+          initialCustomerNotes={job.customer_notes}
+          initialInternalNotes={job.internal_notes}
+        />
+      </AccordionSection>
+
+      <AccordionSection title="Photos">
+        <PhotoUpload appointmentName={appointmentName} />
+      </AccordionSection>
+
+      <AccordionSection title="Service Report">
+        <ServiceReport appointmentName={appointmentName} />
+      </AccordionSection>
 
       {Array.isArray(job.parts) && job.parts.length > 0 && (
-        <>
-          <div className="section-label">Parts on Order</div>
+        <AccordionSection title="Parts on Order" badge={job.parts.length}>
           <div className="card">
             {job.parts.map((p, i) => (
               <div key={i} style={{ fontSize: 13.5, padding: '4px 0', borderBottom: i < job.parts.length - 1 ? '1px solid var(--lcs-border)' : 'none' }}>
@@ -74,7 +91,7 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
               </div>
             ))}
           </div>
-        </>
+        </AccordionSection>
       )}
     </div>
   );
