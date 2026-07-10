@@ -38,16 +38,15 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    rollupOptions: {
-      output: {
-        // Fixed, non-hashed names so www/tech.html can reference them
-        // without reading a manifest. Fine for an internal tool with a
-        // controlled release cadence; re-deploy = new content, same URL.
-        entryFileNames: 'tech.js',
-        chunkFileNames: 'tech-[name].js',
-        assetFileNames: (info) => (info.name?.endsWith('.css') ? 'tech.css' : '[name][extname]'),
-      },
-    },
+    // Hashed filenames + Vite's build manifest — NOT fixed names. Frappe
+    // serves /assets/... with long-lived cache headers on the assumption
+    // that a filename change means the content changed; hashed filenames
+    // are what make that assumption true. tech.py reads this manifest
+    // (copied to www/tech/asset-manifest.json at deploy time) to resolve
+    // the current filenames, and tech.html renders them via Jinja
+    // ({{ tech_js }} / {% for css_file in tech_css %}) — so nothing here
+    // needs to be hardcoded anywhere else after a rebuild.
+    manifest: 'asset-manifest.json',
   },
   server: {
     proxy: {
