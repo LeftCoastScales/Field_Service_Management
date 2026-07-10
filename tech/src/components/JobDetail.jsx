@@ -5,6 +5,7 @@ import TimeTracker from './TimeTracker.jsx';
 import NotesEditor from './NotesEditor.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import ServiceReport from './ServiceReport.jsx';
+import PartsSection from './PartsSection.jsx';
 import AccordionSection from './AccordionSection.jsx';
 
 export default function JobDetail({ appointmentName, employee, capacity, onBack }) {
@@ -82,17 +83,9 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
         <ServiceReport appointmentName={appointmentName} />
       </AccordionSection>
 
-      {Array.isArray(job.parts) && job.parts.length > 0 && (
-        <AccordionSection title="Parts on Order" badge={job.parts.length}>
-          <div className="card">
-            {job.parts.map((p, i) => (
-              <div key={i} style={{ fontSize: 13.5, padding: '4px 0', borderBottom: i < job.parts.length - 1 ? '1px solid var(--lcs-border)' : 'none' }}>
-                {p.item_name} × {p.qty}
-              </div>
-            ))}
-          </div>
-        </AccordionSection>
-      )}
+      <AccordionSection title="Parts on Order" badge={job.parts?.length || null}>
+        <PartsSection appointmentName={appointmentName} initialParts={job.parts} />
+      </AccordionSection>
     </div>
   );
 }

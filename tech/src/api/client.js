@@ -88,6 +88,19 @@ export function whoAmI() {
   return request('/api/method/frappe.auth.get_logged_user');
 }
 
+/** Item search for the Add Part picker. */
+export function searchItems(query) {
+  return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.search_items?query=${encodeURIComponent(query)}`);
+}
+
+/** Adds a part/item to the appointment. Online-only — no offline queue. */
+export function addPartToAppointment({ appointmentName, itemCode, qty }) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.add_part_to_appointment', {
+    method: 'POST',
+    body: { appointment: appointmentName, item_code: itemCode, qty },
+  });
+}
+
 /** Fetches (or creates, on first open) the Service Report for an appointment. */
 export function getServiceReport(appointmentName) {
   return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_service_report?appointment=${encodeURIComponent(appointmentName)}`);

@@ -197,7 +197,13 @@ def search_items(query: str) -> list[dict]:
     if not query or len(query) < 2:
         return []
 
-    items = frappe.get_list(
+    # frappe.get_all, not get_list: Field Service User has no read grant
+    # on Item (checked — there isn't even a fixture wiring Custom DocPerm
+    # into hooks.py for this app, so that's not a quick permission-only
+    # fix either). Item master data isn't sensitive per-row, and the
+    # actual authorization boundary here is _assert_assigned() on the
+    # write side (add_part_to_appointment), not this search.
+    items = frappe.get_all(
         "Item",
         filters={"disabled": 0},
         or_filters=[
