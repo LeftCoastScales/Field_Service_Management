@@ -12,7 +12,7 @@ the coding-style guide's security rules — never frappe.get_all here.
 from __future__ import annotations
 
 import frappe
-from frappe.utils import now_datetime, nowdate, get_datetime
+from frappe.utils import now_datetime, nowdate, get_datetime, flt
 
 
 def _current_employee() -> str:
@@ -180,6 +180,74 @@ def _parts_for_appointment(doc) -> list[dict]:
         }
         for row in (doc.get("items") or [])
     ]
+
+
+def _is_service_item_group(item_group: str | None) -> bool:
+    return (item_group or "").strip().lower() in {"service", "services"}
+
+
+@frappe.whitelist()
+def search_items(query: str) -> list[dict]:
+    """
+    Item search for the Tech PWA's Add Part picker. Deliberately not
+    scoped to a "parts" item group — a tech might reasonably need to add
+    an extra service/labor line too, same flexibility Service Order
+    already has on the Desk side.
+    """
+    if not query or len(query) < 2:
+        return []
+
+    items = frappe.get_list(
+        "Item",
+        filters={"disabled": 0},
+        or_filters=[
+            ["item_code", "like", f"%{query}%"],
+            ["item_name", "like", f"%{query}%"],
+        ],
+        fields=["item_code", "item_name", "item_group", "standard_rate", "stock_uom"],
+        limit_page_length=20,
+        order_by="item_name asc",
+    )
+    for item in items:
+        item["is_service"] = _is_service_item_group(item.get("item_group"))
+    return items
+
+
+@frappe.whitelist()
+def add_part_to_appointment(appointment: str, item_code: str, qty: float = 1) -> dict:
+    """
+    Adds a part (or service line) to the appointment's items table from
+    the field. Online-only for now, same scope limitation as the Service
+    Report — this doesn't queue into the offline mutation outbox, so it
+    needs a live connection to succeed.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    item = frappe.db.get_value(
+        "Item", item_code, ["item_name", "item_group", "standard_rate", "stock_uom"], as_dict=True
+    )
+    if not item:
+        frappe.throw(f"Item {item_code} not found.")
+
+    qty = flt(qty) or 1
+    rate = flt(item.standard_rate)
+
+    doc = frappe.get_doc("Service Appointment", appointment)
+    doc.append(
+        "items",
+        {
+            "item_code": item_code,
+            "item_name": item.item_name,
+            "qty": qty,
+            "uom": item.stock_uom,
+            "rate": rate,
+            "amount": rate * qty,
+            "is_service": bool(_is_service_item_group(item.item_group)),
+        },
+    )
+    doc.save(ignore_permissions=True)  # allow_on_submit=1 on items — works whether Open or already Scheduled/In Progress
+
+    return {"parts": _parts_for_appointment(doc)}
 
 
 def _assert_assigned(appointment: str, service_technician: str) -> None:
