@@ -303,7 +303,14 @@ def _assert_assigned(appointment: str, service_technician: str) -> None:
         "Service Technician Item", {"parent": appointment, "service_technician": service_technician}
     )
     if not assigned:
-        frappe.throw("You are not assigned to this appointment.", frappe.PermissionError)
+        # TEMPORARY: includes the actual received values in the error so we
+        # can see exactly what this specific call got, without digging
+        # through the Payload tab. Revert once the mystery's solved.
+        frappe.throw(
+            f"You are not assigned to this appointment. "
+            f"[debug: appointment={appointment!r}, service_technician={service_technician!r}]",
+            frappe.PermissionError,
+        )
 
 
 @frappe.whitelist()
