@@ -189,7 +189,11 @@ class ServiceAppointment(Document):
 		if self.service_order:
 			order = frappe.get_doc("Service Order", self.service_order)
 			order.status = "Scheduled"
-			order.save()
+			# ignore_permissions: this runs automatically on every submit,
+			# regardless of who's submitting — a field technician has no
+			# direct role permission on Service Order, and shouldn't need
+			# one just for this automated status sync to go through.
+			order.save(ignore_permissions=True)
 
 	def update_service_order_status(self):
 		if not self.service_order:
@@ -205,7 +209,12 @@ class ServiceAppointment(Document):
 
 		if self.status in status_mapping:
 			order.status = status_mapping[self.status]
-			order.save()
+			# ignore_permissions: same reasoning as set_service_order_status
+			# above — this runs on every save of an already-submitted
+			# appointment (before_update_after_submit), including from
+			# Field Service User accounts with no direct Service Order
+			# permission. This is what add_part_to_appointment hit.
+			order.save(ignore_permissions=True)
 
 	def cancel_linked_order(self):
 		if not self.service_order:
@@ -213,7 +222,8 @@ class ServiceAppointment(Document):
 		order = frappe.get_doc("Service Order", self.service_order)
 		order.status = "Open"
 		self.service_order = ""
-		order.save()
+		# ignore_permissions: same reasoning as above
+		order.save(ignore_permissions=True)
 
 
 @frappe.whitelist()
