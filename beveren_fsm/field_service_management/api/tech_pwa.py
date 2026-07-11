@@ -432,7 +432,14 @@ def submit_service_report(appointment: str, checklist=None, technician_notes: st
 
 
 @frappe.whitelist()
-def submit_time_action(action_type: str, at: str, job_ref: str | None = None, employee: str | None = None) -> dict:
+def submit_time_action(
+    action_type: str,
+    at: str,
+    job_ref: str | None = None,
+    employee: str | None = None,
+    reason: str | None = None,
+    duration_minutes: int | None = None,
+) -> dict:
     """
     Reconciles one chained-logic time tracking action against the
     technician's LCS Tech Day Log for `at`'s calendar date. Validation
@@ -482,6 +489,23 @@ def submit_time_action(action_type: str, at: str, job_ref: str | None = None, em
     # Submit Inspection and Leave both hand off into Travel.
     if action_type in ("SUBMIT_INSPECTION", "LEAVE"):
         log.append("segments", {"segment_type": "Travel", "start_time": at})
+
+    # Job pause: record the reason immediately (at PAUSE_JOB time); the
+    # elapsed minutes arrive later with RESUME_JOB, once the device knows
+    # the exact duration.
+    if action_type == "PAUSE_JOB" and open_segment and reason:
+        open_segment.pause_reason = (
+            f"{open_segment.pause_reason}; {reason}" if open_segment.pause_reason else reason
+        )
+
+    if action_type == "RESUME_JOB" and open_segment and duration_minutes:
+        open_segment.pause_minutes = (open_segment.pause_minutes or 0) + duration_minutes
+
+    # Lunch minutes: previously computed client-side but never actually
+    # persisted here despite the field existing on the child table —
+    # fixed alongside the new pause tracking above.
+    if action_type == "LUNCH_IN" and open_segment and duration_minutes:
+        open_segment.lunch_minutes = (open_segment.lunch_minutes or 0) + duration_minutes
 
     if action_type == "END_DAY":
         log.day_state = "Ended"

@@ -297,6 +297,7 @@ button {
 .tracker-banner.prep { background: var(--lcs-gold); color: var(--lcs-navy); }
 .tracker-banner.shop { background: var(--lcs-navy); }
 .tracker-banner.lunch { background: #8a6d00; }
+.tracker-banner.paused { background: var(--lcs-crimson); }
 .tracker-banner.not-started { background: var(--lcs-text-muted); }
 .tracker-banner.ended { background: #3a4556; }
 

@@ -10,6 +10,7 @@ import {
 } from '../state/timeTrackingMachine.js';
 import { loadDayLog, saveDayLog, enqueueMutation } from '../db/offlineStore.js';
 import ClockCorrectionModal from './ClockCorrectionModal.jsx';
+import PauseJobModal from './PauseJobModal.jsx';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -28,6 +29,7 @@ const BANNER_LABEL = {
  */
 export default function TimeTracker({ employee, jobRef = null, capacity = 'light', onChanged }) {
   const [dayLog, setDayLog] = useState(null);
+  const [pauseModalOpen, setPauseModalOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -47,10 +49,21 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
     const { dayLog: next, result } = applyAction(dayLog, { type, at: new Date().toISOString(), jobRef, ...extra });
     await persist(next);
     if (result.ok && type !== ACTIONS.CORRECT_ARRIVAL) {
-      await enqueueMutation({
-        type: 'TIME_ACTION',
-        payload: { action_type: type, at: new Date().toISOString(), job_ref: jobRef, employee },
-      });
+      const payload = { action_type: type, at: new Date().toISOString(), job_ref: jobRef, employee, ...extra };
+
+      // RESUME_JOB/LUNCH_IN close out a break — compute its exact duration
+      // here (the device has precise start/end) so the server doesn't
+      // have to reconstruct timing from two separate PAUSE/RESUME calls.
+      if (type === ACTIONS.RESUME_JOB || type === ACTIONS.LUNCH_IN) {
+        const openSeg = next.segments[next.segments.length - 1];
+        const list = type === ACTIONS.RESUME_JOB ? (openSeg.pauses || []) : openSeg.lunchBreaks;
+        const last = list[list.length - 1];
+        if (last?.end) {
+          payload.duration_minutes = Math.round((new Date(last.end) - new Date(last.start)) / 60000);
+        }
+      }
+
+      await enqueueMutation({ type: 'TIME_ACTION', payload });
     }
     return result;
   }, [dayLog, jobRef, persist, employee]);
@@ -64,9 +77,11 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
     ? 'not-started'
     : ctx.dayState === DAY_STATES.ENDED
       ? 'ended'
-      : ctx.onLunch
-        ? 'lunch'
-        : (ctx.openSegmentType || 'not-started').toLowerCase();
+      : ctx.onJobPause
+        ? 'paused'
+        : ctx.onLunch
+          ? 'lunch'
+          : (ctx.openSegmentType || 'not-started').toLowerCase();
 
   const bannerLabel = ctx.pendingCorrection
     ? 'Correction needed'
@@ -74,9 +89,11 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
       ? 'Not clocked in'
       : ctx.dayState === DAY_STATES.ENDED
         ? 'Day ended'
-        : ctx.onLunch
-          ? 'On lunch'
-          : BANNER_LABEL[ctx.openSegmentType] || '—';
+        : ctx.onJobPause
+          ? `Paused — ${ctx.currentPauseReason}`
+          : ctx.onLunch
+            ? 'On lunch'
+            : BANNER_LABEL[ctx.openSegmentType] || '—';
 
   const handleCorrection = async (correctedArrivalAt) => {
     await dispatch(ACTIONS.CORRECT_ARRIVAL, { correctedArrivalAt });
@@ -110,12 +127,12 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
               Clock In (Arrive at Job)
             </button>
           )}
-          {atThisJob && (
+          {atThisJob && !ctx.onJobPause && (
             <button className="btn btn-danger btn-full" onClick={() => dispatch(ACTIONS.LEAVE)}>
               Clock Out (Complete Job)
             </button>
           )}
-          {atThisJob && !ctx.onLunch && (
+          {atThisJob && !ctx.onLunch && !ctx.onJobPause && (
             <button className="btn btn-outline btn-full" onClick={() => dispatch(ACTIONS.LUNCH_OUT)}>
               Clock Out for Lunch
             </button>
@@ -123,6 +140,16 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           {atThisJob && ctx.onLunch && (
             <button className="btn btn-gold btn-full" onClick={() => dispatch(ACTIONS.LUNCH_IN)}>
               Clock In from Lunch
+            </button>
+          )}
+          {atThisJob && !ctx.onLunch && !ctx.onJobPause && (
+            <button className="btn btn-outline btn-full" onClick={() => setPauseModalOpen(true)}>
+              Pause Job
+            </button>
+          )}
+          {atThisJob && ctx.onJobPause && (
+            <button className="btn btn-gold btn-full" onClick={() => dispatch(ACTIONS.RESUME_JOB)}>
+              Resume Job
             </button>
           )}
           {openElsewhere && (
@@ -194,6 +221,15 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           next.pendingCorrection = null;
           await persist(next);
         }}
+      />
+
+      <PauseJobModal
+        open={pauseModalOpen}
+        onConfirm={async (reason) => {
+          setPauseModalOpen(false);
+          await dispatch(ACTIONS.PAUSE_JOB, { reason });
+        }}
+        onCancel={() => setPauseModalOpen(false)}
       />
     </div>
   );

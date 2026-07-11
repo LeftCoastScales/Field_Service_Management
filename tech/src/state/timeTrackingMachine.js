@@ -25,6 +25,8 @@ export const ACTIONS = {
   LEAVE: 'LEAVE',                             // Clock out of job or shop -> ends Onsite/Shop, begins Travel
   LUNCH_OUT: 'LUNCH_OUT',                     // Pause active segment
   LUNCH_IN: 'LUNCH_IN',                       // Resume active segment
+  PAUSE_JOB: 'PAUSE_JOB',                     // Pause an open Onsite segment for a given reason (parts, customer, etc.)
+  RESUME_JOB: 'RESUME_JOB',                   // Resume from a job pause
   END_DAY: 'END_DAY',                         // Terminate all tracking
   CORRECT_ARRIVAL: 'CORRECT_ARRIVAL',         // Manual entry supplied after a missing-clock-in flag
 };
@@ -56,6 +58,19 @@ function isPaused(segment) {
   if (!segment) return false;
   const last = segment.lunchBreaks[segment.lunchBreaks.length - 1];
   return !!(last && !last.end);
+}
+
+/** Job-specific pause (parts, customer not home, etc.) — distinct from lunch. */
+function isJobPaused(segment) {
+  if (!segment) return false;
+  const pauses = segment.pauses || [];
+  const last = pauses[pauses.length - 1];
+  return !!(last && !last.end);
+}
+
+/** True if the open segment is paused for any reason (lunch or job pause) — used to block Arrive/Leave/End Day/Submit Inspection until resumed. */
+function onAnyBreak(segment) {
+  return isPaused(segment) || isJobPaused(segment);
 }
 
 /** Creates a fresh, empty day log for a technician/date. */
@@ -106,7 +121,7 @@ export function applyAction(dayLog, action) {
       if (!open || open.type !== SEGMENT_TYPES.PREP) {
         return fail(log, 'No open inspection/prep segment to submit.');
       }
-      if (isPaused(open)) return fail(log, 'Resume from lunch before submitting inspection.');
+      if (onAnyBreak(open)) return fail(log, 'Resume from lunch/pause before submitting inspection.');
       open.end = at;
       log.segments.push(newSegment(SEGMENT_TYPES.TRAVEL, null, at));
       return ok(log);
@@ -128,7 +143,7 @@ export function applyAction(dayLog, action) {
       if (open && open.type === SEGMENT_TYPES.PREP) {
         return fail(log, 'Submit truck inspection before clocking in at a job or shop.');
       }
-      if (isPaused(open)) return fail(log, 'Resume from lunch before clocking in.');
+      if (onAnyBreak(open)) return fail(log, 'Resume from lunch/pause before clocking in.');
       if (open) open.end = at; // close Travel (or nothing open at all is fine too)
       const type = action.jobRef ? SEGMENT_TYPES.ONSITE : SEGMENT_TYPES.SHOP;
       log.segments.push(newSegment(type, action.jobRef ?? null, at));
@@ -146,7 +161,7 @@ export function applyAction(dayLog, action) {
         };
         return { dayLog: log, result: { ok: false, needsCorrection: true, message: log.pendingCorrection.message } };
       }
-      if (isPaused(open)) return fail(log, 'Resume from lunch before clocking out.');
+      if (onAnyBreak(open)) return fail(log, 'Resume from lunch/pause before clocking out.');
       open.end = at;
       log.segments.push(newSegment(SEGMENT_TYPES.TRAVEL, null, at));
       return ok(log);
@@ -184,6 +199,7 @@ export function applyAction(dayLog, action) {
     case ACTIONS.LUNCH_OUT: {
       if (!open) return fail(log, 'No active segment to pause.');
       if (isPaused(open)) return fail(log, 'Already on lunch.');
+      if (isJobPaused(open)) return fail(log, 'Resume the job before going to lunch.');
       open.lunchBreaks.push({ start: at, end: null });
       return ok(log);
     }
@@ -191,6 +207,26 @@ export function applyAction(dayLog, action) {
     case ACTIONS.LUNCH_IN: {
       if (!open || !isPaused(open)) return fail(log, 'Not currently on lunch.');
       open.lunchBreaks[open.lunchBreaks.length - 1].end = at;
+      return ok(log);
+    }
+
+    case ACTIONS.PAUSE_JOB: {
+      if (!open || open.type !== SEGMENT_TYPES.ONSITE) {
+        return fail(log, 'Pausing only applies while clocked in at a job.');
+      }
+      if (isPaused(open)) return fail(log, 'Resume from lunch before pausing the job.');
+      if (isJobPaused(open)) return fail(log, 'Already paused.');
+      if (!action.reason || !action.reason.trim()) {
+        return fail(log, 'A reason is required to pause a job.');
+      }
+      if (!open.pauses) open.pauses = []; // backward-compat: segments created before this feature shipped
+      open.pauses.push({ reason: action.reason.trim(), start: at, end: null });
+      return ok(log);
+    }
+
+    case ACTIONS.RESUME_JOB: {
+      if (!open || !isJobPaused(open)) return fail(log, 'Not currently paused.');
+      open.pauses[open.pauses.length - 1].end = at;
       return ok(log);
     }
 
@@ -202,7 +238,7 @@ export function applyAction(dayLog, action) {
       if (open.type === SEGMENT_TYPES.PREP) {
         return fail(log, 'Submit truck inspection before ending the day.');
       }
-      if (isPaused(open)) return fail(log, 'Resume from lunch before ending the day.');
+      if (onAnyBreak(open)) return fail(log, 'Resume from lunch/pause before ending the day.');
       open.end = at;
       log.dayState = DAY_STATES.ENDED;
       return ok(log);
@@ -221,6 +257,7 @@ function newSegment(type, jobRef, start) {
     start,
     end: null,
     lunchBreaks: [],
+    pauses: [],
     flaggedForReview: false,
   };
 }
@@ -239,10 +276,14 @@ function fail(log, message) {
 /** What the UI should currently show as the primary action. */
 export function currentContext(dayLog) {
   const open = openSegment(dayLog);
+  const jobPaused = isJobPaused(open);
+  const openPauses = open?.pauses || [];
   return {
     dayState: dayLog.dayState,
     openSegmentType: open ? open.type : null,
     onLunch: isPaused(open),
+    onJobPause: jobPaused,
+    currentPauseReason: jobPaused ? openPauses[openPauses.length - 1].reason : null,
     pendingCorrection: dayLog.pendingCorrection,
     activeJobRef: open && (open.type === SEGMENT_TYPES.ONSITE) ? open.jobRef : null,
   };
@@ -258,17 +299,22 @@ function minutesBetween(startISO, endISO) {
  * open are excluded from totals (use `asOf` to compute a live in-progress total).
  */
 export function summarizeDay(dayLog, asOf = new Date().toISOString()) {
-  const totals = { travel: 0, prep: 0, onsite: 0, shop: 0, lunch: 0, flagged: 0 };
+  const totals = { travel: 0, prep: 0, onsite: 0, shop: 0, lunch: 0, paused: 0, flagged: 0 };
   for (const seg of dayLog.segments) {
     const end = seg.end || asOf;
     let lunchMinutes = 0;
     for (const lb of seg.lunchBreaks) {
       lunchMinutes += minutesBetween(lb.start, lb.end || asOf);
     }
+    let pauseMinutes = 0;
+    for (const p of seg.pauses || []) {
+      pauseMinutes += minutesBetween(p.start, p.end || asOf);
+    }
     const gross = minutesBetween(seg.start, end);
-    const net = Math.max(0, gross - lunchMinutes);
+    const net = Math.max(0, gross - lunchMinutes - pauseMinutes);
     totals[seg.type.toLowerCase()] += net;
     totals.lunch += lunchMinutes;
+    totals.paused += pauseMinutes;
     if (seg.flaggedForReview) totals.flagged += 1;
   }
   const worked = totals.prep + totals.onsite + totals.shop; // travel is paid too, tracked separately for analytics

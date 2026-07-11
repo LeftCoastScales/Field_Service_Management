@@ -99,6 +99,31 @@ export default function App() {
           <div>
             <h2 style={{ fontSize: 18, margin: '4px 0 12px' }}>My Day</h2>
             <TimeTracker employee={employee} capacity={capacity} />
+
+            <div className="section-label" style={{ marginTop: 20 }}>Truck Check</div>
+            <div className="card">
+              <p style={{ fontSize: 13, color: 'var(--lcs-text-muted)', marginTop: 0, marginBottom: 10 }}>
+                Opens the full vehicle inspection form in a new tab — pick whichever applies to what you're driving today.
+              </p>
+              <div className="action-row two-col">
+                <a
+                  href="/vehicle-inspection/dot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-outline btn-full"
+                >
+                  DOT Inspection
+                </a>
+                <a
+                  href="/vehicle-inspection/light"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-outline btn-full"
+                >
+                  Light Vehicle
+                </a>
+              </div>
+            </div>
           </div>
         )}
       </main>
