@@ -15,6 +15,48 @@ import frappe
 from frappe.utils import now_datetime, nowdate, get_datetime, flt
 
 
+@frappe.whitelist()
+def debug_technician_resolution(appointment: str | None = None) -> dict:
+    """
+    TEMPORARY diagnostic — safe to remove once the add_part_to_appointment
+    "not assigned" mystery is resolved. Returns what the server actually
+    resolves at each step, without throwing, so we can see directly
+    instead of guessing from a stack trace.
+    """
+    result = {"session_user": frappe.session.user}
+
+    employees = frappe.get_all("Employee", filters={"user_id": frappe.session.user}, fields=["name", "status"])
+    result["matching_employees"] = employees
+
+    technicians = []
+    for emp in employees:
+        technicians += frappe.get_all(
+            "Service Technician", filters={"employee": emp.name}, fields=["name", "employee"]
+        )
+    result["matching_service_technicians"] = technicians
+
+    try:
+        result["_current_employee_resolves_to"] = _current_employee()
+    except Exception as e:
+        result["_current_employee_error"] = str(e)
+
+    try:
+        result["_current_service_technician_resolves_to"] = _current_service_technician()
+    except Exception as e:
+        result["_current_service_technician_error"] = str(e)
+
+    if appointment:
+        result["appointment_checked"] = appointment
+        assigned_rows = frappe.get_all(
+            "Service Technician Item",
+            filters={"parent": appointment},
+            fields=["service_technician", "parent", "parenttype"],
+        )
+        result["all_technicians_on_this_appointment"] = assigned_rows
+
+    return result
+
+
 def _current_employee() -> str:
     employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
     if not employee:
