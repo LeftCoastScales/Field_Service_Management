@@ -44,6 +44,23 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
         <div className="job-status" style={{ marginBottom: 8, display: 'inline-block' }}>{job.status}</div>
         <div className="job-customer" style={{ fontSize: 19 }}>{job.customer_name}</div>
         <div className="job-address">{job.site_address}</div>
+        {job.reference_numbers && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--lcs-border)' }}>
+            {[
+              ['Service Call #', job.reference_numbers.service_call],
+              ['Service Quote #', job.reference_numbers.service_quotation],
+              ['Service Order #', job.reference_numbers.service_order],
+              ['Service Appointment #', job.reference_numbers.service_appointment],
+            ]
+              .filter(([, value]) => value)
+              .map(([label, value]) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 3 }}>
+                  <span style={{ color: 'var(--lcs-text-muted)' }}>{label}</span>
+                  <span>{value}</span>
+                </div>
+              ))}
+          </div>
+        )}
         {mapsUrl && (
           <a href={mapsUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-full" style={{ marginTop: 10 }}>
             Open in Maps

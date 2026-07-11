@@ -151,6 +151,7 @@ export default function JobList({ onSelectJob }) {
               </div>
               <div className="job-customer">{job.customer_name}</div>
               <div className="job-address">{job.site_address}</div>
+              <div style={{ fontSize: 11, color: 'var(--lcs-text-muted)', marginTop: 4 }}>{job.name}</div>
               {job.is_crew_leader ? (
                 <div style={{ marginTop: 6, fontSize: 11, fontWeight: 700, color: 'var(--lcs-crimson)' }}>CREW LEADER</div>
               ) : null}

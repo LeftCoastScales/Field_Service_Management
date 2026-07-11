@@ -157,7 +157,34 @@ def get_job_detail(appointment: str) -> dict:
         "internal_notes": doc.get("internal_notes"),
         "is_crew_leader": is_crew_leader,
         "parts": _parts_for_appointment(doc),
+        "reference_numbers": _reference_numbers_for_appointment(doc),
     }
+
+
+def _reference_numbers_for_appointment(doc) -> dict:
+    """
+    The full document chain a job can be traced through: Service Request
+    (what LCS staff call a "Service Call") -> Service Quotation ->
+    Service Order -> this Service Appointment. Any of the upstream links
+    may be blank depending on how the job originated (e.g. an order
+    created directly with no prior quote or call), so this only
+    includes whichever are actually set.
+    """
+    numbers = {"service_appointment": doc.name}
+
+    service_order = doc.get("service_order")
+    if service_order:
+        numbers["service_order"] = service_order
+        order_refs = frappe.db.get_value(
+            "Service Order", service_order, ["service_quotation", "service_request"], as_dict=True
+        )
+        if order_refs:
+            if order_refs.service_quotation:
+                numbers["service_quotation"] = order_refs.service_quotation
+            if order_refs.service_request:
+                numbers["service_call"] = order_refs.service_request  # "Service Call" is LCS's name for Service Request
+
+    return numbers
 
 
 def _parts_for_appointment(doc) -> list[dict]:
