@@ -84,6 +84,32 @@ export function uploadPhoto({ appointmentName, blob, caption }) {
   });
 }
 
+/**
+ * Frappe error responses are a JSON body with either a top-level
+ * "message", or a "_server_messages" field (a JSON-stringified array of
+ * JSON-stringified {message, indicator, ...} objects — yes, double
+ * encoded). This pulls out the actual human-readable text instead of
+ * showing a generic "something went wrong" that hides what the server
+ * actually said.
+ */
+export function extractErrorMessage(err, fallback = 'Something went wrong — try again.') {
+  try {
+    const body = JSON.parse(err.detail || '');
+    if (body._server_messages) {
+      const messages = JSON.parse(body._server_messages);
+      if (messages.length) {
+        const first = JSON.parse(messages[0]);
+        if (first.message) return first.message;
+      }
+    }
+    if (body.message) return body.message;
+    if (body.exc_type) return `${body.exc_type}: ${fallback}`;
+  } catch {
+    // response wasn't the shape we expected — fall through to fallback
+  }
+  return fallback;
+}
+
 export function whoAmI() {
   return request('/api/method/frappe.auth.get_logged_user');
 }

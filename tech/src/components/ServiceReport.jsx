@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import * as api from '../api/client.js';
+import { extractErrorMessage } from '../api/client.js';
 
 const RESPONSES = ['Pass', 'Fail', 'N/A'];
 
@@ -36,9 +37,9 @@ export default function ServiceReport({ appointmentName }) {
       setReport(res.message);
     } catch (err) {
       setError(
-        navigator.onLine
-          ? 'Could not load the Service Report — try again.'
-          : 'Service Report needs a connection — try again once you\u2019re back online.'
+        !navigator.onLine
+          ? 'Service Report needs a connection — try again once you\u2019re back online.'
+          : extractErrorMessage(err, 'Could not load the Service Report — try again.')
       );
     } finally {
       setLoading(false);
@@ -81,7 +82,7 @@ export default function ServiceReport({ appointmentName }) {
       });
       setReport(res.message);
     } catch (err) {
-      setError('Could not save — try again.');
+      setError(extractErrorMessage(err, 'Could not save — try again.'));
     } finally {
       setSaving(false);
     }
@@ -104,7 +105,7 @@ export default function ServiceReport({ appointmentName }) {
       });
       setReport(res.message);
     } catch (err) {
-      setError('Could not submit — try again.');
+      setError(extractErrorMessage(err, 'Could not submit — try again.'));
     } finally {
       setSaving(false);
     }

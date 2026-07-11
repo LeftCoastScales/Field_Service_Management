@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as api from '../api/client.js';
+import { extractErrorMessage } from '../api/client.js';
 
 /**
  * Parts on Order. Existing rows come from whatever the office already
@@ -34,7 +35,7 @@ export default function PartsSection({ appointmentName, initialParts }) {
         setError(null);
       } catch (err) {
         setResults([]);
-        setError('Search failed — try again.');
+        setError(extractErrorMessage(err, 'Search failed — try again.'));
       } finally {
         setSearching(false);
       }
@@ -64,9 +65,9 @@ export default function PartsSection({ appointmentName, initialParts }) {
       setQty(1);
     } catch (err) {
       setError(
-        navigator.onLine
-          ? 'Could not add that part — try again.'
-          : "Adding parts needs a connection — try again once you're back online."
+        !navigator.onLine
+          ? "Adding parts needs a connection — try again once you're back online."
+          : extractErrorMessage(err, 'Could not add that part — try again.')
       );
     } finally {
       setAdding(false);
