@@ -290,6 +290,24 @@ export function currentContext(dayLog) {
 }
 
 /** Minutes helper (rounded to nearest minute). */
+/**
+ * Formats a Date as "YYYY-MM-DDTHH:MM:SS" in LOCAL time — no UTC 'Z'
+ * suffix. This is what must be sent to the server for anything that
+ * becomes a Frappe Datetime value (segment start/end, corrected arrival
+ * times, etc.). Frappe stores Datetime fields naively — no timezone
+ * conversion — so sending new Date().toISOString() (always UTC) would
+ * have the server treat those UTC numbers as if they were already the
+ * technician's local wall-clock time, silently shifting every stored
+ * timestamp by the browser's UTC offset. The 'T' separator (not a
+ * space) matters too: a string with no 'Z'/offset and a 'T' is reliably
+ * parsed as local time by `new Date()` across browsers, including
+ * Safari/iOS, unlike space-separated non-ISO formats.
+ */
+export function toLocalDatetimeString(date) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 function minutesBetween(startISO, endISO) {
   return Math.round((new Date(endISO) - new Date(startISO)) / 60000);
 }

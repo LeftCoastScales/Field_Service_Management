@@ -14,8 +14,14 @@ export default function ClockCorrectionModal({ pendingCorrection, onSubmit, onCa
   if (!pendingCorrection) return null;
 
   const handleSubmit = () => {
-    const iso = new Date(value).toISOString();
-    onSubmit(iso);
+    // `value` is already the technician's local wall-clock entry (that's
+    // what a datetime-local input gives you) — reformat directly rather
+    // than round-tripping through new Date(value).toISOString(), which
+    // would convert to UTC and reintroduce the same bug fixed in
+    // TimeTracker.jsx's dispatch(): the server stores Datetime values
+    // naively, so a UTC string gets treated as if it were already local.
+    const local = value.length === 16 ? `${value}:00` : value; // add seconds if the input omitted them
+    onSubmit(local);
   };
 
   return (

@@ -7,6 +7,7 @@ import {
   createDayLog,
   currentContext,
   summarizeDay,
+  toLocalDatetimeString,
 } from '../state/timeTrackingMachine.js';
 import { loadDayLog, saveDayLog, enqueueMutation } from '../db/offlineStore.js';
 import * as api from '../api/client.js';
@@ -15,7 +16,16 @@ import ClockCorrectionModal from './ClockCorrectionModal.jsx';
 import PauseJobModal from './PauseJobModal.jsx';
 import SendReportModal from './SendReportModal.jsx';
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+// Local calendar date, NOT UTC — new Date().toISOString() would return the
+// UTC date, which drifts from the technician's actual workday for hours
+// at a time in any timezone behind UTC (all of them, for LCS). This is
+// what "day" means for a day log: the technician's own calendar day, not
+// a UTC one that flips over at an arbitrary time relative to their shift.
+const todayISO = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
 const BANNER_LABEL = {
   [SEGMENT_TYPES.TRAVEL]: 'Traveling',
@@ -52,10 +62,20 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
 
   const dispatch = useCallback(async (type, extra = {}) => {
     if (!dayLog) return;
-    const { dayLog: next, result } = applyAction(dayLog, { type, at: new Date().toISOString(), jobRef, ...extra });
+    const now = new Date();
+    const { dayLog: next, result } = applyAction(dayLog, { type, at: now.toISOString(), jobRef, ...extra });
     await persist(next);
     if (result.ok) {
-      const payload = { action_type: type, at: new Date().toISOString(), job_ref: jobRef, employee };
+      const payload = {
+        action_type: type,
+        // Local wall-clock time, NOT UTC — see toLocalDatetimeString for
+        // why. This is what becomes the segment's stored start_time/
+        // end_time in Frappe.
+        at: toLocalDatetimeString(now),
+        job_ref: jobRef,
+        employee,
+        log_date: todayISO(),
+      };
 
       if (type === ACTIONS.CORRECT_ARRIVAL) {
         // Previously this action was never synced at all — a flagged

@@ -541,12 +541,29 @@ def submit_time_action(
     corrected_arrival_at: str | None = None,
     correction_reason: str | None = None,
     correction_job_ref: str | None = None,
+    log_date: str | None = None,
 ) -> dict:
     """
     Reconciles one chained-logic time tracking action against the
-    technician's LCS Tech Day Log for `at`'s calendar date. Validation
+    technician's LCS Tech Day Log for `log_date` — the technician's own
+    local calendar date, supplied explicitly by the client. Validation
     mirrors src/state/timeTrackingMachine.js — see that file for the
     authoritative rules (Section 1.1-1.5 of the Time-Tracking Proposal).
+
+    `at` and `corrected_arrival_at` are local wall-clock strings (no
+    'Z'/UTC suffix) — see toLocalDatetimeString() client-side. Frappe
+    stores Datetime fields naively (no timezone conversion), so these
+    must already be local by the time they arrive here; sending UTC
+    would have every stored segment start/end silently shift by the
+    browser's UTC offset. Same reasoning applies to log_date: supplied
+    explicitly by the client rather than derived from `at` here, since
+    `at` alone can't safely be re-parsed into "the technician's calendar
+    date" without redoing the same local-time logic already done
+    client-side. Falls back to deriving log_date from `at` only for
+    mutations already queued before this fix shipped, which won't carry
+    log_date at all — that fallback predates the local-time fix too, so
+    it inherits the same historical UTC-drift imprecision for any such
+    leftover mutations specifically.
 
     This endpoint is intentionally permissive on ordering: because the
     device is the offline source of truth, the server accepts the action
@@ -554,7 +571,7 @@ def submit_time_action(
     rejecting the sync outright, which would strand queued mutations.
     """
     employee = employee or _current_employee()
-    log_date = get_datetime(at).date().isoformat()
+    log_date = log_date or get_datetime(at).date().isoformat()
     log_name = f"TDL-{employee}-{log_date}"
 
     if frappe.db.exists("LCS Tech Day Log", log_name):
