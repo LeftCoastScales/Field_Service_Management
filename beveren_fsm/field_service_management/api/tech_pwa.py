@@ -473,6 +473,15 @@ def get_service_report(appointment: str) -> dict:
             # server-side like this. Left unset, these silently stayed
             # blank on every new Service Report.
             "service_order": appt.service_order if appt else None,
+            # custom_service_order is a leftover Custom Field from the old
+            # CSR web form (beveren_fsm/www/... era) — added via Customize
+            # Form, so it's invisible in git and in this DocType's own
+            # JSON. It's mandatory in the live database despite being
+            # otherwise unused now; without this, every new Service Report
+            # failed MandatoryError on insert. Worth removing this
+            # duplicate field via Customize Form at some point, but
+            # populating it is the immediate, safe fix either way.
+            "custom_service_order": appt.service_order if appt else None,
             "customer": appt.customer if appt else None,
         })
         doc.insert(ignore_permissions=True)  # validate() populates the checklist from the template
