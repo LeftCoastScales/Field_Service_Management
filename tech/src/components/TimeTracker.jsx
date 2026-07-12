@@ -48,8 +48,21 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
     if (!dayLog) return;
     const { dayLog: next, result } = applyAction(dayLog, { type, at: new Date().toISOString(), jobRef, ...extra });
     await persist(next);
-    if (result.ok && type !== ACTIONS.CORRECT_ARRIVAL) {
-      const payload = { action_type: type, at: new Date().toISOString(), job_ref: jobRef, employee, ...extra };
+    if (result.ok) {
+      const payload = { action_type: type, at: new Date().toISOString(), job_ref: jobRef, employee };
+
+      if (type === ACTIONS.CORRECT_ARRIVAL) {
+        // Previously this action was never synced at all — a flagged
+        // segment could only be resolved by someone editing the record
+        // directly in Desk. Distinct field names from the payload
+        // above, since these describe a manually-entered correction,
+        // not a normal action's own timestamp/job.
+        payload.corrected_arrival_at = extra.correctedArrivalAt;
+        payload.correction_reason = extra.correctionReason;
+        payload.correction_job_ref = extra.correctionJobRef || null;
+      } else {
+        Object.assign(payload, extra);
+      }
 
       // RESUME_JOB/LUNCH_IN close out a break — compute its exact duration
       // here (the device has precise start/end) so the server doesn't
@@ -96,7 +109,12 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
             : BANNER_LABEL[ctx.openSegmentType] || '—';
 
   const handleCorrection = async (correctedArrivalAt) => {
-    await dispatch(ACTIONS.CORRECT_ARRIVAL, { correctedArrivalAt });
+    const corr = dayLog.pendingCorrection;
+    await dispatch(ACTIONS.CORRECT_ARRIVAL, {
+      correctedArrivalAt,
+      correctionReason: corr?.reason,
+      correctionJobRef: corr?.requestedJobRef || null,
+    });
   };
 
   const atThisJob = jobRef && ctx.activeJobRef === jobRef;

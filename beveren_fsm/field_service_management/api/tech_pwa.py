@@ -439,6 +439,9 @@ def submit_time_action(
     employee: str | None = None,
     reason: str | None = None,
     duration_minutes: int | None = None,
+    corrected_arrival_at: str | None = None,
+    correction_reason: str | None = None,
+    correction_job_ref: str | None = None,
 ) -> dict:
     """
     Reconciles one chained-logic time tracking action against the
@@ -506,6 +509,28 @@ def submit_time_action(
     # fixed alongside the new pause tracking above.
     if action_type == "LUNCH_IN" and open_segment and duration_minutes:
         open_segment.lunch_minutes = (open_segment.lunch_minutes or 0) + duration_minutes
+
+    # Manually-entered technician corrections. This mirrors
+    # timeTrackingMachine.js's CORRECT_ARRIVAL case exactly — see that
+    # file for why these are the only two recoverable flag reasons.
+    # Previously this action was never synced to the server at all
+    # (excluded client-side), so a flagged segment could only ever be
+    # resolved by someone editing the record directly in Desk.
+    if action_type == "CORRECT_ARRIVAL" and corrected_arrival_at:
+        if correction_reason == "SEQUENTIAL_LOCK":
+            if open_segment:
+                open_segment.end_time = corrected_arrival_at
+                open_segment.flagged_for_review = 1
+                open_segment.correction_reason = "Sequential Lock"
+            log.append("segments", {"segment_type": "Travel", "start_time": corrected_arrival_at})
+        elif correction_reason == "MISSING_CLOCK_IN":
+            log.append("segments", {
+                "segment_type": "Onsite" if correction_job_ref else "Shop",
+                "reference_appointment": correction_job_ref,
+                "start_time": corrected_arrival_at,
+                "flagged_for_review": 1,
+                "correction_reason": "Missing Clock-In",
+            })
 
     if action_type == "END_DAY":
         log.day_state = "Ended"

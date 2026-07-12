@@ -6,6 +6,8 @@ from __future__ import annotations
 import frappe
 from frappe.model.document import Document
 
+ATTENDANCE_SHIFT = "LCS Standard"  # every technician currently works this shift; no Shift Assignment records exist yet
+
 
 class LCSTechDayLog(Document):
 	"""
@@ -18,6 +20,9 @@ class LCSTechDayLog(Document):
 	def validate(self):
 		self.needs_review_count = sum(1 for s in self.segments if s.flagged_for_review)
 		self._compute_totals()
+
+	def on_update(self):
+		self._maybe_create_attendance()
 
 	def _compute_totals(self):
 		total_minutes = 0
@@ -41,3 +46,53 @@ class LCSTechDayLog(Document):
 		doubletime_threshold = 720
 		self.overtime_minutes = max(0, min(self.total_paid_minutes, doubletime_threshold) - scheduled)
 		self.doubletime_minutes = max(0, self.total_paid_minutes - doubletime_threshold)
+
+	def _maybe_create_attendance(self):
+		"""
+		Creates a DRAFT Attendance record once this day is fully wrapped up:
+		day_state is Ended, and there are no unresolved flagged segments
+		left for the office to review. Runs on every save (on_update), so
+		it fires correctly whether the day just ended cleanly, or a flag
+		gets cleared later by someone editing this record in Desk.
+
+		Deliberately left as a draft (docstatus 0) — HR reviews and
+		submits it themselves; this never auto-submits. Only creates once
+		per employee/date — if an Attendance already exists (however it
+		got there), this leaves it alone rather than overwriting it.
+
+		Wrapped in try/except: on_update runs inside the same transaction
+		as this doc's own save, so an unhandled exception here (e.g. a
+		data issue on the Employee record) would roll back the day log
+		save itself — which would then block a technician's time-tracking
+		sync over an HR-side data problem. Logged instead, so it's visible
+		without being able to break the more important save.
+		"""
+		if self.day_state != "Ended" or self.needs_review_count:
+			return
+		if not self.segments:
+			return
+		if frappe.db.exists("Attendance", {"employee": self.employee, "attendance_date": self.log_date}):
+			return
+
+		try:
+			company = frappe.db.get_value("Employee", self.employee, "company")
+			first_segment = self.segments[0]
+			last_segment = self.segments[-1]
+
+			attendance = frappe.get_doc({
+				"doctype": "Attendance",
+				"employee": self.employee,
+				"attendance_date": self.log_date,
+				"status": "Present",
+				"company": company,
+				"shift": ATTENDANCE_SHIFT,
+				"in_time": first_segment.start_time,
+				"out_time": last_segment.end_time,
+				"working_hours": round((self.total_paid_minutes or 0) / 60, 2),
+			})
+			attendance.insert(ignore_permissions=True)  # left as draft — no attendance.submit() call
+		except Exception:
+			frappe.log_error(
+				title=f"LCS Tech Day Log: Attendance auto-create failed for {self.name}",
+				message=frappe.get_traceback(),
+			)
