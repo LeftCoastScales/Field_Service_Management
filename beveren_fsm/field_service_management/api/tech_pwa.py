@@ -93,6 +93,22 @@ def _site_address_for_order(service_order_name: str | None) -> str | None:
 
 
 @frappe.whitelist()
+def get_current_technician() -> dict:
+    """
+    Resolves the logged-in user's Employee/Service Technician records.
+    Used once on app load so `employee` is never blank in the PWA's sync
+    payloads — previously hardcoded to null in App.jsx and never actually
+    resolved, even though the server-side fallback in submit_time_action
+    (employee or _current_employee()) meant this likely wasn't the cause
+    of any missing day logs — just a real gap worth closing regardless.
+    """
+    return {
+        "employee": _current_employee(),
+        "service_technician": _current_service_technician(),
+    }
+
+
+@frappe.whitelist()
 def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> list[dict]:
     """Today's (or a given range's) Service Appointments assigned to the logged-in technician."""
     service_technician = _current_service_technician()

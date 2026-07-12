@@ -434,25 +434,35 @@ textarea.notes-field.internal {
   background: var(--lcs-surface);
   border-top: 1px solid var(--lcs-border);
   display: flex;
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
   z-index: 20;
 }
 
-.bottom-tabbar button {
+.bottom-tabbar button,
+.bottom-tabbar a {
   flex: 1;
+  min-height: 60px;
   background: none;
   border: none;
-  padding: 8px 4px;
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 4px;
+  font-size: 14px;
+  font-weight: 800;
   color: var(--lcs-text-muted);
+  text-decoration: none;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
 }
 
-.bottom-tabbar button.active { color: var(--lcs-steel); }
+.tab-icon { font-size: 22px; line-height: 1; }
+
+.bottom-tabbar button.active {
+  color: var(--lcs-navy);
+  background: var(--lcs-bg-tint);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .modal-sheet { animation: none; }

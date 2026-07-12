@@ -114,6 +114,11 @@ export function whoAmI() {
   return request('/api/method/frappe.auth.get_logged_user');
 }
 
+/** Resolves the logged-in user's Employee ID — used once on app load. */
+export function getCurrentTechnician() {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_current_technician');
+}
+
 /** Item search for the Add Part picker. */
 export function searchItems(query) {
   return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.search_items?query=${encodeURIComponent(query)}`);

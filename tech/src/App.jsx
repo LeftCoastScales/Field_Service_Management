@@ -41,8 +41,14 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await api.whoAmI();
-        setEmployee(res.message);
+        // Was previously api.whoAmI() (frappe.auth.get_logged_user), which
+        // returns the session USERNAME (e.g. "lstacy@leftcoastscales.com"),
+        // not the Employee record ID. Since LCS Tech Day Log.employee is a
+        // Link field to Employee, every submit_time_action sync was
+        // silently failing Link validation server-side — this is very
+        // likely why no day log or Attendance record was ever appearing.
+        const res = await api.getCurrentTechnician();
+        setEmployee(res.message.employee);
       } catch {
         // Session cookie will still be present when back online; the
         // app works fully offline off the last known identity/cache.
@@ -130,11 +136,17 @@ export default function App() {
 
       <nav className="bottom-tabbar">
         <button className={screen === 'jobs' || screen === 'jobDetail' ? 'active' : ''} onClick={() => setScreen('jobs')}>
+          <span className="tab-icon">🗂</span>
           Jobs
         </button>
         <button className={screen === 'day' ? 'active' : ''} onClick={() => setScreen('day')}>
+          <span className="tab-icon">🕐</span>
           My Day
         </button>
+        <a href="/shortcuts" target="_blank" rel="noreferrer">
+          <span className="tab-icon">⚡</span>
+          Quick Access
+        </a>
       </nav>
     </div>
   );
