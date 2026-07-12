@@ -81,7 +81,7 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
       )}
 
       <AccordionSection title="Time Tracking" defaultOpen>
-        <TimeTracker employee={employee} jobRef={appointmentName} capacity={capacity} />
+        <TimeTracker employee={employee} jobRef={appointmentName} capacity={capacity} onJobCompleted={onBack} />
       </AccordionSection>
 
       <AccordionSection title="Job Notes">

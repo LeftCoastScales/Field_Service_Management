@@ -109,6 +109,77 @@ def get_current_technician() -> dict:
 
 
 @frappe.whitelist()
+def complete_appointment(appointment: str) -> dict:
+    """
+    Marks a job complete: sets Service Appointment.status to "Completed"
+    (which cascades to the linked Service Order's status via
+    update_service_order_status), and removes it from this technician's
+    job list going forward — see the status filter in get_my_jobs.
+    Deliberately independent of Service Report submission: requiring
+    that first would currently block completion on any service type
+    that doesn't yet have a checklist template set up.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+    doc = frappe.get_doc("Service Appointment", appointment)
+    doc.status = "Completed"
+    doc.save(ignore_permissions=True)
+    return {"status": doc.status}
+
+
+@frappe.whitelist()
+def get_completion_email_info(appointment: str) -> dict:
+    """
+    Tells the PWA whether there's a Service Report worth sending as a PDF,
+    and whether a client email is already on file (Service Order's
+    customer_contact -> Contact.email_id) so it knows whether to prompt
+    for one.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    report = _service_report_for_appointment(appointment)
+    if not report:
+        return {"has_service_report": False, "email": None}
+
+    service_order = frappe.db.get_value("Service Appointment", appointment, "service_order")
+    email = None
+    if service_order:
+        contact = frappe.db.get_value("Service Order", service_order, "customer_contact")
+        if contact:
+            email = frappe.db.get_value("Contact", contact, "email_id")
+
+    return {"has_service_report": True, "email": email}
+
+
+@frappe.whitelist()
+def send_service_report_pdf(appointment: str, emails) -> dict:
+    """
+    Emails the Service Report as a PDF to one or more addresses. `emails`
+    may be a list or a comma-separated string (whichever survives the
+    JSON round-trip more conveniently from the client).
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    report = _service_report_for_appointment(appointment)
+    if not report:
+        frappe.throw("No Service Report exists for this appointment to send.")
+
+    if isinstance(emails, str):
+        emails = [e.strip() for e in emails.split(",") if e.strip()]
+    emails = [e for e in (emails or []) if e]
+    if not emails:
+        frappe.throw("At least one email address is required.")
+
+    pdf_bytes = frappe.get_print("Service Report", report.name, as_pdf=True)
+    frappe.sendmail(
+        recipients=emails,
+        subject=f"Service Report — {report.name}",
+        message="Please find attached the service report for your recent appointment.",
+        attachments=[{"fname": f"{report.name}.pdf", "fcontent": pdf_bytes}],
+    )
+    return {"sent_to": emails}
+
+
+@frappe.whitelist()
 def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> list[dict]:
     """Today's (or a given range's) Service Appointments assigned to the logged-in technician."""
     service_technician = _current_service_technician()
@@ -130,6 +201,7 @@ def get_my_jobs(from_date: str | None = None, to_date: str | None = None) -> lis
         filters={
             "name": ("in", appointment_names),
             "scheduled_start_datetime": ("between", [f"{from_date} 00:00:00", f"{to_date} 23:59:59"]),
+            "status": ("!=", "Completed"),  # Mark Complete removes a job from the tech's list
         },
         fields=["name", "customer", "status", "scheduled_start_datetime", "service_order"],
         order_by="scheduled_start_datetime asc",
@@ -391,7 +463,18 @@ def get_service_report(appointment: str) -> dict:
 
     doc = _service_report_for_appointment(appointment)
     if not doc:
-        doc = frappe.get_doc({"doctype": "Service Report", "service_appointment": appointment})
+        appt = frappe.db.get_value("Service Appointment", appointment, ["service_order", "customer"], as_dict=True)
+        doc = frappe.get_doc({
+            "doctype": "Service Report",
+            "service_appointment": appointment,
+            # Set explicitly rather than relying on fetch_from — fetch_from
+            # only auto-populates through Desk's client-side JS when a Link
+            # field changes in the browser, not when a document is created
+            # server-side like this. Left unset, these silently stayed
+            # blank on every new Service Report.
+            "service_order": appt.service_order if appt else None,
+            "customer": appt.customer if appt else None,
+        })
         doc.insert(ignore_permissions=True)  # validate() populates the checklist from the template
 
     return _serialize_service_report(doc)

@@ -9,8 +9,11 @@ import {
   summarizeDay,
 } from '../state/timeTrackingMachine.js';
 import { loadDayLog, saveDayLog, enqueueMutation } from '../db/offlineStore.js';
+import * as api from '../api/client.js';
+import { extractErrorMessage } from '../api/client.js';
 import ClockCorrectionModal from './ClockCorrectionModal.jsx';
 import PauseJobModal from './PauseJobModal.jsx';
+import SendReportModal from './SendReportModal.jsx';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
@@ -27,9 +30,12 @@ const BANNER_LABEL = {
  * (rendered on the Today's Jobs / global screen), Arrive/Leave apply to
  * the shop, and Start of Day / End of Day controls are shown instead.
  */
-export default function TimeTracker({ employee, jobRef = null, capacity = 'light', onChanged }) {
+export default function TimeTracker({ employee, jobRef = null, capacity = 'light', onChanged, onJobCompleted }) {
   const [dayLog, setDayLog] = useState(null);
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState(null);
+  const [sendReportOpen, setSendReportOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -117,6 +123,29 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
     });
   };
 
+  const handleMarkComplete = async () => {
+    if (!window.confirm('Mark this job complete? It will be removed from your job list.')) return;
+    setCompleting(true);
+    setCompleteError(null);
+    try {
+      if (ctx.activeJobRef === jobRef) {
+        // Still clocked in here — close out the onsite segment first so
+        // the office doesn't see a job marked Completed while the
+        // technician's own time log shows them still on site.
+        const leaveResult = await dispatch(ACTIONS.LEAVE);
+        if (!leaveResult?.ok) {
+          throw new Error(leaveResult?.message || 'Could not clock out before completing.');
+        }
+      }
+      await api.completeAppointment(jobRef);
+      setSendReportOpen(true); // ask about emailing the Service Report before navigating away
+    } catch (err) {
+      setCompleteError(extractErrorMessage(err, 'Could not mark this job complete — try again.'));
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   const atThisJob = jobRef && ctx.activeJobRef === jobRef;
   const openElsewhere = ctx.openSegmentType === SEGMENT_TYPES.ONSITE && ctx.activeJobRef && ctx.activeJobRef !== jobRef;
 
@@ -147,7 +176,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           )}
           {atThisJob && !ctx.onJobPause && (
             <button className="btn btn-danger btn-full" onClick={() => dispatch(ACTIONS.LEAVE)}>
-              Clock Out (Complete Job)
+              Clock Out
             </button>
           )}
           {atThisJob && !ctx.onLunch && !ctx.onJobPause && (
@@ -169,6 +198,14 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
             <button className="btn btn-gold btn-full" onClick={() => dispatch(ACTIONS.RESUME_JOB)}>
               Resume Job
             </button>
+          )}
+          {!ctx.onJobPause && !ctx.onLunch && (
+            <button className="btn btn-primary btn-full" onClick={handleMarkComplete} disabled={completing}>
+              {completing ? 'Completing…' : 'Mark Complete'}
+            </button>
+          )}
+          {completeError && (
+            <p style={{ fontSize: 12.5, color: 'var(--lcs-crimson)' }}>{completeError}</p>
           )}
           {openElsewhere && (
             <p style={{ fontSize: 12.5, color: 'var(--lcs-crimson)' }}>
@@ -248,6 +285,15 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           await dispatch(ACTIONS.PAUSE_JOB, { reason });
         }}
         onCancel={() => setPauseModalOpen(false)}
+      />
+
+      <SendReportModal
+        open={sendReportOpen}
+        appointmentName={jobRef}
+        onDone={() => {
+          setSendReportOpen(false);
+          onJobCompleted?.();
+        }}
       />
     </div>
   );

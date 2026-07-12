@@ -152,3 +152,24 @@ export function submitServiceReport({ appointmentName, checklist, technicianNote
     body: { appointment: appointmentName, checklist, technician_notes: technicianNotes },
   });
 }
+
+/** Marks a job complete — removes it from the tech's job list going forward. */
+export function completeAppointment(appointmentName) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.complete_appointment', {
+    method: 'POST',
+    body: { appointment: appointmentName },
+  });
+}
+
+/** Whether a Service Report exists to send, and whether a client email is already on file. */
+export function getCompletionEmailInfo(appointmentName) {
+  return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_completion_email_info?appointment=${encodeURIComponent(appointmentName)}`);
+}
+
+/** Emails the Service Report PDF to one or more addresses. */
+export function sendServiceReportPdf({ appointmentName, emails }) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.send_service_report_pdf', {
+    method: 'POST',
+    body: { appointment: appointmentName, emails },
+  });
+}
