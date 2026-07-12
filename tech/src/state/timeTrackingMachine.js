@@ -28,6 +28,7 @@ export const ACTIONS = {
   PAUSE_JOB: 'PAUSE_JOB',                     // Pause an open Onsite segment for a given reason (parts, customer, etc.)
   RESUME_JOB: 'RESUME_JOB',                   // Resume from a job pause
   END_DAY: 'END_DAY',                         // Terminate all tracking
+  REOPEN_DAY: 'REOPEN_DAY',                   // Undo an End Day tapped by mistake — back to Active, no segment reopened
   CORRECT_ARRIVAL: 'CORRECT_ARRIVAL',         // Manual entry supplied after a missing-clock-in flag
 };
 
@@ -241,6 +242,17 @@ export function applyAction(dayLog, action) {
       if (onAnyBreak(open)) return fail(log, 'Resume from lunch/pause before ending the day.');
       open.end = at;
       log.dayState = DAY_STATES.ENDED;
+      return ok(log);
+    }
+
+    case ACTIONS.REOPEN_DAY: {
+      // Undoes an End Day tapped by mistake. Deliberately doesn't reopen
+      // the segment that was closed at End Day — that segment's end time
+      // is presumably accurate (it really did end right then); what was
+      // wrong was ending the whole day. After this, the tech just taps
+      // Clock In again like normal, same as any other gap between jobs.
+      if (log.dayState !== DAY_STATES.ENDED) return fail(log, 'Day is not ended.');
+      log.dayState = DAY_STATES.ACTIVE;
       return ok(log);
     }
 

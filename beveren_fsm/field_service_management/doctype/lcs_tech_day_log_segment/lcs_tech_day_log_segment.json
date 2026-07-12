@@ -66,7 +66,7 @@
    "fieldname": "correction_reason",
    "label": "Correction Reason",
    "fieldtype": "Select",
-   "options": "\nMissing Clock-In\nSequential Lock"
+   "options": "\nMissing Clock-In\nSequential Lock\nReopened Day"
   }
  ]
 }

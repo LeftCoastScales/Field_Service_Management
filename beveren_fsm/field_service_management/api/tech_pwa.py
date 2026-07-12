@@ -651,6 +651,15 @@ def submit_time_action(
     if action_type == "END_DAY":
         log.day_state = "Ended"
 
+    if action_type == "REOPEN_DAY":
+        # Undoes an End Day tapped by mistake. Flagged for review since
+        # it's a correction to a payroll-relevant record, same reasoning
+        # as the other manual corrections above.
+        log.day_state = "Active"
+        if log.segments:
+            log.segments[-1].flagged_for_review = 1
+            log.segments[-1].correction_reason = "Reopened Day"
+
     log.needs_review_count = sum(1 for s in log.segments if s.flagged_for_review)
     log.save(ignore_permissions=True)
     return {"day_log": log.name, "day_state": log.day_state}

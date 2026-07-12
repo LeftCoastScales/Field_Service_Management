@@ -282,6 +282,18 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
               End of Day
             </button>
           )}
+          {ctx.dayState === DAY_STATES.ENDED && (
+            <button
+              className="btn btn-outline btn-full"
+              onClick={() => {
+                if (window.confirm('Reopen today? Use this if End of Day was tapped by mistake.')) {
+                  dispatch(ACTIONS.REOPEN_DAY);
+                }
+              }}
+            >
+              Reopen Day
+            </button>
+          )}
         </div>
       )}
 
