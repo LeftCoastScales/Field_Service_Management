@@ -297,6 +297,12 @@ function minutesBetween(startISO, endISO) {
 /**
  * Totals worked/travel/lunch/prep minutes for a day log. Segments still
  * open are excluded from totals (use `asOf` to compute a live in-progress total).
+ *
+ * Lunch is unpaid and is subtracted from net/worked/paid time. A job
+ * pause (parts, waiting on customer, etc.) is paid — it stays on the
+ * clock for payroll — so it is NOT subtracted here; `totals.paused` is
+ * tracked separately purely so it can be reported/excluded from customer
+ * billing elsewhere, without affecting what the technician is paid for.
  */
 export function summarizeDay(dayLog, asOf = new Date().toISOString()) {
   const totals = { travel: 0, prep: 0, onsite: 0, shop: 0, lunch: 0, paused: 0, flagged: 0 };
@@ -311,7 +317,7 @@ export function summarizeDay(dayLog, asOf = new Date().toISOString()) {
       pauseMinutes += minutesBetween(p.start, p.end || asOf);
     }
     const gross = minutesBetween(seg.start, end);
-    const net = Math.max(0, gross - lunchMinutes - pauseMinutes);
+    const net = Math.max(0, gross - lunchMinutes); // pause is paid — not subtracted
     totals[seg.type.toLowerCase()] += net;
     totals.lunch += lunchMinutes;
     totals.paused += pauseMinutes;

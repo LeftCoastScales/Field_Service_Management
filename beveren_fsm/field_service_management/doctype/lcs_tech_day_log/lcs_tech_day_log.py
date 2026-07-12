@@ -25,6 +25,12 @@ class LCSTechDayLog(Document):
 			if not seg.end_time:
 				continue
 			gross = (seg.end_time - seg.start_time).total_seconds() / 60
+			# Lunch is unpaid and comes off net/paid time. A job pause
+			# (parts, waiting on customer, etc.) stays on the clock for
+			# payroll — it's paid — so seg.pause_minutes is deliberately
+			# NOT subtracted here. It's tracked on the segment purely so
+			# it can be excluded from customer billing elsewhere, without
+			# reducing what the technician is paid for.
 			net = max(0, gross - (seg.lunch_minutes or 0))
 			seg.net_minutes = round(net)
 			total_minutes += seg.net_minutes
