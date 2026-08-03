@@ -15,9 +15,12 @@ class ZZTestTools {
 			<div class="zztest-tools" style="max-width: 760px;">
 				<p class="text-muted">
 					Loads or removes the ZZTEST sample data set used to walk the test plan
-					(Customer, Contacts, Service Technicians, Vehicle, Customer Equipment,
-					a Service Agreement due today, and a starter Service Request). Only
-					System Managers can run this.
+					(Customer, Contacts, Users/Employees, Service Technicians, Vehicles,
+					Customer Equipment, sellable Items, a Service Agreement due today, and a
+					starter Service Request). Remove Test Data only cleans up what was
+					originally created; Force Cleanup also sweeps up anything you created
+					manually while testing that links back to it. Only System Managers can
+					run this.
 				</p>
 				<div class="zztest-status alert alert-info">Checking status...</div>
 				<div class="zztest-buttons" style="margin-bottom: 15px;"></div>
@@ -110,6 +113,22 @@ class ZZTestTools {
 				this.call(
 					"remove_test_data",
 					__("This will permanently delete every ZZTEST record tracked on this site. Continue?")
+				);
+			});
+
+		$(`<button class="btn btn-danger btn-sm" style="margin-left: 8px;">${__("Force Cleanup")}</button>`)
+			.appendTo(this.$buttons)
+			.prop("disabled", !data.record_count)
+			.on("click", () => {
+				this.call(
+					"force_cleanup",
+					__(
+						"This goes further than Remove Test Data: it also finds and deletes any Quotations, " +
+							"Service Orders, Appointments, Invoices, or other documents you created manually while " +
+							"testing that reference the ZZTEST records -- not just the original 27. Documents that " +
+							"are still linked to something outside the test data are left alone and reported. " +
+							"This cannot be undone. Continue?"
+					)
 				);
 			});
 

@@ -511,24 +511,23 @@ def remove_test_data():
             if docstatus == 1:
                 frappe.get_doc(doctype, name).cancel()
                 lines.append(f"- cancelled {doctype} '{name}'")
-            frappe.delete_doc(doctype, name, ignore_permissions=True, force=True)
+            # Deliberately NOT force=True: if something still links to this
+            # record (e.g. a Quotation/Order/Invoice you created manually
+            # while testing), Frappe should refuse and we report it below
+            # rather than silently deleting the master and leaving that
+            # other document with a dangling reference. Use Force Cleanup
+            # if you want those linked records cleaned up too.
+            frappe.delete_doc(doctype, name, ignore_permissions=True)
             lines.append(f"- deleted {doctype} '{name}'")
             remaining.remove(entry)
         except Exception:
             frappe.log_error(title=f"ZZTEST cleanup failed: {doctype} {name}", message=frappe.get_traceback())
-            lines.append(f"! FAILED to delete {doctype} '{name}' -- see Error Log")
+            lines.append(f"! FAILED to delete {doctype} '{name}' -- still linked from something else, see Error Log")
 
     _save_manifest(remaining)
     locked = False
     if not remaining:
-        os.remove(_manifest_path())
-        with open(_lock_path(), "w") as f:
-            f.write(
-                f"Test data fully removed on {datetime.now().isoformat(timespec='seconds')}.\n"
-                f"create_test_data will refuse to run while this file exists.\n"
-                f"Use the Unlock button on the ZZTEST Data Tools page if you deliberately "
-                f"want to re-seed test data.\n"
-            )
+        _write_lock()
         lines.append("\nAll test data removed. Site is now locked against re-seeding.")
         locked = True
     else:
@@ -536,6 +535,18 @@ def remove_test_data():
 
     frappe.db.commit()
     return {"lines": lines, "manifest_count": len(remaining), "locked": locked}
+
+
+def _write_lock():
+    if os.path.exists(_manifest_path()):
+        os.remove(_manifest_path())
+    with open(_lock_path(), "w") as f:
+        f.write(
+            f"Test data fully removed on {datetime.now().isoformat(timespec='seconds')}.\n"
+            f"create_test_data will refuse to run while this file exists.\n"
+            f"Use the Unlock button on the ZZTEST Data Tools page if you deliberately "
+            f"want to re-seed test data.\n"
+        )
 
 
 @frappe.whitelist()
@@ -546,3 +557,140 @@ def unlock():
         os.remove(_lock_path())
         return {"lines": ["Lock removed. You can load test data again."]}
     return {"lines": ["Not locked -- nothing to do."]}
+
+
+MAX_FORCE_CLEANUP_DISCOVERED = 2000
+
+
+@frappe.whitelist()
+def force_cleanup():
+    """
+    Regular remove_test_data() only ever touches the records it originally
+    created. If you've since walked the lifecycle manually (Quotation ->
+    Service Order -> Service Appointment -> Sales Invoice, extra Service
+    Reports, Stock Entries, etc.), those documents reference the ZZTEST
+    Customer/Items/etc. and will block the normal cleanup with "linked
+    record" errors.
+
+    This does a wider cleanup: starting from whatever's still tracked in
+    the manifest, it uses Frappe's own link-discovery (the same mechanism
+    that normally blocks a delete with "Cannot delete ... as it is linked
+    with ...") to find every document anywhere in the system that's
+    connected to the test data -- directly or transitively -- then
+    repeatedly retries deleting the whole set until it's fully gone or
+    nothing more can be removed.
+
+    It does NOT bypass Frappe's link checks on documents outside that
+    discovered set. If something you didn't create during ZZTEST testing
+    (a real, unrelated document) still references one of these records,
+    that specific record is left alone and reported rather than force-
+    deleted -- "force" here means "reaches further than the original 27
+    records," not "ignores every safety check."
+    """
+    _require_system_manager()
+
+    from frappe.model.delete_doc import get_dynamic_linked_docs, get_linked_docs
+
+    manifest = _load_manifest()
+    if not manifest:
+        return {
+            "lines": ["Nothing tracked -- nothing to force-clean."],
+            "removed": 0,
+            "locked": os.path.exists(_lock_path()),
+        }
+
+    lines = []
+
+    # --- Discovery: BFS outward from every tracked root -----------------
+    discovered = {(e["doctype"], e["name"]) for e in manifest}
+    frontier = list(discovered)
+    aborted = False
+    while frontier:
+        next_frontier = []
+        for doctype, name in frontier:
+            if not frappe.db.exists(doctype, name):
+                continue
+            try:
+                doc = frappe.get_doc(doctype, name)
+                links = get_linked_docs(doc, method="Delete") + get_dynamic_linked_docs(doc, method="Delete")
+            except Exception:
+                links = []
+            for link in links:
+                key = (link["reference_doctype"], link["reference_docname"])
+                if key not in discovered:
+                    discovered.add(key)
+                    next_frontier.append(key)
+                    if len(discovered) > MAX_FORCE_CLEANUP_DISCOVERED:
+                        aborted = True
+                        break
+            if aborted:
+                break
+        if aborted:
+            break
+        frontier = next_frontier
+
+    if aborted:
+        return {
+            "lines": [
+                f"Stopped: found more than {MAX_FORCE_CLEANUP_DISCOVERED} linked records while "
+                f"tracing out from the test data. That's far more than this test set should ever "
+                f"touch, so this looks like it may be reaching into real data -- aborting without "
+                f"deleting anything. Contact support before proceeding if you expected this."
+            ],
+            "removed": 0,
+            "locked": False,
+        }
+
+    lines.append(
+        f"Traced {len(discovered)} record(s) connected to the test data "
+        f"({len(manifest)} originally tracked, {len(discovered) - len(manifest)} discovered from manual testing)."
+    )
+
+    # --- Deletion: retry passes until stable -----------------------------
+    remaining = set(discovered)
+    removed = []
+    for _pass in range(30):
+        if not remaining:
+            break
+        progressed = False
+        for doctype, name in list(remaining):
+            try:
+                if not frappe.db.exists(doctype, name):
+                    remaining.discard((doctype, name))
+                    progressed = True
+                    continue
+                docstatus = frappe.db.get_value(doctype, name, "docstatus")
+                if docstatus == 1:
+                    frappe.get_doc(doctype, name).cancel()
+                frappe.delete_doc(doctype, name, ignore_permissions=True)
+                removed.append((doctype, name))
+                remaining.discard((doctype, name))
+                progressed = True
+            except Exception:
+                continue
+        if not progressed:
+            break
+
+    lines.append(f"Removed {len(removed)} record(s).")
+    if remaining:
+        lines.append(
+            f"{len(remaining)} record(s) still couldn't be removed -- something outside the "
+            f"test data (a real document) still references them. See Error Log for details:"
+        )
+        for doctype, name in list(remaining)[:20]:
+            lines.append(f"  - {doctype} / {name}")
+            frappe.log_error(
+                title=f"ZZTEST force cleanup stuck: {doctype} {name}",
+                message="Still referenced by something outside the discovered test-data set.",
+            )
+
+    remaining_manifest = [e for e in manifest if (e["doctype"], e["name"]) in remaining]
+    _save_manifest(remaining_manifest)
+    locked = False
+    if not remaining_manifest:
+        _write_lock()
+        lines.append("\nAll tracked test data removed. Site is now locked against re-seeding.")
+        locked = True
+
+    frappe.db.commit()
+    return {"lines": lines, "removed": len(removed), "locked": locked}
