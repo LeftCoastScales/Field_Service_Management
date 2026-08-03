@@ -2,10 +2,13 @@
 # For license information, please see license.txt
 #
 # ZZTEST test data tools -- loads/removes a sample data set covering the
-# LCS test plan (Customer/Contact/Address, Service Type/Area, Service
-# Technicians, LCS Vehicle, LCS Scale Model + Customer Equipment pair,
-# LCS Service Report Checklist Template, LCS Service Agreement, and a
-# starter Service Request) directly through Frappe's ORM -- no external
+# LCS test plan (Customer/Contact/Address, Service Type/Area, two test
+# Users + Employees + Service Technicians, three LCS Vehicles -- a
+# straight truck, a van, and a pickup -- LCS Scale Model + Customer
+# Equipment pair, LCS Service Report Checklist Template, LCS Service
+# Agreement, a starter Service Request, and four sellable Items --
+# indicator, platform, load cell, and leveling foot -- for testing parts
+# lookup/consumption) directly through Frappe's ORM -- no external
 # scripts, API keys, or REST calls needed. Runs entirely server-side,
 # triggered from the "ZZTEST Data Tools" Desk page.
 #
@@ -216,19 +219,69 @@ def create_test_data():
         dedupe_filters={"first_name": ZZTEST_PREFIX, "last_name": "Contact"},
     )
 
-    b.log("8. Service Technicians (for crew-leader / overlap tests)")
+    b.log("8. Users & Employees (for Tech PWA + permission tests)")
+    gender = frappe.db.get_value("Gender", {"name": ["in", ["Other", "Male", "Female"]]}) or None
+    field_service_role = "Field Service User"
+    if not frappe.db.exists("Role", field_service_role):
+        b.log(
+            f"  NOTE: Role '{field_service_role}' does not exist on this site (it's created "
+            f"manually, not via fixtures -- see hooks.py). Test users are created without it; "
+            f"the low-privilege permission-sync test won't be meaningful until that role exists."
+        )
+
+    def _make_employee_user(first_name, email):
+        user_name = b.create(
+            "User",
+            {
+                "email": email,
+                "first_name": first_name,
+                "last_name": "ZZTEST",
+                "send_welcome_email": 0,
+                "enabled": 1,
+            },
+            dedupe_filters={"name": email},
+        )
+        if b.last_created and frappe.db.exists("Role", field_service_role):
+            user_doc = frappe.get_doc("User", user_name)
+            user_doc.append("roles", {"role": field_service_role})
+            user_doc.save(ignore_permissions=True)
+
+        employee_name = b.create(
+            "Employee",
+            {
+                "first_name": first_name,
+                "last_name": "ZZTEST",
+                "company": company,
+                "status": "Active",
+                "gender": gender,
+                "date_of_birth": add_days(today(), -365 * 30),
+                "date_of_joining": add_days(today(), -180),
+                "user_id": user_name,
+            },
+            dedupe_filters={"first_name": first_name, "last_name": "ZZTEST", "company": company},
+        )
+        return user_name, employee_name
+
+    tech_one_user, tech_one_employee = _make_employee_user(f"{ZZTEST_PREFIX} Tech1", "zztest.tech1@example.com")
+    tech_two_user, tech_two_employee = _make_employee_user(f"{ZZTEST_PREFIX} Tech2", "zztest.tech2@example.com")
+    b.log(
+        "  No password is set on these accounts -- use the User list's 'Set New Password' "
+        "action to log in as one of them."
+    )
+
+    b.log("9. Service Technicians (for crew-leader / overlap tests)")
     b.create(
         "Service Technician",
-        {"full_name": f"{ZZTEST_PREFIX} Tech One", "service_area": service_area},
+        {"full_name": f"{ZZTEST_PREFIX} Tech One", "service_area": service_area, "employee": tech_one_employee},
         dedupe_filters={"full_name": f"{ZZTEST_PREFIX} Tech One"},
     )
     b.create(
         "Service Technician",
-        {"full_name": f"{ZZTEST_PREFIX} Tech Two", "service_area": service_area},
+        {"full_name": f"{ZZTEST_PREFIX} Tech Two", "service_area": service_area, "employee": tech_two_employee},
         dedupe_filters={"full_name": f"{ZZTEST_PREFIX} Tech Two"},
     )
 
-    b.log("9. LCS Vehicle (fleet / non-human resource)")
+    b.log("10. LCS Vehicles (fleet / non-human resources: truck, van, pickup)")
     b.create(
         "LCS Vehicle",
         {
@@ -245,8 +298,46 @@ def create_test_data():
         },
         dedupe_filters={"unit_number": f"{ZZTEST_PREFIX}-99"},
     )
+    b.create(
+        "LCS Vehicle",
+        {
+            "unit_number": f"{ZZTEST_PREFIX}-98",
+            "nickname": "Test Van",
+            "vehicle_type": "Van",
+            "form_type": "Light Vehicle",
+            "status": "Active",
+            "service_area": service_area,
+            "branch": "Perris",
+            "year": 2023,
+            "make": "Ford",
+            "model": "Transit",
+        },
+        dedupe_filters={"unit_number": f"{ZZTEST_PREFIX}-98"},
+    )
+    b.create(
+        "LCS Vehicle",
+        {
+            "unit_number": f"{ZZTEST_PREFIX}-97",
+            "nickname": "Test Pickup",
+            "vehicle_type": "Pickup",
+            "form_type": "Light Vehicle",
+            "status": "Active",
+            "service_area": service_area,
+            "branch": "Perris",
+            "year": 2021,
+            "make": "Ford",
+            "model": "F-150",
+        },
+        dedupe_filters={"unit_number": f"{ZZTEST_PREFIX}-97"},
+    )
+    b.log(
+        "  NOTE: calibration test weights don't have a standalone master doctype in this app -- "
+        "'Calibration Equipment' is only enterable as a free-text resource row directly on a "
+        "Service Appointment (LCS Appointment Resource), e.g. type '500 lb Test Weight Set' "
+        "when assigning resources during the manual lifecycle walkthrough."
+    )
 
-    b.log("10. LCS Customer Equipment - Display (auto-pairs a Base)")
+    b.log("11. LCS Customer Equipment - Display (auto-pairs a Base)")
     display_serial = f"{ZZTEST_PREFIX}-DISP-0001"
     display_equipment = b.create(
         "LCS Customer Equipment",
@@ -278,7 +369,7 @@ def create_test_data():
             b.manifest.append({"doctype": "LCS Customer Equipment", "name": paired_base})
             _save_manifest(b.manifest)
 
-    b.log("11. LCS Customer Equipment - overdue calibration (for scheduler test)")
+    b.log("12. LCS Customer Equipment - overdue calibration (for scheduler test)")
     overdue_serial = f"{ZZTEST_PREFIX}-OVERDUE-0001"
     b.create(
         "LCS Customer Equipment",
@@ -296,7 +387,7 @@ def create_test_data():
         dedupe_filters={"serial_number": overdue_serial},
     )
 
-    b.log("12. LCS Service Report Checklist Template")
+    b.log("13. LCS Service Report Checklist Template")
     b.create(
         "LCS Service Report Checklist Template",
         {
@@ -311,7 +402,7 @@ def create_test_data():
         dedupe_filters={"name": service_type},
     )
 
-    b.log("13. LCS Service Agreement (Active, due today, auto-create ON)")
+    b.log("14. LCS Service Agreement (Active, due today, auto-create ON)")
     b.create(
         "LCS Service Agreement",
         {
@@ -344,7 +435,7 @@ def create_test_data():
         },
     )
 
-    b.log("14. Starter Service Request (walk the rest of the lifecycle manually)")
+    b.log("15. Starter Service Request (walk the rest of the lifecycle manually)")
     b.create(
         "Service Request",
         {
@@ -360,6 +451,35 @@ def create_test_data():
         },
         dedupe_filters={"subject": f"{ZZTEST_PREFIX} Sample Service Request"},
     )
+
+    b.log("16. Sellable Items (scale components: indicators, platforms, load cells, feet)")
+    item_group = frappe.db.get_value("Item Group", {"item_group_name": "Products"})
+    if not item_group:
+        # fall back to whatever root/group Item Group exists on this site
+        item_group = frappe.db.get_value("Item Group", {"is_group": 1})
+    if not item_group:
+        b.log("  NOTE: no Item Group found on this site -- skipping sample Items.")
+    else:
+        stock_uom = "Nos" if frappe.db.exists("UOM", "Nos") else frappe.db.get_value("UOM", {})
+        sample_items = [
+            ("ZZTEST-IND-100", "ZZTEST Digital Weight Indicator"),
+            ("ZZTEST-PLT-4X4", "ZZTEST Floor Scale Platform 4x4 ft"),
+            ("ZZTEST-LC-5K", "ZZTEST Load Cell - 5,000 lb Capacity"),
+            ("ZZTEST-FOOT-SS", "ZZTEST Stainless Steel Leveling Foot"),
+        ]
+        for item_code, item_name in sample_items:
+            b.create(
+                "Item",
+                {
+                    "item_code": item_code,
+                    "item_name": item_name,
+                    "item_group": item_group,
+                    "stock_uom": stock_uom,
+                    "is_stock_item": 1,
+                    "description": item_name,
+                },
+                dedupe_filters={"item_code": item_code},
+            )
 
     b.log(f"\nDone. {len(b.manifest)} record(s) tracked in zztest_manifest.json.")
     frappe.db.commit()
