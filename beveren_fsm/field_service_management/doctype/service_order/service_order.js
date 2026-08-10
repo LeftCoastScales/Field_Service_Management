@@ -1093,7 +1093,7 @@ frappe.ui.form.on("Service Order", {
           selectedItems = tableData.map((row) => ({
             item_code: row.item_code,
             qty: row.qty,
-            max_qty: row.max_qty,
+            max_qty: row.qty,
             rate: row.rate,
             amount: row.amount,
             warehouse: row.warehouse,
@@ -1307,6 +1307,29 @@ beveren_fsm.field_service_management.ServiceOrderController = class ServiceOrder
   // ------------------------------------------------------------------
   due_date() {
     // no-op: Service Order doesn't use payment-terms-driven due dates
+  }
+
+  // ------------------------------------------------------------------
+  // Override added to fix: base_grand_total silently ignoring tax.
+  // Core ERPNext's shared calculate_totals() (taxes_and_totals.js) only
+  // recomputes base_grand_total = grand_total * conversion_rate for a
+  // hardcoded doctype whitelist (Quotation, Sales Order, Delivery Note,
+  // Sales Invoice, POS Invoice). Service Order isn't on that list, so
+  // it falls into the "else" branch built for Buying-side tax
+  // categories ("Valuation and Total" / "Total"), which our Sales
+  // Taxes and Charges rows don't set -- leaving base_grand_total
+  // pinned at base_net_total (pre-tax) any time a sales tax is
+  // applied, even though grand_total itself is correct. This silently
+  // produced a wrong base_in_words on save (in_words was right,
+  // base_in_words wasn't) -- found while verifying the in_words fix.
+  // Recompute base_grand_total the same way the whitelisted Sales
+  // doctypes do.
+  // ------------------------------------------------------------------
+  calculate_totals() {
+    super.calculate_totals();
+    this.frm.doc.base_grand_total = this.frm.doc.total_taxes_and_charges
+      ? flt(this.frm.doc.grand_total * this.frm.doc.conversion_rate)
+      : this.frm.doc.base_net_total;
   }
 
   refresh(doc, dt, dn) {
