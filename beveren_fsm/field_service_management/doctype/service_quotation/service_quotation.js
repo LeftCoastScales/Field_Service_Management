@@ -212,6 +212,18 @@ beveren_fsm.field_service_management.ServiceQuotationController = class ServiceQ
     super.onload(doc, dt, dn);
   }
 
+  // ------------------------------------------------------------------
+  // Override added to fix: SellingController's inherited due_date()
+  // handler unconditionally reads doc.payment_schedule.length, but
+  // Service Quotation has no payment_schedule field (same issue found
+  // and fixed on Service Order -- see that file's due_date() override
+  // for the full explanation). Silent console TypeError, no visible
+  // break, stubbed out rather than left throwing on every change.
+  // ------------------------------------------------------------------
+  due_date() {
+    // no-op: Service Quotation doesn't use payment-terms-driven due dates
+  }
+
   party_name() {
     var me = this;
     erpnext.utils.get_party_details(this.frm, null, null, function () {

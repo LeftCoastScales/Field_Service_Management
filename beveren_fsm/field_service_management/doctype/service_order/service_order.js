@@ -1293,6 +1293,22 @@ beveren_fsm.field_service_management.ServiceOrderController = class ServiceOrder
   onload(doc, dt, dn) {
     super.onload(doc, dt, dn);
   }
+
+  // ------------------------------------------------------------------
+  // Override added to fix: SellingController's inherited due_date()
+  // handler unconditionally reads doc.payment_schedule.length, but
+  // Service Order has no payment_schedule field (it's not a full sales
+  // transaction doctype). Left unoverridden, every due_date change
+  // (e.g. after picking a Customer) threw a silent console TypeError:
+  // "Cannot read properties of undefined (reading 'length')". No
+  // visible break -- due_date itself still saved fine -- but it's
+  // dead/broken inherited logic that doesn't apply to this doctype, so
+  // it's stubbed out here rather than left throwing on every change.
+  // ------------------------------------------------------------------
+  due_date() {
+    // no-op: Service Order doesn't use payment-terms-driven due dates
+  }
+
   refresh(doc, dt, dn) {
     super.refresh(doc, dt, dn);
     if (doc.__islocal && !doc.posting_date) {
