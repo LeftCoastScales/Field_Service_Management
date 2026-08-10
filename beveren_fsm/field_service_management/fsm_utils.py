@@ -197,20 +197,25 @@ def make_service_order_from_quotation(source_name, target_doc=None):
 	Quotation onto a new Service Order.
 
 	Customer resolution reuses ERPNext's own Quotation -> Sales Order
-	logic (erpnext.selling.doctype.quotation.mapper._make_customer), so
-	Lead- and Prospect-type Quotations behave exactly like they already
-	do today when your sales team converts one to a Sales Order: if a
-	Customer already exists for that Lead/Prospect it's reused, otherwise
-	one is auto-created from the Lead's/Prospect's details. Customer-type
-	Quotations map straight across. This intentionally mirrors core
-	ERPNext behavior rather than inventing a new conversion path.
+	logic (erpnext.selling.doctype.quotation.quotation._make_customer),
+	so Lead- and Prospect-type Quotations behave exactly like they
+	already do today when your sales team converts one to a Sales Order:
+	if a Customer already exists for that Lead/Prospect it's reused,
+	otherwise one is auto-created from the Lead's/Prospect's details.
+	Customer-type Quotations map straight across. This intentionally
+	mirrors core ERPNext behavior rather than inventing a new conversion
+	path.
 
 	Lands on a new (unsaved) Service Order with customer and items
 	filled in -- same pattern as the app's existing Service Quotation ->
 	Service Order bridge (see service_order.make_order_from_quote) --
 	so Service Type, Priority and Due Date can be set before saving.
 	"""
-	from erpnext.selling.doctype.quotation.mapper import _make_customer
+	# NOTE: on ERPNext v16 this helper lives in quotation.py itself, not a
+	# separate mapper.py (that split happens in a later ERPNext version).
+	# Importing from quotation.py keeps this working on the version this
+	# site actually runs.
+	from erpnext.selling.doctype.quotation.quotation import _make_customer
 	from frappe.model.mapper import get_mapped_doc
 
 	customer = _make_customer(source_name, ignore_permissions=False)
