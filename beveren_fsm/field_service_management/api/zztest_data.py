@@ -72,6 +72,35 @@ def _company_currency_and_country(company):
     return (doc.default_currency or "USD"), (doc.country or "United States")
 
 
+def _break_paired_equipment_links(items):
+    """
+    LCS Customer Equipment Display/Base pairs point at each other via
+    paired_component, so Frappe's link-safety check will always find each
+    side "still linked" from the other -- a genuine mutual-reference
+    deadlock that no amount of retrying can resolve on its own (confirmed
+    live: both remove_test_data() and force_cleanup() got permanently
+    stuck on a Display/Base pair, which in turn blocked their LCS Scale
+    Model and Manufacturer records too -- this happens on every load/
+    remove cycle, not just when other documents reference the test data).
+
+    `items` is an iterable of (doctype, name) tuples -- either the
+    manifest entries or force_cleanup()'s discovered set. Since both
+    sides of any pair found here are already in our own tracked/
+    discovered set (i.e. we're about to try deleting both anyway), it's
+    safe to sever the link first so normal (non-force) deletion can
+    proceed on each side independently, instead of leaving them deadlocked.
+    """
+    names = {name for doctype, name in items if doctype == "LCS Customer Equipment"}
+    for name in names:
+        if not frappe.db.exists("LCS Customer Equipment", name):
+            continue
+        paired = frappe.db.get_value("LCS Customer Equipment", name, "paired_component")
+        if paired and paired in names:
+            frappe.db.set_value(
+                "LCS Customer Equipment", name, "paired_component", None, update_modified=False
+            )
+
+
 class _Builder:
     """Tracks what this run creates and appends it to the on-disk manifest."""
 
@@ -498,6 +527,12 @@ def remove_test_data():
             "locked": os.path.exists(_lock_path()),
         }
 
+    # Break any Display/Base mutual-pairing links up front -- see
+    # _break_paired_equipment_links() docstring. Without this, a paired
+    # equipment record is *permanently* stuck: it's always "still linked"
+    # from its own pair, no matter how many times you retry.
+    _break_paired_equipment_links((e["doctype"], e["name"]) for e in manifest)
+
     lines = []
     remaining = list(manifest)
     for entry in reversed(manifest):
@@ -645,6 +680,10 @@ def force_cleanup():
         f"Traced {len(discovered)} record(s) connected to the test data "
         f"({len(manifest)} originally tracked, {len(discovered) - len(manifest)} discovered from manual testing)."
     )
+
+    # Same Display/Base mutual-pairing deadlock as remove_test_data() --
+    # break it across the whole discovered set before attempting deletes.
+    _break_paired_equipment_links(discovered)
 
     # --- Deletion: retry passes until stable -----------------------------
     remaining = set(discovered)
