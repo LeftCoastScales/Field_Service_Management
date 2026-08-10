@@ -11,6 +11,13 @@
   "show_title_field_in_link": 1,
   "fields": [
     {
+      "fieldname": "naming_series",
+      "label": "Series",
+      "fieldtype": "Select",
+      "options": "MDL-.####.",
+      "reqd": 1
+    },
+    {
       "fieldname": "manufacturer",
       "label": "Manufacturer",
       "fieldtype": "Link",
