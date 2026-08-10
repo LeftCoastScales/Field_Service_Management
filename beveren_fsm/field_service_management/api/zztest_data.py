@@ -393,10 +393,10 @@ def create_test_data():
         {
             "service_type": service_type,
             "items": [
-                {"checklist_item": "Zero-balance check"},
-                {"checklist_item": "Load test at 50% capacity"},
-                {"checklist_item": "Load test at full capacity"},
-                {"checklist_item": "Calibration sticker applied"},
+                {"item_text": "Zero-balance check"},
+                {"item_text": "Load test at 50% capacity"},
+                {"item_text": "Load test at full capacity"},
+                {"item_text": "Calibration sticker applied"},
             ],
         },
         dedupe_filters={"name": service_type},
