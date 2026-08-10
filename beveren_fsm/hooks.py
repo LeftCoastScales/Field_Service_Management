@@ -176,6 +176,7 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"Quotation": "public/js/quotation.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 

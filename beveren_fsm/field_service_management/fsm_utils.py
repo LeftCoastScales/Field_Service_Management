@@ -187,3 +187,54 @@ def update_appointment_from_api(
 
 	appointment.save()
 	return appointment.name
+
+
+@frappe.whitelist()
+def make_service_order_from_quotation(source_name, target_doc=None):
+	"""
+	CRM bridge for sales-originated service work (new Service Agreements,
+	quoted repairs, installations): maps a submitted, standard ERPNext
+	Quotation onto a new Service Order.
+
+	Customer resolution reuses ERPNext's own Quotation -> Sales Order
+	logic (erpnext.selling.doctype.quotation.mapper._make_customer), so
+	Lead- and Prospect-type Quotations behave exactly like they already
+	do today when your sales team converts one to a Sales Order: if a
+	Customer already exists for that Lead/Prospect it's reused, otherwise
+	one is auto-created from the Lead's/Prospect's details. Customer-type
+	Quotations map straight across. This intentionally mirrors core
+	ERPNext behavior rather than inventing a new conversion path.
+
+	Lands on a new (unsaved) Service Order with customer and items
+	filled in -- same pattern as the app's existing Service Quotation ->
+	Service Order bridge (see service_order.make_order_from_quote) --
+	so Service Type, Priority and Due Date can be set before saving.
+	"""
+	from erpnext.selling.doctype.quotation.mapper import _make_customer
+	from frappe.model.mapper import get_mapped_doc
+
+	customer = _make_customer(source_name, ignore_permissions=False)
+
+	def set_missing_values(source, target):
+		if customer:
+			target.customer = customer.name
+
+	mapping = {
+		"Quotation": {
+			"doctype": "Service Order",
+			"validation": {"docstatus": ["=", 1]},
+			# party_name holds a Customer, Lead, or Prospect name depending on
+			# quotation_to -- never map it straight into the Customer link
+			# field. The resolved `customer` above (via _make_customer) is
+			# always a real Customer, set in set_missing_values instead.
+			"field_no_map": ["party_name"],
+		},
+		"Quotation Item": {
+			"doctype": "Service Order Item",
+			"field_map": {"parent": "prevdoc_docname", "name": "quotation_item"},
+			"condition": lambda d: not d.get("is_alternative"),
+		},
+	}
+
+	doc = get_mapped_doc("Quotation", source_name, mapping, target_doc, set_missing_values)
+	return doc
