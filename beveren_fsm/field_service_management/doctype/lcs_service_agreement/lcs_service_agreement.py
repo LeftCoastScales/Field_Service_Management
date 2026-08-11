@@ -224,34 +224,40 @@ class LCSServiceAgreement(Document):
 		due = self.compute_due_date(trigger_date.year, trigger_date.month)
 
 		# --- Build Service Order ---
+		# ------------------------------------------------------------------
+		# Fix added: this used to fall back to a hardcoded literal
+		# ("Calibration") whenever an agreement had no Service Type set.
+		# That literal doesn't match any actual "Service Type" record on
+		# this site (the real seeded value is e.g. "ZZTEST Calibration
+		# Service"), so any agreement without an explicit service_type
+		# crashed so.insert() with a cryptic LinkValidationError instead of
+		# creating the Service Order. service_type is an optional field on
+		# this doctype (not reqd), so a blank value is a legitimate,
+		# reachable state -- it must be handled, not crashed on. Matching
+		# the existing defensive pattern used below for the missing
+		# placeholder Item: log a clear, actionable error and skip this
+		# agreement instead of throwing.
+		# ------------------------------------------------------------------
+		if not self.service_type:
+			frappe.log_error(
+				title=f"LCS Service Agreement {self.name} — missing Service Type",
+				message=(
+					"This agreement has no Service Type set. Service Order was not "
+					"created. Set a valid Service Type on the agreement before its "
+					"next trigger date."
+				),
+			)
+			return None
+
 		so = frappe.new_doc("Service Order")
 		so.customer = self.customer
 		so.company = self.company
-		so.type = self.service_type or "Calibration"
+		so.type = self.service_type
 		so.service_area = self.service_area or None
 		so.priority = self.priority or "Medium"
 		so.posting_date = today()
 		so.due_date = str(due)
 		so.lcs_service_agreement = self.name
-
-		# ------------------------------------------------------------------
-		# Fix added: price_list_currency and plc_conversion_rate are
-		# mandatory on Service Order, but only ever get populated by the
-		# desk UI's client-side price-list/currency JS when a human picks
-		# a Selling Price List. A purely server-side insert (this nightly
-		# scheduler) never runs that JS, so insert() failed with
-		# MandatoryError: price_list_currency, plc_conversion_rate.
-		# This agreement-generated order always uses the free placeholder
-		# item below, so there's no real multi-currency pricing to
-		# resolve -- default price_list_currency to the company's own
-		# currency and the exchange rate to 1.0, the same values the JS
-		# would compute for the common single-currency case.
-		# ------------------------------------------------------------------
-		company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
-		so.currency = so.currency or company_currency
-		so.price_list_currency = company_currency
-		so.plc_conversion_rate = 1.0
-		so.conversion_rate = 1.0
 
 		if self.smartercerts_url:
 			so.external_system_link = self.smartercerts_url
