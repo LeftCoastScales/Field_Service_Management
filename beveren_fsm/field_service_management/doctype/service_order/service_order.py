@@ -149,12 +149,26 @@ class ServiceOrder(Document):
 	def process_item_selection(self, item_idx=None):
 		return
 
+	# ------------------------------------------------------------------
+	# Fix added: money_in_words(None, ...) throws TypeError.
+	# grand_total/base_grand_total are only ever populated by the desk
+	# UI's client-side calculate_totals() override -- a Service Order
+	# inserted purely server-side (e.g. LCS Service Agreement's nightly
+	# auto_create_service_orders scheduler, or any future API/script
+	# insert) never runs that JS, so both fields are still None the
+	# first time validate() -> set_in_words() runs here, before
+	# calculate_service_totals() even executes. flt() coalesces None/
+	# blank to 0.0, matching this app's own existing convention
+	# elsewhere in this file (see calculate_service_totals/check_amc_budget)
+	# and matching the test plan's expectation that a zero/blank total
+	# renders as "Zero" instead of erroring.
+	# ------------------------------------------------------------------
 	def set_in_words(self):
 		from frappe.utils import money_in_words
 
-		self.in_words = money_in_words(self.grand_total, self.currency)
+		self.in_words = money_in_words(flt(self.grand_total), self.currency)
 		self.base_in_words = money_in_words(
-			self.base_grand_total, frappe.get_cached_value("Company", self.company, "default_currency")
+			flt(self.base_grand_total), frappe.get_cached_value("Company", self.company, "default_currency")
 		)
 
 	def calculate_service_totals(self):
