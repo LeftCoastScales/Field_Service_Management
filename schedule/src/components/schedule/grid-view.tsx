@@ -13,7 +13,20 @@ interface GridViewProps {
   selectedDate: Date;
   onAppointmentClick?: (appointment: Appointment) => void;
   searchQuery?: string;
+  serviceAreaFilter?: string;
 }
+
+// Fix added: derive an appointment's service area the same way
+// schedule-left-panel.tsx already does (location.service_area if present,
+// otherwise the flat service_area field). Grid view previously had no
+// serviceAreaFilter prop at all, so the "All Areas" dropdown had zero
+// effect here -- appointments outside the selected area still showed up.
+const getAppointmentServiceArea = (apt: Appointment): string | undefined => {
+  if (apt.location && typeof apt.location === "object" && apt.location.service_area) {
+    return apt.location.service_area;
+  }
+  return apt.service_area;
+};
 
 type SortField = "name" | "service_order" | "customer" | "status" | "posting_date" | "scheduled_start_datetime" | null;
 type SortDirection = "asc" | "desc";
@@ -35,6 +48,7 @@ export function GridView({
   selectedDate,
   onAppointmentClick,
   searchQuery = "",
+  serviceAreaFilter = "all",
 }: GridViewProps) {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -52,6 +66,11 @@ export function GridView({
   // Filter and sort appointments
   const filteredAndSortedAppointments = useMemo(() => {
     let filtered = appointments;
+
+    // Apply service area filter (fix added -- see getAppointmentServiceArea)
+    if (serviceAreaFilter !== "all") {
+      filtered = filtered.filter((apt) => getAppointmentServiceArea(apt) === serviceAreaFilter);
+    }
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -135,7 +154,7 @@ export function GridView({
     }
 
     return filtered;
-  }, [appointments, sortField, sortDirection, searchQuery]);
+  }, [appointments, sortField, sortDirection, searchQuery, serviceAreaFilter]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

@@ -353,6 +353,7 @@ export function ScheduleRightPanel({
             selectedDate={selectedDate}
             onAppointmentClick={onAppointmentSelect}
             searchQuery={gridSearch}
+            serviceAreaFilter={serviceAreaFilter}
           />
         )}
         {viewType === "calendar" && (
@@ -363,6 +364,7 @@ export function ScheduleRightPanel({
             onAppointmentClick={onAppointmentSelect}
             currentMonth={calendarMonth}
             onMonthChange={setCalendarMonth}
+            serviceAreaFilter={serviceAreaFilter}
           />
         )}
       </div>

@@ -21,6 +21,21 @@ interface Technician {
   service_area?: string;
 }
 
+// Fix added: the previous implementation filtered *technician* rows by a
+// static tech.service_area field, which is a different concept from "only
+// show appointments for the selected area" (the actual test/requirement).
+// Technicians don't reliably carry their own service_area, so that filter
+// was effectively a no-op in practice, and even when it did match it filtered
+// the wrong entity. Derive area per-appointment the same way
+// schedule-left-panel.tsx / grid-view.tsx / calendar-view.tsx already do,
+// and filter the appointments shown on the timeline instead.
+const getAppointmentServiceArea = (apt: Appointment): string | undefined => {
+  if (apt.location && typeof apt.location === "object" && apt.location.service_area) {
+    return apt.location.service_area;
+  }
+  return apt.service_area;
+};
+
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i); // 0-23
 const TECHNICIAN_ROW_HEIGHT = 60; // Fixed height per technician row (compact, shows 2 arrows worth)
 const HOUR_COLUMN_WIDTH = 80;
@@ -109,26 +124,20 @@ export function GanttView({
     }
   };
 
-  // Filter technicians by search
+  // Filter technicians by search only (area filtering now happens on the
+  // appointments themselves -- see appointmentsForSelectedDate below).
   const filteredTechnicians = useMemo(() => {
-    let result = technicians;
-
-    // Apply service area filter first
-    if (serviceAreaFilter !== "all") {
-      result = result.filter((tech) => tech.service_area === serviceAreaFilter);
-    }
-
-    // Then apply search
-    if (!technicianSearch.trim()) return result;
+    if (!technicianSearch.trim()) return technicians;
     const searchLower = technicianSearch.toLowerCase();
-    return result.filter(
+    return technicians.filter(
       (tech) =>
         tech.full_name.toLowerCase().includes(searchLower) ||
         tech.name.toLowerCase().includes(searchLower)
     );
-  }, [technicians, technicianSearch, serviceAreaFilter]);
+  }, [technicians, technicianSearch]);
 
-  // Filter appointments for the selected date (parse as local to avoid TZ drift)
+  // Filter appointments for the selected date and service area (parse as
+  // local to avoid TZ drift)
   const appointmentsForSelectedDate = useMemo(() => {
     const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -138,9 +147,15 @@ export function GanttView({
       const appointmentDate = parseLocalDateTime(apt.scheduled_start_datetime);
       const appointmentDateStr = format(appointmentDate, "yyyy-MM-dd");
 
-      return appointmentDateStr === selectedDateStr;
+      if (appointmentDateStr !== selectedDateStr) return false;
+
+      if (serviceAreaFilter !== "all" && getAppointmentServiceArea(apt) !== serviceAreaFilter) {
+        return false;
+      }
+
+      return true;
     });
-  }, [appointments, selectedDate]);
+  }, [appointments, selectedDate, serviceAreaFilter]);
 
   // Get technicians that have appointments for this date
   const techniciansWithAppointments = useMemo(() => {
