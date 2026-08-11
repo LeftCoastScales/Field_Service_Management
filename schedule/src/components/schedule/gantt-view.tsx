@@ -15,6 +15,7 @@ interface GanttViewProps {
   serviceAreaFilter?: string;
 }
 
+
 interface Technician {
   name: string;
   full_name: string;
