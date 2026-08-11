@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import get_datetime
 
 ATTENDANCE_SHIFT = "LCS Standard"  # every technician currently works this shift; no Shift Assignment records exist yet
 
@@ -29,7 +30,14 @@ class LCSTechDayLog(Document):
 		for seg in self.segments:
 			if not seg.end_time:
 				continue
-			gross = (seg.end_time - seg.start_time).total_seconds() / 60
+			# submit_time_action() sets end_time/start_time from raw API string
+			# params on segments that were already loaded from the DB (where
+			# Frappe's own load path already cast them to datetime objects) —
+			# a plain attribute assignment doesn't trigger that cast, so this
+			# can see a str on one side and a datetime on the other by the
+			# time validate() runs. get_datetime() normalizes either shape
+			# and is a no-op if the value is already a datetime.
+			gross = (get_datetime(seg.end_time) - get_datetime(seg.start_time)).total_seconds() / 60
 			# Lunch is unpaid and comes off net/paid time. A job pause
 			# (parts, waiting on customer, etc.) stays on the clock for
 			# payroll — it's paid — so seg.pause_minutes is deliberately
