@@ -234,6 +234,25 @@ class LCSServiceAgreement(Document):
 		so.due_date = str(due)
 		so.lcs_service_agreement = self.name
 
+		# ------------------------------------------------------------------
+		# Fix added: price_list_currency and plc_conversion_rate are
+		# mandatory on Service Order, but only ever get populated by the
+		# desk UI's client-side price-list/currency JS when a human picks
+		# a Selling Price List. A purely server-side insert (this nightly
+		# scheduler) never runs that JS, so insert() failed with
+		# MandatoryError: price_list_currency, plc_conversion_rate.
+		# This agreement-generated order always uses the free placeholder
+		# item below, so there's no real multi-currency pricing to
+		# resolve -- default price_list_currency to the company's own
+		# currency and the exchange rate to 1.0, the same values the JS
+		# would compute for the common single-currency case.
+		# ------------------------------------------------------------------
+		company_currency = frappe.get_cached_value("Company", self.company, "default_currency")
+		so.currency = so.currency or company_currency
+		so.price_list_currency = company_currency
+		so.plc_conversion_rate = 1.0
+		so.conversion_rate = 1.0
+
 		if self.smartercerts_url:
 			so.external_system_link = self.smartercerts_url
 
