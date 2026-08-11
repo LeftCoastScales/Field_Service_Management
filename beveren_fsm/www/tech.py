@@ -21,6 +21,7 @@ import json
 import os
 
 import frappe
+import frappe.sessions
 
 no_cache = 1
 
@@ -39,6 +40,16 @@ def get_context(context):
 	context.no_breadcrumbs = True
 	context.no_header = True
 	context.employee = employee
+
+	# tech.html deliberately does not extend templates/web.html (no Frappe
+	# site chrome around the app shell), which means it also misses out on
+	# the CSRF token injection that page normally provides for free. Every
+	# write in api/tech_pwa.py is a whitelisted POST, so without this the
+	# token src/api/client.js reads is always empty and every mutation is
+	# rejected with CSRFTokenError. Mirrors the working pattern in
+	# www/schedule.py and www/service-agreement-quote/index.py.
+	context.csrf_token = frappe.sessions.get_csrf_token()
+	frappe.db.commit()  # nosemgrep
 
 	manifest = _load_asset_manifest()
 	entry = manifest.get("index.html", {})

@@ -4,15 +4,25 @@
  * Thin wrapper over the Frappe REST API. The PWA is served from the same
  * origin (e.g. https://lcscales.v.frappe.cloud/tech), so session cookie
  * auth applies automatically — no API keys needed on-device. Every write
- * call must send the CSRF token, read fresh from the cookie, matching the
- * pattern established for the SAQ portal form (see SOP-SAQ-001).
+ * call must send the CSRF token, matching the pattern established for the
+ * SAQ portal form (see SOP-SAQ-001).
+ *
+ * Frappe does NOT set a readable csrf_token cookie by default — that was
+ * the previous (broken) assumption here, and it silently sent an empty
+ * X-Frappe-CSRF-Token header on every write, which the server correctly
+ * rejected with CSRFTokenError. tech.py's get_context() computes the real
+ * token server-side and tech.html injects it as window.csrf_token before
+ * this module loads (same global name schedule.html and the SAQ form use
+ * — not window.frappe.csrf_token, which is a Desk-only boot value this
+ * standalone shell never has).
  */
 
 function getCsrfToken() {
-  // Frappe injects frappe.csrf_token as a global on Desk pages, but on a
-  // pure www/ route or a mounted SPA we read it from the cookie Frappe sets.
+  // Prefer a fresh cookie read if one is ever present (defensive — some
+  // Frappe configurations do set one), otherwise fall back to the value
+  // tech.html injected from the server-rendered context.
   const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : (window.frappe?.csrf_token ?? '');
+  return match ? decodeURIComponent(match[1]) : (window.csrf_token ?? '');
 }
 
 async function request(path, { method = 'GET', body, isForm = false } = {}) {

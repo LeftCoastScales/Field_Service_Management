@@ -39,10 +39,17 @@
 <body>
 	<div id="root"></div>
 
-	{# frappe's csrf_token cookie is already present on any authenticated
-	   page load, so src/api/client.js reads it straight from the cookie,
-	   exactly as the SAQ portal form does. Service worker registration
-	   happens inside main.jsx (bundled into the JS below), not here. #}
+	{# Frappe does not set a readable csrf_token cookie by default — that
+	   was a wrong assumption in an earlier version of this file, and it
+	   silently broke every write in the app (see api/tech_pwa.py). Since
+	   this shell deliberately skips templates/web.html, the token has to
+	   be computed in tech.py's get_context() and injected here explicitly,
+	   exactly as www/schedule.html and the SAQ portal form already do.
+	   Service worker registration happens inside main.jsx (bundled into
+	   the JS below), not here. #}
+	<script>
+	window.csrf_token = '{{ csrf_token }}';
+	</script>
 	<script type="module" src="/assets/beveren_fsm/tech/{{ tech_js }}"></script>
 </body>
 </html>

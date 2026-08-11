@@ -15,6 +15,7 @@ import { extractErrorMessage } from '../api/client.js';
 import ClockCorrectionModal from './ClockCorrectionModal.jsx';
 import PauseJobModal from './PauseJobModal.jsx';
 import SendReportModal from './SendReportModal.jsx';
+import ConfirmModal from './ConfirmModal.jsx';
 
 // Local calendar date, NOT UTC — new Date().toISOString() would return the
 // UTC date, which drifts from the technician's actual workday for hours
@@ -46,6 +47,11 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState(null);
   const [sendReportOpen, setSendReportOpen] = useState(false);
+  // Which native-confirm replacement is open, if any: 'complete' | 'reopen' | null.
+  // Was window.confirm() for both — replaced so these two match the rest of
+  // the app's modal pattern and are reachable by automated testing tools,
+  // which can't interact with native browser-chrome dialogs.
+  const [confirmOpen, setConfirmOpen] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -144,7 +150,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
   };
 
   const handleMarkComplete = async () => {
-    if (!window.confirm('Mark this job complete? It will be removed from your job list.')) return;
+    setConfirmOpen(null);
     setCompleting(true);
     setCompleteError(null);
     try {
@@ -220,7 +226,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
             </button>
           )}
           {!ctx.onJobPause && !ctx.onLunch && (
-            <button className="btn btn-primary btn-full" onClick={handleMarkComplete} disabled={completing}>
+            <button className="btn btn-primary btn-full" onClick={() => setConfirmOpen('complete')} disabled={completing}>
               {completing ? 'Completing…' : 'Mark Complete'}
             </button>
           )}
@@ -285,11 +291,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           {ctx.dayState === DAY_STATES.ENDED && (
             <button
               className="btn btn-outline btn-full"
-              onClick={() => {
-                if (window.confirm('Reopen today? Use this if End of Day was tapped by mistake.')) {
-                  dispatch(ACTIONS.REOPEN_DAY);
-                }
-              }}
+              onClick={() => setConfirmOpen('reopen')}
             >
               Reopen Day
             </button>
@@ -326,6 +328,27 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           setSendReportOpen(false);
           onJobCompleted?.();
         }}
+      />
+
+      <ConfirmModal
+        open={confirmOpen === 'complete'}
+        title="Mark this job complete?"
+        body="It will be removed from your job list."
+        confirmLabel="Mark Complete"
+        onConfirm={handleMarkComplete}
+        onCancel={() => setConfirmOpen(null)}
+      />
+
+      <ConfirmModal
+        open={confirmOpen === 'reopen'}
+        title="Reopen today?"
+        body="Use this if End of Day was tapped by mistake."
+        confirmLabel="Reopen Day"
+        onConfirm={() => {
+          setConfirmOpen(null);
+          dispatch(ACTIONS.REOPEN_DAY);
+        }}
+        onCancel={() => setConfirmOpen(null)}
       />
     </div>
   );
