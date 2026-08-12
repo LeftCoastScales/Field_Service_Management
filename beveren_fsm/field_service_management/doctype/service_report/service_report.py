@@ -13,10 +13,20 @@ class ServiceReport(Document):
 
 	def on_submit(self):
 		self._assert_checklist_complete()
+		# on_submit() runs AFTER Frappe has already written this document's
+		# row via db_update() (submit() flow is: set docstatus -> validate ->
+		# db_update() -> run_post_save_methods(), and on_submit is a
+		# post-save method). A plain `self.field = value` assignment here
+		# only changes the in-memory object for the rest of *this* request
+		# (which is why the very next API response looked correct) -- it's
+		# never written to the DB, so submitted_at silently stayed null on
+		# every subsequent read. db_set() issues the extra UPDATE (and
+		# updates self.<field> too), which is what post-save hooks need to
+		# use for any field they want to actually persist.
 		if not self.submitted_at:
-			self.submitted_at = now_datetime()
+			self.db_set("submitted_at", now_datetime(), update_modified=False)
 		if not self.submitted_by:
-			self.submitted_by = _service_technician_for_session_user()
+			self.db_set("submitted_by", _service_technician_for_session_user(), update_modified=False)
 
 	def _populate_checklist_from_template(self):
 		"""
