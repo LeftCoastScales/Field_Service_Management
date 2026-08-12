@@ -142,9 +142,23 @@ export function addPartToAppointment({ appointmentName, itemCode, qty }) {
   });
 }
 
-/** Fetches (or creates, on first open) the Service Report for an appointment. */
+/**
+ * Fetches (or creates, on first open) the Service Report for an
+ * appointment. This is a POST, not a GET, even though it's semantically a
+ * "read" from the caller's side: get_service_report() lazy-creates the
+ * Service Report doc server-side on first open (see tech_pwa.py). Frappe
+ * only commits database writes made during POST/non-GET requests — a
+ * write issued from a GET handler renders fine in that response (the
+ * in-memory doc is fully populated) but is silently never persisted,
+ * which broke Save Draft/Submit Report with "No Service Report exists
+ * yet" on every subsequent call. POST here matches the endpoint's actual
+ * side effect and ensures the created doc is committed.
+ */
 export function getServiceReport(appointmentName) {
-  return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_service_report?appointment=${encodeURIComponent(appointmentName)}`);
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_service_report', {
+    method: 'POST',
+    body: { appointment: appointmentName },
+  });
 }
 
 /** Saves in-progress checklist responses/notes without submitting. */
