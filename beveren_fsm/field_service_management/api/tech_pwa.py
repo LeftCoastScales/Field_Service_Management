@@ -857,22 +857,37 @@ def collect_payment(appointment: str, amount: float, method: str) -> dict:
             f"{frappe.utils.fmt_money(invoice.outstanding_amount, currency=invoice.currency)}."
         )
 
-    pe = get_payment_entry("Sales Invoice", invoice.name, party_amount=amount)
-    pe.mode_of_payment = mode_of_payment
-    bank_cash_account = get_bank_cash_account(mode_of_payment, pe.company)
-    if bank_cash_account and bank_cash_account.get("account"):
-        pe.paid_to = bank_cash_account["account"]
-    pe.reference_no = f"Field Payment - {appointment}"
-    pe.reference_date = nowdate()
-    pe.paid_amount = amount
-    pe.received_amount = amount
-    if pe.references:
-        pe.references[0].allocated_amount = amount
-    pe.flags.ignore_permissions = True
-    pe.insert(ignore_permissions=True)
-    pe.submit()
-
-    invoice.reload()
+    # get_payment_entry (ERPNext core) does its own doctype permission
+    # check on Sales Invoice/Payment Entry, and Field Service User has no
+    # Desk-level grant on either -- correctly so, a tech shouldn't be able
+    # to browse the accounting module. _assert_assigned() above is the
+    # real authorization boundary for this endpoint, same as every other
+    # write in this file, so the actual money-moving calls run as
+    # Administrator rather than the technician's own (deliberately
+    # narrow) role. Confirmed via direct testing: without this, collect_payment
+    # failed with "User ... does not have doctype access via role
+    # permission for document Sales Invoice" despite _assert_assigned
+    # already having verified the technician owns this job.
+    original_user = frappe.session.user
+    frappe.set_user("Administrator")
+    try:
+        pe = get_payment_entry("Sales Invoice", invoice.name, party_amount=amount)
+        pe.mode_of_payment = mode_of_payment
+        bank_cash_account = get_bank_cash_account(mode_of_payment, pe.company)
+        if bank_cash_account and bank_cash_account.get("account"):
+            pe.paid_to = bank_cash_account["account"]
+        pe.reference_no = f"Field Payment - {appointment}"
+        pe.reference_date = nowdate()
+        pe.paid_amount = amount
+        pe.received_amount = amount
+        if pe.references:
+            pe.references[0].allocated_amount = amount
+        pe.flags.ignore_permissions = True
+        pe.insert(ignore_permissions=True)
+        pe.submit()
+        invoice.reload()
+    finally:
+        frappe.set_user(original_user)
     receipt_emailed_to = _send_payment_receipt_email(invoice, pe, service_order)
 
     return {
