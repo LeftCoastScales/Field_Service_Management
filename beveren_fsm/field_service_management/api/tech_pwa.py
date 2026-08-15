@@ -873,7 +873,14 @@ def collect_payment(appointment: str, amount: float, method: str) -> dict:
     try:
         pe = get_payment_entry("Sales Invoice", invoice.name, party_amount=amount)
         pe.mode_of_payment = mode_of_payment
-        bank_cash_account = get_bank_cash_account(mode_of_payment, pe.company)
+        # get_bank_cash_account(doc, bank_account) -- NOT (mode_of_payment, company)
+        # as first assumed. It reads doc.company and doc.get("mode_of_payment")
+        # itself (hence mode_of_payment must already be set on pe, above), and
+        # bank_account is an optional preferred-account override we don't need.
+        # Confirmed against erpnext/accounts/doctype/payment_entry/payment_entry.py
+        # (version-16 branch) after this shipped the wrong signature and failed
+        # live testing with "AttributeError: 'str' object has no attribute 'company'".
+        bank_cash_account = get_bank_cash_account(pe, None)
         if bank_cash_account and bank_cash_account.get("account"):
             pe.paid_to = bank_cash_account["account"]
         pe.reference_no = f"Field Payment - {appointment}"
