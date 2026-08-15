@@ -6,6 +6,7 @@ import NotesEditor from './NotesEditor.jsx';
 import PhotoUpload from './PhotoUpload.jsx';
 import ServiceReport from './ServiceReport.jsx';
 import PartsSection from './PartsSection.jsx';
+import CollectPayment from './CollectPayment.jsx';
 import AccordionSection from './AccordionSection.jsx';
 
 export default function JobDetail({ appointmentName, employee, capacity, onBack }) {
@@ -102,6 +103,10 @@ export default function JobDetail({ appointmentName, employee, capacity, onBack 
 
       <AccordionSection title="Parts on Order" badge={job.parts?.length || null}>
         <PartsSection appointmentName={appointmentName} initialParts={job.parts} />
+      </AccordionSection>
+
+      <AccordionSection title="Collect Payment">
+        <CollectPayment appointmentName={appointmentName} />
       </AccordionSection>
     </div>
   );

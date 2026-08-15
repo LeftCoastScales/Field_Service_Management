@@ -94,6 +94,19 @@ export function uploadPhoto({ appointmentName, blob, caption }) {
   });
 }
 
+/** Whether a submitted invoice with a balance due exists for this job, and what methods to offer. */
+export function getPaymentInfo(appointmentName) {
+  return request(`/api/method/beveren_fsm.field_service_management.api.tech_pwa.get_payment_info?appointment=${encodeURIComponent(appointmentName)}`);
+}
+
+/** Creates and submits a Payment Entry against the job's Sales Invoice, then emails a receipt. */
+export function collectPayment({ appointmentName, amount, method }) {
+  return request('/api/method/beveren_fsm.field_service_management.api.tech_pwa.collect_payment', {
+    method: 'POST',
+    body: { appointment: appointmentName, amount, method },
+  });
+}
+
 /**
  * Frappe error responses are a JSON body with either a top-level
  * "message", or a "_server_messages" field (a JSON-stringified array of
