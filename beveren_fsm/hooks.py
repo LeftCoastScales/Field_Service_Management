@@ -134,9 +134,13 @@ fixtures = [
 		"filters": [["employee_type", "=", "Full-time"]],
 	},
 
-	# Only 4 custom roles needed — all others (Field Service User, Dispatcher,
-	# Crew Leader, Credit Manager, Fleet Manager, Quality Manager, Training Manager,
-	# Compliance Officer, Field Service Manager) already exist in this ERPNext instance.
+	# Custom roles — all others (Field Service User, Dispatcher, Crew Leader,
+	# Credit Manager, Fleet Manager, Quality Manager, Training Manager,
+	# Compliance Officer, Field Service Manager) already exist in this ERPNext
+	# instance. Service Manager and Service Administrator were previously
+	# created directly on the live site and are added here so they're no
+	# longer dropped on export (same class of gap as the Sales Invoice
+	# custom fields fix — see Section 8.9 of the roadmap).
 	{
 		"dt": "Role",
 		"filters": [
@@ -145,6 +149,8 @@ fixtures = [
 				"CRM Manager",
 				"Helpdesk Agent",
 				"Helpdesk Manager",
+				"Service Manager",
+				"Service Administrator",
 			]],
 		],
 	},
