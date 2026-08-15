@@ -426,6 +426,17 @@ def _mirror_part_to_service_order(
             },
         )
 
+    # Service Order.items lacks allow_on_submit (unlike Service
+    # Appointment.items, which has it) and most orders being worked in
+    # the field are already submitted (Scheduled/Dispatched/In Progress/
+    # Review all have docstatus=1). Without this flag, Frappe's normal
+    # update-after-submit guard silently reverts the appended/merged row
+    # right back out during save -- no exception, no error in the
+    # response, just a no-op -- which is exactly the failure mode this
+    # fix exists to close. Confirmed via direct testing against a
+    # submitted (status=Review) Service Order: without this flag the
+    # part never reached the DB despite a 200 response.
+    order.flags.ignore_validate_update_after_submit = True
     order.save(ignore_permissions=True)
 
 
