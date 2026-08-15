@@ -341,6 +341,15 @@ def add_part_to_appointment(appointment: str, item_code: str, qty: float = 1) ->
     the field. Online-only for now, same scope limitation as the Service
     Report — this doesn't queue into the offline mutation outbox, so it
     needs a live connection to succeed.
+
+    Also mirrors the row onto the linked Service Order's own items table
+    (merging into an existing item_code's qty rather than duplicating a
+    row) — Service Order.items is the only place the Create Invoice flow
+    (service_order.js create_service_invoice / fsm_utils.create_service_invoice)
+    reads from. Without this, a part a tech adds in the field never
+    reaches an invoice — it would sit on Service Appointment.items
+    forever, invisible to billing. See LCS ERPNext Implementation
+    Roadmap, Section 8 (Phase 5).
     """
     _assert_assigned(appointment, _current_service_technician())
 
@@ -352,6 +361,7 @@ def add_part_to_appointment(appointment: str, item_code: str, qty: float = 1) ->
 
     qty = flt(qty) or 1
     rate = flt(item.standard_rate)
+    is_service = bool(_is_service_item_group(item.item_group))
 
     doc = frappe.get_doc("Service Appointment", appointment)
     doc.append(
@@ -363,12 +373,60 @@ def add_part_to_appointment(appointment: str, item_code: str, qty: float = 1) ->
             "uom": item.stock_uom,
             "rate": rate,
             "amount": rate * qty,
-            "is_service": bool(_is_service_item_group(item.item_group)),
+            "is_service": is_service,
         },
     )
     doc.save(ignore_permissions=True)  # allow_on_submit=1 on items — works whether Open or already Scheduled/In Progress
 
+    _mirror_part_to_service_order(doc.get("service_order"), item_code, item.item_name, qty, rate, is_service)
+
     return {"parts": _parts_for_appointment(doc)}
+
+
+def _mirror_part_to_service_order(
+    service_order: str | None,
+    item_code: str,
+    item_name: str | None,
+    qty: float,
+    rate: float,
+    is_service: bool,
+) -> None:
+    """
+    Keeps Service Order.items in sync with parts added in the field so
+    they actually get billed. Merges into an existing row for the same
+    item_code (increments qty/amount) rather than appending a duplicate
+    line — mirrors the merge-by-item_code behavior service_order.js's
+    create_service_invoice dialog already applies on its own side, and
+    means an item invoiced before, then added to again in the field,
+    correctly shows a remaining invoiceable qty afterward.
+
+    Skipped quietly if the appointment has no linked Service Order —
+    shouldn't happen in practice, but a field tech's part-add shouldn't
+    fail over a data issue on an unrelated document.
+    """
+    if not service_order:
+        return
+
+    order = frappe.get_doc("Service Order", service_order)
+    existing = next((row for row in order.items if row.item_code == item_code), None)
+
+    if existing:
+        existing.qty = flt(existing.qty) + qty
+        existing.amount = flt(existing.rate) * existing.qty
+    else:
+        order.append(
+            "items",
+            {
+                "item_code": item_code,
+                "item_name": item_name,
+                "qty": qty,
+                "rate": rate,
+                "amount": rate * qty,
+                "is_service": is_service,
+            },
+        )
+
+    order.save(ignore_permissions=True)
 
 
 def _assert_assigned(appointment: str, service_technician: str) -> None:
