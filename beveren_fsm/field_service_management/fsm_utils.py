@@ -1,10 +1,22 @@
 import json
 
 import frappe
+from frappe import _
+
+# Create Invoice moves real accounting data (a Sales Invoice) — restricted to
+# Accounting department staff and the Service Administrator role, not
+# dispatchers or crew leads. Desk-only; there's no PWA entry point for this.
+INVOICE_CREATION_ROLES = ["System Manager", "Accounts Manager", "Accounts User", "Service Administrator"]
 
 
 @frappe.whitelist()
 def create_service_invoice(doctype, docname, customer, items=None):
+	if not set(INVOICE_CREATION_ROLES) & set(frappe.get_roles()):
+		frappe.throw(
+			_("Only Accounting staff or a Service Administrator can create invoices."),
+			frappe.PermissionError,
+		)
+
 	items = json.loads(items) if items else []
 	invoice = frappe.new_doc("Sales Invoice")
 	invoice.customer = customer
