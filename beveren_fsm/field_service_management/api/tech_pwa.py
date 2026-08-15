@@ -743,6 +743,235 @@ def submit_time_action(
     return {"day_log": log.name, "day_state": log.day_state}
 
 
+# ---- Field Payment Collection (Phase 5) ------------------------------------
+# Activates the "Collect Payment" action on the Job Detail screen. See LCS
+# ERPNext Implementation Roadmap, Section 8.4/8.5 for the resolved design:
+# amount + method (Cash/Check/Card) -> Payment Entry against the Service
+# Order's Sales Invoice, record-only (no gateway/processing integration --
+# a card charge happens on a separate terminal outside ERPNext), using
+# standard mode_of_payment so Phase 7M's surcharge logic (Section 22) has
+# a clean field to key off later. Then an emailed receipt reusing the
+# site's default Letter Head branding. Collect Payment only proceeds
+# against an already-submitted invoice (Section 8.1 step 5) -- never a
+# draft that could still be edited -- checked both client-side (PWA hides
+# the action until get_payment_info says can_collect) and again here,
+# since the client can't be trusted as the only gate on a money-moving
+# endpoint.
+
+PAYMENT_METHOD_TO_MODE_OF_PAYMENT = {
+    "Cash": "Cash",
+    "Check": "Check",
+    "Card": "Credit Card",
+}
+
+
+def _latest_submitted_invoice_for_service_order(service_order: str):
+    """
+    The most recently created submitted Sales Invoice referencing this
+    Service Order (custom_reference_service_doctype/_document -- see
+    fsm_utils.create_service_invoice). Create Invoice's own
+    double-invoicing guard (Section 8.2, custom_invoice_created) isn't
+    built yet, so this defensively doesn't assume there's exactly one --
+    it just takes the newest.
+    """
+    names = frappe.get_all(
+        "Sales Invoice",
+        filters={
+            "custom_reference_service_doctype": "Service Order",
+            "custom_reference_service_document": service_order,
+            "docstatus": 1,
+        },
+        fields=["name"],
+        order_by="creation desc",
+        limit_page_length=1,
+    )
+    if not names:
+        return None
+    return frappe.get_doc("Sales Invoice", names[0].name)
+
+
+@frappe.whitelist()
+def get_payment_info(appointment: str) -> dict:
+    """
+    Tells the PWA whether Collect Payment should be shown/enabled for
+    this job: whether a submitted Sales Invoice exists for its Service
+    Order, and if so whether it still has a balance due.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    service_order = frappe.db.get_value("Service Appointment", appointment, "service_order")
+    invoice = _latest_submitted_invoice_for_service_order(service_order) if service_order else None
+
+    if not invoice:
+        return {"can_collect": False, "status": "not_invoiced", "invoice": None, "outstanding_amount": 0, "currency": None, "methods": []}
+
+    if flt(invoice.outstanding_amount) <= 0:
+        return {
+            "can_collect": False,
+            "status": "paid_in_full",
+            "invoice": invoice.name,
+            "outstanding_amount": 0,
+            "currency": invoice.currency,
+            "methods": [],
+        }
+
+    return {
+        "can_collect": True,
+        "status": "outstanding",
+        "invoice": invoice.name,
+        "outstanding_amount": flt(invoice.outstanding_amount),
+        "currency": invoice.currency,
+        "methods": list(PAYMENT_METHOD_TO_MODE_OF_PAYMENT.keys()),
+    }
+
+
+@frappe.whitelist()
+def collect_payment(appointment: str, amount: float, method: str) -> dict:
+    """
+    Creates and submits a Payment Entry against the appointment's
+    Service Order's Sales Invoice, then emails a receipt to the customer
+    contact on file. POST-only -- this mutates real accounting records,
+    same GET-vs-POST rule from Section 8.6/Section 39 (commit 0cca418).
+    """
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_bank_cash_account, get_payment_entry
+
+    _assert_assigned(appointment, _current_service_technician())
+
+    mode_of_payment = PAYMENT_METHOD_TO_MODE_OF_PAYMENT.get(method)
+    if not mode_of_payment:
+        frappe.throw(f"Unknown payment method: {method}")
+
+    amount = flt(amount)
+    if amount <= 0:
+        frappe.throw("Enter an amount greater than zero.")
+
+    service_order = frappe.db.get_value("Service Appointment", appointment, "service_order")
+    invoice = _latest_submitted_invoice_for_service_order(service_order) if service_order else None
+    if not invoice:
+        frappe.throw("No submitted invoice was found for this job yet — Collect Payment isn't available until it's invoiced.")
+    if flt(invoice.outstanding_amount) <= 0:
+        frappe.throw("This invoice is already paid in full.")
+    if amount > flt(invoice.outstanding_amount) + 0.005:  # small tolerance for float rounding
+        frappe.throw(
+            f"That's more than the outstanding balance of "
+            f"{frappe.utils.fmt_money(invoice.outstanding_amount, currency=invoice.currency)}."
+        )
+
+    pe = get_payment_entry("Sales Invoice", invoice.name, party_amount=amount)
+    pe.mode_of_payment = mode_of_payment
+    bank_cash_account = get_bank_cash_account(mode_of_payment, pe.company)
+    if bank_cash_account and bank_cash_account.get("account"):
+        pe.paid_to = bank_cash_account["account"]
+    pe.reference_no = f"Field Payment - {appointment}"
+    pe.reference_date = nowdate()
+    pe.paid_amount = amount
+    pe.received_amount = amount
+    if pe.references:
+        pe.references[0].allocated_amount = amount
+    pe.flags.ignore_permissions = True
+    pe.insert(ignore_permissions=True)
+    pe.submit()
+
+    invoice.reload()
+    receipt_emailed_to = _send_payment_receipt_email(invoice, pe, service_order)
+
+    return {
+        "payment_entry": pe.name,
+        "amount_paid": flt(pe.paid_amount),
+        "outstanding_amount": flt(invoice.outstanding_amount),
+        "receipt_emailed_to": receipt_emailed_to,
+    }
+
+
+_RECEIPT_CONTENT_TEMPLATE = """
+<div style="font-family: sans-serif; color: #1a1a1a; max-width: 680px; margin: 24px auto;">
+  <h2 style="color: #002050; border-bottom: 2px solid #002050; padding-bottom: 8px;">Payment Receipt</h2>
+  <table style="width: 100%; font-size: 13px; margin-bottom: 16px;">
+    <tr><td style="color: #555;">Invoice</td><td style="text-align: right;">{{ invoice.name }}</td></tr>
+    <tr><td style="color: #555;">Payment Date</td><td style="text-align: right;">{{ payment_entry.reference_date }}</td></tr>
+    <tr><td style="color: #555;">Payment Method</td><td style="text-align: right;">{{ payment_entry.mode_of_payment }}</td></tr>
+    <tr><td style="color: #555;">Customer</td><td style="text-align: right;">{{ invoice.customer_name }}</td></tr>
+  </table>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr style="background: #f2f2f2;">
+        <th style="text-align: left; padding: 6px;">Item</th>
+        <th style="text-align: right; padding: 6px;">Qty</th>
+        <th style="text-align: right; padding: 6px;">Rate</th>
+        <th style="text-align: right; padding: 6px;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in invoice.items %}
+      <tr style="border-bottom: 1px solid #e0e0e0;">
+        <td style="padding: 6px;">{{ item.item_name }}</td>
+        <td style="text-align: right; padding: 6px;">{{ item.qty }}</td>
+        <td style="text-align: right; padding: 6px;">{{ frappe.utils.fmt_money(item.rate, currency=invoice.currency) }}</td>
+        <td style="text-align: right; padding: 6px;">{{ frappe.utils.fmt_money(item.amount, currency=invoice.currency) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <table style="width: 100%; font-size: 13px; margin-top: 16px;">
+    <tr><td>Invoice Total</td><td style="text-align: right;">{{ frappe.utils.fmt_money(invoice.grand_total, currency=invoice.currency) }}</td></tr>
+    <tr style="font-weight: bold; color: #002050;"><td>Amount Paid Today</td><td style="text-align: right;">{{ frappe.utils.fmt_money(payment_entry.paid_amount, currency=invoice.currency) }}</td></tr>
+    <tr><td>Remaining Balance</td><td style="text-align: right;">{{ frappe.utils.fmt_money(invoice.outstanding_amount, currency=invoice.currency) }}</td></tr>
+  </table>
+  <p style="font-size: 12px; color: #777; margin-top: 24px;">Thank you for your business.</p>
+</div>
+"""
+
+
+def _render_payment_receipt_pdf(invoice, payment_entry) -> bytes:
+    """
+    Builds the receipt PDF by wrapping the site's default Letter Head
+    (same header/footer/logo the Service Report PDF picks up automatically
+    via Print Settings' with_letterhead flag) around a receipt-specific
+    content block, per Section 8.5 -- reuse the branding, not the
+    Service-Report-specific checklist section.
+    """
+    from frappe.utils.pdf import get_pdf
+
+    letter_head = frappe.db.get_value(
+        "Letter Head", {"is_default": 1, "disabled": 0}, ["content", "footer"], as_dict=True
+    ) or {}
+    body = frappe.render_template(
+        _RECEIPT_CONTENT_TEMPLATE, {"invoice": invoice, "payment_entry": payment_entry, "frappe": frappe}
+    )
+    full_html = f"{letter_head.get('content') or ''}{body}{letter_head.get('footer') or ''}"
+    return get_pdf(full_html)
+
+
+def _send_payment_receipt_email(invoice, payment_entry, service_order: str | None) -> str | None:
+    """
+    Emails the receipt to the customer contact on file. Doesn't fail the
+    payment if there's no email on file or sending errors out -- the
+    Payment Entry is the durable record; the receipt is a courtesy on
+    top of it, same non-blocking spirit as complete_appointment being
+    independent of Service Report submission.
+    """
+    email = None
+    if service_order:
+        contact = frappe.db.get_value("Service Order", service_order, "customer_contact")
+        if contact:
+            email = frappe.db.get_value("Contact", contact, "email_id")
+    if not email:
+        return None
+
+    try:
+        pdf_bytes = _render_payment_receipt_pdf(invoice, payment_entry)
+        frappe.sendmail(
+            recipients=[email],
+            subject=f"Payment Receipt — {invoice.name}",
+            message="Please find attached your payment receipt. Thank you for your business.",
+            attachments=[{"fname": f"Receipt-{payment_entry.name}.pdf", "fcontent": pdf_bytes}],
+        )
+        return email
+    except Exception:
+        frappe.log_error(title="Payment receipt email failed", message=frappe.get_traceback())
+        return None
+
+
 # ---- doc_events hooks: carry dispatch instructions forward through the ----
 # ---- Service Request -> Service Order -> Service Appointment chain.    ----
 # Registered in hooks.py's doc_events, not whitelisted — these are internal
