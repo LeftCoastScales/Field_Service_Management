@@ -76,6 +76,11 @@ fixtures = [
 					"Service Area-custom_cost_center",
 					"Service Area-custom_territory",
 					"Service Area-custom_office_address",
+					# Sales Invoice reference-to-service-document fields (Phase 5)
+					"Sales Invoice-custom_field_service_management_link",
+					"Sales Invoice-custom_reference_service_doctype",
+					"Sales Invoice-custom_column_break_uspzq",
+					"Sales Invoice-custom_reference_service_document",
 				],
 			]
 		],
