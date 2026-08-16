@@ -118,8 +118,36 @@ def complete_appointment(appointment: str) -> dict:
     Deliberately independent of Service Report submission: requiring
     that first would currently block completion on any service type
     that doesn't yet have a checklist template set up.
+
+    Crew gate: on a multi-technician job, only the designated crew leader
+    (Service Technician Item.custom_is_crew_leader) may close it out --
+    any one of several technicians tapping "Mark Complete" mid-job (while
+    the others are still on site) would otherwise silently drop the job
+    from everyone's list and cascade the Service Order forward with no
+    consensus. Solo-technician jobs are exempt from this gate: with only
+    one assigned technician there's no one else's work to step on, so
+    that technician can complete it regardless of the crew-leader flag.
     """
-    _assert_assigned(appointment, _current_service_technician())
+    service_technician = _current_service_technician()
+    _assert_assigned(appointment, service_technician)
+
+    assigned = frappe.get_all(
+        "Service Technician Item",
+        filters={"parent": appointment},
+        fields=["service_technician", "custom_is_crew_leader"],
+    )
+    if len(assigned) > 1:
+        is_leader = any(
+            row.service_technician == service_technician and row.custom_is_crew_leader
+            for row in assigned
+        )
+        if not is_leader:
+            frappe.throw(
+                "Only the crew leader can mark this job complete when more than one "
+                "technician is assigned.",
+                frappe.PermissionError,
+            )
+
     doc = frappe.get_doc("Service Appointment", appointment)
     doc.status = "Completed"
     doc.save(ignore_permissions=True)
