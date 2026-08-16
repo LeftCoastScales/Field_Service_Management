@@ -1,6 +1,6 @@
 import frappe
 from frappe.model.document import Document
-from frappe.utils import add_months, getdate, today
+from frappe.utils import add_days, add_months, getdate, today
 
 
 class LCSCustomerEquipment(Document):
@@ -171,7 +171,89 @@ class LCSCustomerEquipment(Document):
 # ------------------------------------------------------------------
 
 
+# Days of advance notice before calibration_due_date to auto-create a
+# Service Request. Resolved Aug 16, 2026 (Section 9.7) -- 30 days gives
+# dispatch a full month to schedule the recalibration visit.
+CALIBRATION_LEAD_DAYS = 30
+
+
 def flag_overdue_equipment():
+	"""
+	Nightly scheduler task (registered in hooks.py's scheduler_events --
+	unchanged by this Phase 6 addition, same function name kept on purpose
+	so no hooks.py edit was needed).
+
+	Two passes, per LCS ERPNext Implementation Roadmap Section 9.4:
+	1. Equipment approaching its calibration_due_date (within
+	   CALIBRATION_LEAD_DAYS) gets a Service Request auto-created, unless
+	   one already exists for it. Modeled directly on
+	   lcs_service_agreement.auto_create_service_orders()'s per-record
+	   error-isolated pattern -- one bad equipment record can't block the
+	   rest.
+	2. Equipment that's already overdue and still has no Service Request
+	   at all (the original behavior, kept as a safety net) is logged to
+	   the Error Log for visibility.
+	"""
+	_create_calibration_service_requests()
+	_log_overdue_without_service_request()
+
+
+def _has_open_service_request(equipment_name: str) -> bool:
+	return bool(
+		frappe.db.exists(
+			"Service Request",
+			{"custom_customer_equipment": equipment_name, "status": ["!=", "Closed"]},
+		)
+	)
+
+
+def _create_calibration_service_requests():
+	window_end = add_days(today(), CALIBRATION_LEAD_DAYS)
+
+	candidates = frappe.get_all(
+		"LCS Customer Equipment",
+		filters={
+			"status": "Active",
+			"calibration_due_date": ["between", [today(), window_end]],
+		},
+		fields=["name", "customer", "manufacturer", "scale_model", "serial_number", "calibration_due_date"],
+	)
+
+	for row in candidates:
+		try:
+			if _has_open_service_request(row.name):
+				continue
+
+			company = _default_company()
+			company_currency = frappe.get_cached_value("Company", company, "default_currency")
+
+			sr = frappe.new_doc("Service Request")
+			sr.customer = row.customer
+			sr.custom_customer_equipment = row.name
+			sr.due_date = row.calibration_due_date
+			sr.posting_date = today()
+			sr.company = company
+			sr.currency = company_currency
+			# "Inspection" reused per Lucian's decision (Section 9.7) --
+			# none of the six existing Service Types name calibration
+			# work specifically, and a new one wasn't warranted.
+			sr.type = "Inspection"
+			sr.priority = "Medium"
+			sr.subject = f"Calibration due — {row.scale_model or row.manufacturer}, {row.serial_number}"
+			sr.insert(ignore_permissions=True)
+
+			frappe.logger().info(
+				f"LCS Customer Equipment {row.name}: created Service Request {sr.name} "
+				f"(calibration due {row.calibration_due_date})"
+			)
+		except Exception:
+			frappe.log_error(
+				title=f"Calibration Service Request auto-create failed — {row.name}",
+				message=frappe.get_traceback(),
+			)
+
+
+def _log_overdue_without_service_request():
 	overdue = frappe.get_all(
 		"LCS Customer Equipment",
 		filters={
@@ -180,11 +262,24 @@ def flag_overdue_equipment():
 		},
 		fields=["name", "customer", "manufacturer", "scale_model", "serial_number", "calibration_due_date"],
 	)
-
 	if not overdue:
 		return
 
+	still_uncovered = [row for row in overdue if not _has_open_service_request(row.name)]
+	if not still_uncovered:
+		return
+
 	frappe.log_error(
-		message=frappe.as_json(overdue),
-		title=f"LCS Customer Equipment - Overdue Calibrations ({len(overdue)})",
+		message=frappe.as_json(still_uncovered),
+		title=f"LCS Customer Equipment - Overdue Calibrations With No Service Request ({len(still_uncovered)})",
 	)
+
+
+def _default_company():
+	company = frappe.db.get_single_value("Global Defaults", "default_company")
+	if not company:
+		companies = frappe.get_all("Company", pluck="name", limit=1)
+		company = companies[0] if companies else None
+	if not company:
+		frappe.throw("No Company exists on this site yet. Complete the ERPNext Setup Wizard first.")
+	return company
