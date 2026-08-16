@@ -129,6 +129,36 @@ export function applyAction(dayLog, action) {
     }
 
     case ACTIONS.ARRIVE: {
+      // Starting a new job (or heading to the shop) directly from a
+      // paused job is a first-class transition, not an anomaly:
+      // PAUSE_JOB already signals "not actively working this job right
+      // now" (parts on order, customer not home, etc.), so the paused
+      // job's segment is closed out cleanly at this moment instead of
+      // being routed through the Sequential Clock-In Lock's correction
+      // flow below, which exists to catch genuinely forgotten
+      // clock-outs, not a dispatcher-sanctioned move to the next job.
+      // Also closes out a concurrent lunch break on that segment, if
+      // one is open (see LUNCH_OUT, which now allows starting lunch
+      // from a paused job too) — otherwise it would be left dangling.
+      // Reports the closed-out durations on the result so the caller
+      // can sync them, since no separate RESUME_JOB/LUNCH_IN call
+      // precedes this one to carry them.
+      if (open && open.type === SEGMENT_TYPES.ONSITE && isJobPaused(open)) {
+        const closedPause = open.pauses[open.pauses.length - 1];
+        closedPause.end = at;
+        const closedPauseMinutes = Math.round((new Date(closedPause.end) - new Date(closedPause.start)) / 60000);
+        let closedLunchMinutes = null;
+        if (isPaused(open)) {
+          const closedLunch = open.lunchBreaks[open.lunchBreaks.length - 1];
+          closedLunch.end = at;
+          closedLunchMinutes = Math.round((new Date(closedLunch.end) - new Date(closedLunch.start)) / 60000);
+        }
+        open.end = at;
+        const pausedType = action.jobRef ? SEGMENT_TYPES.ONSITE : SEGMENT_TYPES.SHOP;
+        log.segments.push(newSegment(pausedType, action.jobRef ?? null, at));
+        return ok(log, 'Previous job parked as paused; now clocked in here.', { closedPauseMinutes, closedLunchMinutes });
+      }
+
       // Sequential Clock-In Lock: cannot arrive at a new job/shop while
       // a previous ONSITE/SHOP segment is still open.
       if (open && (open.type === SEGMENT_TYPES.ONSITE || open.type === SEGMENT_TYPES.SHOP)) {
@@ -198,9 +228,13 @@ export function applyAction(dayLog, action) {
     }
 
     case ACTIONS.LUNCH_OUT: {
+      // Deliberately allowed while job-paused (e.g. waiting on parts) —
+      // a technician shouldn't have to resume a job they can't actually
+      // work yet just to clock out for lunch. lunchBreaks and pauses are
+      // independent arrays on the same segment, so both can be open at
+      // once; LUNCH_IN and RESUME_JOB each close their own independently.
       if (!open) return fail(log, 'No active segment to pause.');
       if (isPaused(open)) return fail(log, 'Already on lunch.');
-      if (isJobPaused(open)) return fail(log, 'Resume the job before going to lunch.');
       open.lunchBreaks.push({ start: at, end: null });
       return ok(log);
     }
@@ -274,9 +308,9 @@ function newSegment(type, jobRef, start) {
   };
 }
 
-function ok(log, message) {
+function ok(log, message, extra) {
   log.updatedAt = new Date().toISOString();
-  return { dayLog: log, result: { ok: true, message } };
+  return { dayLog: log, result: { ok: true, message, ...extra } };
 }
 
 function fail(log, message) {

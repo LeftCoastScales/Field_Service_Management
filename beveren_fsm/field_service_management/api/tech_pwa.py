@@ -714,6 +714,8 @@ def submit_time_action(
     correction_reason: str | None = None,
     correction_job_ref: str | None = None,
     log_date: str | None = None,
+    pause_duration_minutes: int | None = None,
+    lunch_duration_minutes: int | None = None,
 ) -> dict:
     """
     Reconciles one chained-logic time tracking action against the
@@ -767,6 +769,14 @@ def submit_time_action(
 
     # Close whatever segment is currently open before opening the next one.
     if action_type in ("SUBMIT_INSPECTION", "ARRIVE", "LEAVE", "END_DAY") and open_segment:
+        # Starting a new job/shop directly from a paused job (see the
+        # ARRIVE case in timeTrackingMachine.js) closes out any dangling
+        # pause/lunch duration on the segment being closed here, since no
+        # separate RESUME_JOB/LUNCH_IN call precedes this one to carry it.
+        if action_type == "ARRIVE" and pause_duration_minutes:
+            open_segment.pause_minutes = (open_segment.pause_minutes or 0) + pause_duration_minutes
+        if action_type == "ARRIVE" and lunch_duration_minutes:
+            open_segment.lunch_minutes = (open_segment.lunch_minutes or 0) + lunch_duration_minutes
         open_segment.end_time = at
 
     # Open the segment this action starts (Day-Start / Arrive actions).
