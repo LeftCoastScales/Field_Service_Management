@@ -994,6 +994,66 @@ def _send_payment_receipt_email(invoice, payment_entry, service_order: str | Non
         return None
 
 
+# ---- Appointment Confirmation Email (Phase 6) -------------------------------
+# Fires once, on the actual transition of Service Appointment.status into
+# "Scheduled" -- not on every later save while it's already Scheduled.
+# set_scheduled_status() (service_appointment.py) runs on both validate()
+# and before_submit(), so a naive "if status == Scheduled" check here would
+# re-fire on every subsequent edit. has_value_changed() is the standard
+# Frappe way to detect the actual transition. Registered as an on_update
+# hook in hooks.py, not whitelisted -- an internal doc lifecycle callback,
+# same class as copy_instructions_from_order below. See LCS ERPNext
+# Implementation Roadmap, Section 9.2 for the resolved design.
+
+def send_scheduled_confirmation_email(doc, method=None):
+    if not (doc.has_value_changed("status") and doc.status == "Scheduled"):
+        return
+
+    email = None
+    if doc.get("service_order"):
+        contact = frappe.db.get_value("Service Order", doc.service_order, "customer_contact")
+        if contact:
+            email = frappe.db.get_value("Contact", contact, "email_id")
+    if not email:
+        # No email on file -- never block the actual scheduling operation
+        # over a notification. Same graceful-skip precedent as
+        # _send_payment_receipt_email below.
+        return
+
+    site_address = _site_address_for_order(doc.get("service_order"))
+
+    technician_first_name = None
+    if doc.get("service_technicians"):
+        full_name = doc.service_technicians[0].full_name
+        if full_name:
+            technician_first_name = full_name.split()[0]
+
+    window = None
+    if doc.scheduled_start_datetime and doc.scheduled_finish_datetime:
+        start = get_datetime(doc.scheduled_start_datetime)
+        finish = get_datetime(doc.scheduled_finish_datetime)
+        window = f"{start.strftime('%A, %B %-d, %Y')}, {start.strftime('%-I:%M %p')}-{finish.strftime('%-I:%M %p')}"
+
+    lines = []
+    lines.append(
+        f"Your appointment is confirmed for {window}." if window
+        else "Your appointment has been scheduled."
+    )
+    if site_address:
+        lines.append(f"Site: {site_address}")
+    if technician_first_name:
+        lines.append(f"Your technician, {technician_first_name}, is assigned to this visit.")
+
+    try:
+        frappe.sendmail(
+            recipients=[email],
+            subject=f"Appointment Confirmed — {doc.name}",
+            message="<br>".join(lines),
+        )
+    except Exception:
+        frappe.log_error(title="Appointment confirmation email failed", message=frappe.get_traceback())
+
+
 # ---- doc_events hooks: carry dispatch instructions forward through the ----
 # ---- Service Request -> Service Order -> Service Appointment chain.    ----
 # Registered in hooks.py's doc_events, not whitelisted — these are internal

@@ -310,6 +310,7 @@ doc_events = {
 	},
 	"Service Appointment": {
 		"validate": "beveren_fsm.field_service_management.api.tech_pwa.copy_instructions_from_order",
+		"on_update": "beveren_fsm.field_service_management.api.tech_pwa.send_scheduled_confirmation_email",
 	},
 }
 
