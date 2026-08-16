@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ACTIONS,
   DAY_STATES,
@@ -16,6 +16,7 @@ import ClockCorrectionModal from './ClockCorrectionModal.jsx';
 import PauseJobModal from './PauseJobModal.jsx';
 import SendReportModal from './SendReportModal.jsx';
 import ConfirmModal from './ConfirmModal.jsx';
+import ReturnFromLunchModal from './ReturnFromLunchModal.jsx';
 
 // Local calendar date, NOT UTC — new Date().toISOString() would return the
 // UTC date, which drifts from the technician's actual workday for hours
@@ -43,7 +44,14 @@ const BANNER_LABEL = {
  */
 export default function TimeTracker({ employee, jobRef = null, capacity = 'light', onChanged, onJobCompleted }) {
   const [dayLog, setDayLog] = useState(null);
+  // Mirrors `dayLog` but updated synchronously (not via React's batched
+  // setState) so that two dispatch() calls awaited back-to-back in the
+  // same handler -- e.g. LUNCH_IN then RESUME_JOB from the "back from
+  // lunch, resume the job" choice below -- each see the other's result
+  // instead of both operating on the same stale pre-first-call state.
+  const dayLogRef = useRef(null);
   const [pauseModalOpen, setPauseModalOpen] = useState(false);
+  const [lunchReturnOpen, setLunchReturnOpen] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState(null);
   const [sendReportOpen, setSendReportOpen] = useState(false);
@@ -56,20 +64,24 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
   useEffect(() => {
     (async () => {
       const existing = await loadDayLog(todayISO());
-      setDayLog(existing || createDayLog(employee, todayISO()));
+      const initial = existing || createDayLog(employee, todayISO());
+      dayLogRef.current = initial;
+      setDayLog(initial);
     })();
   }, [employee]);
 
   const persist = useCallback(async (log) => {
+    dayLogRef.current = log;
     setDayLog(log);
     await saveDayLog(log);
     onChanged?.(log);
   }, [onChanged]);
 
   const dispatch = useCallback(async (type, extra = {}) => {
-    if (!dayLog) return;
+    const current = dayLogRef.current;
+    if (!current) return;
     const now = new Date();
-    const { dayLog: next, result } = applyAction(dayLog, { type, at: now.toISOString(), jobRef, ...extra });
+    const { dayLog: next, result } = applyAction(current, { type, at: now.toISOString(), jobRef, ...extra });
     await persist(next);
     if (result.ok) {
       const payload = {
@@ -108,10 +120,21 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
         }
       }
 
+      // ARRIVE from a paused job closes out that job's dangling pause
+      // (and lunch break, if concurrent) as a side effect — see the
+      // ARRIVE case in timeTrackingMachine.js. Forward those durations
+      // so the server applies them to the segment being closed rather
+      // than losing them (no separate RESUME_JOB/LUNCH_IN call precedes
+      // this one to carry them).
+      if (type === ACTIONS.ARRIVE) {
+        if (result.closedPauseMinutes != null) payload.pause_duration_minutes = result.closedPauseMinutes;
+        if (result.closedLunchMinutes != null) payload.lunch_duration_minutes = result.closedLunchMinutes;
+      }
+
       await enqueueMutation({ type: 'TIME_ACTION', payload });
     }
     return result;
-  }, [dayLog, jobRef, persist, employee]);
+  }, [jobRef, persist, employee]);
 
   if (!dayLog) return null;
 
@@ -172,6 +195,31 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
     }
   };
 
+  // Tapping "Clock In from Lunch" while the job is ALSO still job-paused
+  // is ambiguous (see ReturnFromLunchModal) -- ask instead of guessing.
+  // Otherwise (plain lunch, no job pause) just end lunch directly, same
+  // as before.
+  const handleLunchIn = () => {
+    if (ctx.onJobPause) {
+      setLunchReturnOpen(true);
+    } else {
+      dispatch(ACTIONS.LUNCH_IN);
+    }
+  };
+
+  const handleLunchInStillPaused = async () => {
+    setLunchReturnOpen(false);
+    await dispatch(ACTIONS.LUNCH_IN);
+  };
+
+  const handleLunchInThenResume = async () => {
+    setLunchReturnOpen(false);
+    const lunchResult = await dispatch(ACTIONS.LUNCH_IN);
+    if (lunchResult?.ok) {
+      await dispatch(ACTIONS.RESUME_JOB);
+    }
+  };
+
   const atThisJob = jobRef && ctx.activeJobRef === jobRef;
   const openElsewhere = ctx.openSegmentType === SEGMENT_TYPES.ONSITE && ctx.activeJobRef && ctx.activeJobRef !== jobRef;
 
@@ -205,13 +253,13 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
               Clock Out
             </button>
           )}
-          {atThisJob && !ctx.onLunch && !ctx.onJobPause && (
+          {atThisJob && !ctx.onLunch && (
             <button className="btn btn-outline btn-full" onClick={() => dispatch(ACTIONS.LUNCH_OUT)}>
               Clock Out for Lunch
             </button>
           )}
           {atThisJob && ctx.onLunch && (
-            <button className="btn btn-gold btn-full" onClick={() => dispatch(ACTIONS.LUNCH_IN)}>
+            <button className="btn btn-gold btn-full" onClick={() => handleLunchIn()}>
               Clock In from Lunch
             </button>
           )}
@@ -233,7 +281,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           {completeError && (
             <p style={{ fontSize: 12.5, color: 'var(--lcs-crimson)' }}>{completeError}</p>
           )}
-          {openElsewhere && (
+          {openElsewhere && !ctx.onJobPause && (
             <p style={{ fontSize: 12.5, color: 'var(--lcs-crimson)' }}>
               You're still clocked in elsewhere. Clock out there before arriving here.
             </p>
@@ -278,7 +326,7 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
             </button>
           )}
           {ctx.onLunch && (
-            <button className="btn btn-gold btn-full" onClick={() => dispatch(ACTIONS.LUNCH_IN)}>
+            <button className="btn btn-gold btn-full" onClick={() => handleLunchIn()}>
               Clock In from Lunch
             </button>
           )}
@@ -319,6 +367,14 @@ export default function TimeTracker({ employee, jobRef = null, capacity = 'light
           await dispatch(ACTIONS.PAUSE_JOB, { reason });
         }}
         onCancel={() => setPauseModalOpen(false)}
+      />
+
+      <ReturnFromLunchModal
+        open={lunchReturnOpen}
+        pauseReason={ctx.currentPauseReason}
+        onResumeJob={handleLunchInThenResume}
+        onStillPaused={handleLunchInStillPaused}
+        onCancel={() => setLunchReturnOpen(false)}
       />
 
       <SendReportModal
