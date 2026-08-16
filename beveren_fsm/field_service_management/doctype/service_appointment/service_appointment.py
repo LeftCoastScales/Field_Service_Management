@@ -179,6 +179,21 @@ class ServiceAppointment(Document):
 		)
 
 	def set_scheduled_status(self):
+		"""
+		Promotes a fresh appointment (status not yet set, or explicitly
+		"Open") to "Scheduled" once it has a scheduling window and at
+		least one assigned technician. Guarded to only touch status
+		while it's still pre-scheduled -- this runs from validate(), on
+		every save, so it previously unconditionally reasserted
+		"Scheduled" any time technicians+schedule were present, silently
+		reverting Dispatched/In Progress/Completed/Cancelled back to
+		Scheduled on the very next save. That made complete_appointment()
+		a no-op in practice: it set status = "Completed" in memory, then
+		validate() (invoked by that same .save()) immediately stomped it
+		back to "Scheduled" before the write landed.
+		"""
+		if self.status not in (None, "", "Open"):
+			return
 		if self.scheduled_start_datetime and self.scheduled_finish_datetime:
 			if self.get("service_technicians") and len(self.get("service_technicians")) > 0:
 				self.status = "Scheduled"
