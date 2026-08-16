@@ -459,6 +459,72 @@ def update_notes(appointment: str, customer_notes: str = "", internal_notes: str
     return {"ok": True}
 
 
+# ---- En-route notification ("On My Way") ------------------------------
+# Net-new, not an extension of the time-tracking machine (submit_time_action)
+# -- that machine's CLOCK_IN_LIGHT "Travel" segment is payroll-relevant and
+# isn't reliably tied to a specific appointment. Deliberately does not touch
+# Service Appointment.status: the status enum has no "En Route" value, and
+# adding one would ripple into update_service_order_status()'s status_mapping
+# and the dispatch board's status filtering -- out of scope for what is
+# fundamentally a notification. See LCS ERPNext Implementation Roadmap,
+# Section 9.3 for the resolved design.
+
+@frappe.whitelist()
+def notify_on_my_way(appointment: str) -> dict:
+    """
+    Sends an "on my way" notification to the customer for this appointment.
+    en_route_notified_at doubles as an audit trail and an idempotency guard --
+    once set, a technician re-tapping the button in the PWA is a no-op rather
+    than a re-send.
+    """
+    _assert_assigned(appointment, _current_service_technician())
+
+    doc = frappe.get_doc("Service Appointment", appointment)
+    if doc.get("en_route_notified_at"):
+        return {"ok": True, "already_sent": True, "en_route_notified_at": doc.en_route_notified_at}
+
+    email = None
+    if doc.get("service_order"):
+        contact = frappe.db.get_value("Service Order", doc.service_order, "customer_contact")
+        if contact:
+            email = frappe.db.get_value("Contact", contact, "email_id")
+    if not email:
+        # No email on file -- never block the technician's workflow over a
+        # notification. Same graceful-skip precedent as
+        # send_scheduled_confirmation_email (Section 9.2) and
+        # _send_payment_receipt_email.
+        return {"ok": True, "already_sent": False, "skipped_no_recipient": True}
+
+    site_address = _site_address_for_order(doc.get("service_order"))
+
+    technician_first_name = None
+    if doc.get("service_technicians"):
+        full_name = doc.service_technicians[0].full_name
+        if full_name:
+            technician_first_name = full_name.split()[0]
+
+    lines = []
+    lines.append(
+        f"{technician_first_name} is on the way to your site." if technician_first_name
+        else "Your technician is on the way to your site."
+    )
+    if site_address:
+        lines.append(f"Site: {site_address}")
+
+    try:
+        frappe.sendmail(
+            recipients=[email],
+            subject=f"Your Technician Is On The Way — {doc.name}",
+            message="<br>".join(lines),
+        )
+    except Exception:
+        frappe.log_error(title="En-route notification email failed", message=frappe.get_traceback())
+        return {"ok": True, "already_sent": False, "send_failed": True}
+
+    doc.db_set("en_route_notified_at", now_datetime(), update_modified=True)
+    return {"ok": True, "already_sent": False, "en_route_notified_at": doc.en_route_notified_at}
+
+
 @frappe.whitelist()
 def upload_job_photo() -> dict:
     """
