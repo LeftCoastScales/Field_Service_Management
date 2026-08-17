@@ -154,6 +154,19 @@ export async function markPhotoSynced(localId, remoteFileUrl) {
 export async function enqueueMutation(mutation) {
   const db = await getDB();
   await db.add('mutationQueue', { ...mutation, createdAt: new Date().toISOString(), attempts: 0 });
+
+  // Try to flush the outbox right away so an online, foregrounded session
+  // doesn't sit on unsynced actions until the next 'online'/visibilitychange
+  // event or a full app reload -- previously the *only* triggers for
+  // syncNow(), which left same-session, back-to-back actions (e.g. arrive,
+  // pause, arrive next job) queued with zero sync attempts for as long as
+  // the tab stayed open, online, and foregrounded. Dynamic import avoids a
+  // circular dependency (sync.js already imports this module). Must never
+  // throw or block the caller's optimistic UI update -- failures just fall
+  // back to the existing triggers and the manual sync-pill tap.
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
+    import('./sync.js').then(({ syncNow }) => syncNow()).catch(() => {});
+  }
 }
 
 export async function getQueuedMutations() {

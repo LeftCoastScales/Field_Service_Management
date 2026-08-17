@@ -2,8 +2,15 @@
  * sync.js
  *
  * Drains the IndexedDB mutation outbox against the Frappe REST API
- * whenever the browser is online. Called on `online` events, on app
- * foreground, and via the periodic Workbox background sync tag.
+ * whenever the browser is online. Triggered immediately after each
+ * mutation is enqueued (see offlineStore.js's enqueueMutation), and as
+ * a fallback on `online` events, on app foreground (visibilitychange),
+ * on initial load, and via a manual tap on the header sync pill.
+ *
+ * NOTE: there is no Workbox periodic background sync registered in
+ * sw.js (checked -- it isn't there), so this module's only triggers
+ * are the ones listed above. Don't rely on background sync firing
+ * while the PWA isn't open.
  */
 
 import * as api from '../api/client.js';
@@ -17,7 +24,35 @@ import {
 
 const MAX_ATTEMPTS = 8;
 
-export async function syncNow({ onProgress } = {}) {
+// Now that enqueueMutation() (offlineStore.js) triggers a syncNow() attempt
+// on every write, syncNow() can legitimately be invoked several times in
+// close succession -- e.g. two actions queued back-to-back, or an
+// 'online'/visibilitychange event firing while an enqueue-triggered run is
+// still in flight. Without a guard, overlapping runs would each read the
+// same queue snapshot and could both apply (and double-submit) the same
+// mutation before either removes it. inFlight coalesces concurrent callers
+// onto a single pass and immediately schedules one more pass afterward if
+// anything was enqueued during that pass, so nothing queued mid-flight gets
+// silently skipped.
+let inFlight = null;
+let rerunRequested = false;
+
+export async function syncNow(opts = {}) {
+  if (inFlight) {
+    rerunRequested = true;
+    return inFlight;
+  }
+  inFlight = runSyncPass(opts).finally(() => {
+    inFlight = null;
+    if (rerunRequested) {
+      rerunRequested = false;
+      syncNow(opts);
+    }
+  });
+  return inFlight;
+}
+
+async function runSyncPass({ onProgress } = {}) {
   if (!navigator.onLine) return { synced: 0, failed: 0 };
 
   const mutations = await getQueuedMutations();
