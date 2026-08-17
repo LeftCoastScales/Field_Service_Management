@@ -842,6 +842,48 @@ def submit_time_action(
             log.segments[-1].flagged_for_review = 1
             log.segments[-1].correction_reason = "Reopened Day"
 
+    # ---- Live status fields (Technician Status Board, Section 41) ---------
+    # current_job / on_lunch / job_paused are kept in sync right here, at
+    # the one place all these transitions already happen, instead of
+    # re-deriving "what is this technician doing right now" from the
+    # segment history on every board refresh.
+    if action_type in ("CLOCK_IN_LIGHT", "START_INSPECTION", "ARRIVE", "SUBMIT_INSPECTION", "LEAVE"):
+        # Every one of these opens a brand-new segment, so any lunch/pause
+        # flag on the log belongs to the segment that just closed -- clear
+        # it before the new one starts. ARRIVE-while-paused already folds
+        # the closing segment's pause/lunch *minutes* onto that segment
+        # above; this is the separate "is it happening right now" flag.
+        log.on_lunch = 0
+        log.job_paused = 0
+        log.current_job = job_ref if action_type == "ARRIVE" else None
+
+    if action_type == "PAUSE_JOB":
+        log.job_paused = 1
+
+    if action_type == "RESUME_JOB":
+        log.job_paused = 0
+
+    if action_type == "LUNCH_OUT" and open_segment:
+        # Previously a no-op here: LUNCH_OUT touched no field at all (the
+        # client only reports elapsed lunch minutes later, at LUNCH_IN),
+        # so the server never learned a technician had gone to lunch until
+        # they were already back. That was fine when nothing server-side
+        # needed to know in real time; the status board does.
+        log.on_lunch = 1
+
+    if action_type == "LUNCH_IN":
+        log.on_lunch = 0
+
+    if action_type == "CORRECT_ARRIVAL" and corrected_arrival_at:
+        log.on_lunch = 0
+        log.job_paused = 0
+        log.current_job = correction_job_ref if correction_reason == "MISSING_CLOCK_IN" else None
+
+    if action_type == "END_DAY":
+        log.on_lunch = 0
+        log.job_paused = 0
+        log.current_job = None
+
     log.needs_review_count = sum(1 for s in log.segments if s.flagged_for_review)
     log.save(ignore_permissions=True)
     return {"day_log": log.name, "day_state": log.day_state}
