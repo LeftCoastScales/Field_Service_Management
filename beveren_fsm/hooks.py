@@ -27,6 +27,27 @@ fixtures = [
 	# ---------------------------------------------------------------------------
 	# "LCS Shortcut",  # seeded on initial deploy only — do not re-enable
 	"Service Type",
+	{
+		# Role-permission rows (Role Permissions Manager / DocPerm) that this
+		# app depends on -- e.g. Field Service User's read access to Service
+		# Appointment, which get_my_jobs() needs (frappe.get_list() enforces
+		# DocType-level permissions; frappe.get_all() doesn't, and that
+		# inconsistency is exactly how this gap went unnoticed for so long).
+		# Was previously live-only: fixed directly on the site via the UI,
+		# never exported, so a fresh install/site would silently regress and
+		# lock every technician out of their job list again. Filtered to the
+		# roles this app actually manages so we never sweep in unrelated
+		# site-wide permission rows (e.g. core Frappe roles, HR/Payroll
+		# roles) that happen to share the Custom DocPerm doctype.
+		"dt": "Custom DocPerm",
+		"filters": [
+			[
+				"role",
+				"in",
+				["Service Manager", "Field Service User"],
+			]
+		],
+	},
 	"Product Location",
 	"LCS Service Agreement",
 	"LCS Service Agreement Quote",
