@@ -208,7 +208,10 @@ app_include_css = ["/assets/beveren_fsm/css/lcs_theme.css"]
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
-doctype_js = {"Quotation": "public/js/quotation.js"}
+doctype_js = {
+	"Quotation": "public/js/quotation.js",
+	"Lead": "public/js/lead.js",
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
@@ -332,6 +335,9 @@ doc_events = {
 	"Service Appointment": {
 		"validate": "beveren_fsm.field_service_management.api.tech_pwa.copy_instructions_from_order",
 		"on_update": "beveren_fsm.field_service_management.api.tech_pwa.send_scheduled_confirmation_email",
+	},
+	"Lead": {
+		"after_insert": "beveren_fsm.field_service_management.api.lead_referral.on_lead_after_insert",
 	},
 }
 
