@@ -16,7 +16,23 @@
   "section_break_checklist",
   "checklist",
   "section_break_notes",
-  "technician_notes"
+  "technician_notes",
+  "custom_csr",
+  "custom_description_of_work_performed",
+  "custom_checked_in",
+  "custom_walk_through_performed",
+  "custom_quoted",
+  "custom_quote_number",
+  "custom_certs_completed",
+  "custom_new_equipment",
+  "custom_sticker_type",
+  "custom_stickers_completed",
+  "custom_site_clean_up",
+  "custom_recommendations",
+  "custom_csr_reviewed_with_customer",
+  "custom_notes",
+  "custom_client_printed_name",
+  "custom_client_signature"
  ],
  "fields": [
   {
@@ -87,12 +103,94 @@
    "fieldname": "technician_notes",
    "fieldtype": "Small Text",
    "label": "Technician Notes"
+  },
+  {
+   "fieldname": "custom_csr",
+   "fieldtype": "Section Break",
+   "label": "CSR"
+  },
+  {
+   "fieldname": "custom_description_of_work_performed",
+   "fieldtype": "Long Text",
+   "label": "Description of Work Performed"
+  },
+  {
+   "fieldname": "custom_checked_in",
+   "fieldtype": "Check",
+   "label": "Checked In"
+  },
+  {
+   "fieldname": "custom_walk_through_performed",
+   "fieldtype": "Check",
+   "label": "Walk Through Performed"
+  },
+  {
+   "fieldname": "custom_quoted",
+   "fieldtype": "Check",
+   "label": "Quoted"
+  },
+  {
+   "fieldname": "custom_quote_number",
+   "fieldtype": "Data",
+   "label": "Quote Number",
+   "depends_on": "eval:doc.custom_quoted == 1"
+  },
+  {
+   "fieldname": "custom_certs_completed",
+   "fieldtype": "Check",
+   "label": "Certs Completed"
+  },
+  {
+   "fieldname": "custom_new_equipment",
+   "fieldtype": "Check",
+   "label": "New Equipment"
+  },
+  {
+   "fieldname": "custom_sticker_type",
+   "fieldtype": "Select",
+   "label": "Sticker Type",
+   "options": "Silver\nGreen\nMixed"
+  },
+  {
+   "fieldname": "custom_stickers_completed",
+   "fieldtype": "Check",
+   "label": "Stickers Completed"
+  },
+  {
+   "fieldname": "custom_site_clean_up",
+   "fieldtype": "Check",
+   "label": "Site Clean Up"
+  },
+  {
+   "fieldname": "custom_recommendations",
+   "fieldtype": "Check",
+   "label": "Recommendations"
+  },
+  {
+   "fieldname": "custom_csr_reviewed_with_customer",
+   "fieldtype": "Check",
+   "label": "CSR Reviewed with Customer"
+  },
+  {
+   "fieldname": "custom_notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "custom_client_printed_name",
+   "fieldtype": "Data",
+   "label": "Client Printed Name"
+  },
+  {
+   "fieldname": "custom_client_signature",
+   "fieldtype": "Signature",
+   "label": "Client Signature"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-07-10 00:00:00.000000",
+ "modified": "2026-08-19 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Field Service Management",
  "name": "Service Report",
