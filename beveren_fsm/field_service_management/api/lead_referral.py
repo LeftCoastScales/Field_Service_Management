@@ -87,42 +87,45 @@ def mark_incentive_paid(lead_name):
 
 	# 4. Email employee confirmation
 	if emp_email:
-		frappe.sendmail(
-			recipients=[emp_email],
-			subject="Your LCS referral has been qualified — you've been paid!",
-			message=(
-				"<p>Hi " + (emp.first_name or emp_full_name) + ",</p>"
-				"<p>Your referral has been reviewed by Sales and confirmed as qualified. "
-				"Your <strong>$10 cash payout</strong> has been recorded and is ready at the office.</p>"
-				"<table style='border-collapse:collapse;width:100%;max-width:480px;"
-				"font-family:Arial,sans-serif;font-size:14px'>"
-				"<tr style='background:#1B2A4A;color:#fff'>"
-				"<td colspan='2' style='padding:10px 14px;font-weight:bold'>Payout Summary</td></tr>"
-				"<tr style='background:#F2F4F8'>"
-				"<td style='padding:8px 14px;font-weight:bold;width:40%'>Referred contact</td>"
-				"<td style='padding:8px 14px'>" + referred_name + "</td></tr>"
-				"<tr>"
-				"<td style='padding:8px 14px;font-weight:bold'>Company</td>"
-				"<td style='padding:8px 14px'>"
-				+ referred_co
-				+ (", " + referred_city if referred_city else "")
-				+ "</td></tr>"
-				"<tr style='background:#F2F4F8'>"
-				"<td style='padding:8px 14px;font-weight:bold'>Payout amount</td>"
-				"<td style='padding:8px 14px'><strong>$10.00 cash</strong></td></tr>"
-				"<tr>"
-				"<td style='padding:8px 14px;font-weight:bold'>Date confirmed</td>"
-				"<td style='padding:8px 14px'>" + paid_date + "</td></tr>"
-				"</table>"
-				"<p style='margin-top:16px;padding:12px 16px;background:#EAF3DE;"
-				"border-left:4px solid #3B6D11;font-family:Arial,sans-serif;"
-				"font-size:14px;color:#27500A'>"
-				"Keep it going — every qualified lead earns you $10, and milestone bonuses "
-				"stack at 10, 25, and 50 leads.</p>"
-				"<p style='font-size:12px;color:#666;margin-top:24px'>— Left Coast Scales</p>"
-			),
-			now=True,
-		)
+		try:
+			frappe.sendmail(
+				recipients=[emp_email],
+				subject="Your LCS referral has been qualified — you've been paid!",
+				message=(
+					"<p>Hi " + (emp.first_name or emp_full_name) + ",</p>"
+					"<p>Your referral has been reviewed by Sales and confirmed as qualified. "
+					"Your <strong>$10 cash payout</strong> has been recorded and is ready at the office.</p>"
+					"<table style='border-collapse:collapse;width:100%;max-width:480px;"
+					"font-family:Arial,sans-serif;font-size:14px'>"
+					"<tr style='background:#1B2A4A;color:#fff'>"
+					"<td colspan='2' style='padding:10px 14px;font-weight:bold'>Payout Summary</td></tr>"
+					"<tr style='background:#F2F4F8'>"
+					"<td style='padding:8px 14px;font-weight:bold;width:40%'>Referred contact</td>"
+					"<td style='padding:8px 14px'>" + referred_name + "</td></tr>"
+					"<tr>"
+					"<td style='padding:8px 14px;font-weight:bold'>Company</td>"
+					"<td style='padding:8px 14px'>"
+					+ referred_co
+					+ (", " + referred_city if referred_city else "")
+					+ "</td></tr>"
+					"<tr style='background:#F2F4F8'>"
+					"<td style='padding:8px 14px;font-weight:bold'>Payout amount</td>"
+					"<td style='padding:8px 14px'><strong>$10.00 cash</strong></td></tr>"
+					"<tr>"
+					"<td style='padding:8px 14px;font-weight:bold'>Date confirmed</td>"
+					"<td style='padding:8px 14px'>" + paid_date + "</td></tr>"
+					"</table>"
+					"<p style='margin-top:16px;padding:12px 16px;background:#EAF3DE;"
+					"border-left:4px solid #3B6D11;font-family:Arial,sans-serif;"
+					"font-size:14px;color:#27500A'>"
+					"Keep it going — every qualified lead earns you $10, and milestone bonuses "
+					"stack at 10, 25, and 50 leads.</p>"
+					"<p style='font-size:12px;color:#666;margin-top:24px'>— Left Coast Scales</p>"
+				),
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(title="Referral payout email failed", message=frappe.get_traceback())
 
 	frappe.db.commit()
 	return {"status": "ok", "paid_date": paid_date, "employee": emp_full_name}
@@ -243,43 +246,49 @@ def on_lead_after_insert(doc, method=None):
 
 	lead_url = get_url() + "/app/lead/" + doc.name
 
-	frappe.sendmail(
-		recipients=manager_emails,
-		subject="New Incentive Lead: " + (referred_co or referred_name),
-		message=(
-			"<p>Hi,</p>"
-			"<p>A new referral has been submitted through the LCS Lead Incentive Program.</p>"
-			"<table style='border-collapse:collapse;width:100%;max-width:540px;font-family:Arial,sans-serif;font-size:14px'>"
-			"<tr style='background:#1B2A4A;color:#fff'><td colspan='2' style='padding:10px 14px;font-weight:bold'>Lead Details</td></tr>"
-			"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold;width:40%'>Submitted by</td><td style='padding:8px 14px'>" + emp_full_name + "</td></tr>"
-			"<tr><td style='padding:8px 14px;font-weight:bold'>Referring customer</td><td style='padding:8px 14px'>" + referring_cust + (" — " + referring_co if referring_co else "") + "</td></tr>"
-			"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Referred contact</td><td style='padding:8px 14px'>" + referred_name + (" — " + (doc.job_title or "") if doc.job_title else "") + "</td></tr>"
-			"<tr><td style='padding:8px 14px;font-weight:bold'>Company</td><td style='padding:8px 14px'>" + referred_co + (", " + referred_city if referred_city else "") + "</td></tr>"
-			"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Phone</td><td style='padding:8px 14px'>" + (doc.phone or "—") + "</td></tr>"
-			"<tr><td style='padding:8px 14px;font-weight:bold'>Email</td><td style='padding:8px 14px'>" + (doc.email_id or "—") + "</td></tr>"
-			"</table>"
-			"<p style='margin-top:16px'><a href='" + lead_url + "' style='background:#1B2A4A;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-family:Arial,sans-serif;font-size:14px'>Open Lead in ERPNext →</a></p>"
-			"<p style='font-size:12px;color:#666;margin-top:24px'>Once confirmed, open the lead and click <strong>Mark Qualified &amp; Paid</strong> to log the payout.</p>"
-		),
-		now=True,
-	)
-
-	# Confirmation to the referring employee
-	if emp_email:
+	try:
 		frappe.sendmail(
-			recipients=[emp_email],
-			subject="Your LCS referral has been submitted",
+			recipients=manager_emails,
+			subject="New Incentive Lead: " + (referred_co or referred_name),
 			message=(
-				"<p>Hi " + (emp.first_name or emp_full_name) + ",</p>"
-				"<p>Your referral has been received and is in the queue for Sales review.</p>"
-				"<table style='border-collapse:collapse;width:100%;max-width:480px;font-family:Arial,sans-serif;font-size:14px'>"
-				"<tr style='background:#1B2A4A;color:#fff'><td colspan='2' style='padding:10px 14px;font-weight:bold'>Your Referral</td></tr>"
-				"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold;width:40%'>Contact</td><td style='padding:8px 14px'>" + referred_name + "</td></tr>"
+				"<p>Hi,</p>"
+				"<p>A new referral has been submitted through the LCS Lead Incentive Program.</p>"
+				"<table style='border-collapse:collapse;width:100%;max-width:540px;font-family:Arial,sans-serif;font-size:14px'>"
+				"<tr style='background:#1B2A4A;color:#fff'><td colspan='2' style='padding:10px 14px;font-weight:bold'>Lead Details</td></tr>"
+				"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold;width:40%'>Submitted by</td><td style='padding:8px 14px'>" + emp_full_name + "</td></tr>"
+				"<tr><td style='padding:8px 14px;font-weight:bold'>Referring customer</td><td style='padding:8px 14px'>" + referring_cust + (" — " + referring_co if referring_co else "") + "</td></tr>"
+				"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Referred contact</td><td style='padding:8px 14px'>" + referred_name + (" — " + (doc.job_title or "") if doc.job_title else "") + "</td></tr>"
 				"<tr><td style='padding:8px 14px;font-weight:bold'>Company</td><td style='padding:8px 14px'>" + referred_co + (", " + referred_city if referred_city else "") + "</td></tr>"
-				"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Submitted</td><td style='padding:8px 14px'>" + paid_date + "</td></tr>"
+				"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Phone</td><td style='padding:8px 14px'>" + (doc.phone or "—") + "</td></tr>"
+				"<tr><td style='padding:8px 14px;font-weight:bold'>Email</td><td style='padding:8px 14px'>" + (doc.email_id or "—") + "</td></tr>"
 				"</table>"
-				"<p style='margin-top:16px'>Once Sales confirms this lead is qualified, you will receive another email and your <strong>$10 cash payout</strong> will be ready at the office.</p>"
-				"<p style='font-size:12px;color:#666;margin-top:24px'>— Left Coast Scales</p>"
+				"<p style='margin-top:16px'><a href='" + lead_url + "' style='background:#1B2A4A;color:#fff;padding:8px 16px;border-radius:4px;text-decoration:none;font-family:Arial,sans-serif;font-size:14px'>Open Lead in ERPNext →</a></p>"
+				"<p style='font-size:12px;color:#666;margin-top:24px'>Once confirmed, open the lead and click <strong>Mark Qualified &amp; Paid</strong> to log the payout.</p>"
 			),
 			now=True,
 		)
+	except Exception:
+		frappe.log_error(title="Referral notification email failed", message=frappe.get_traceback())
+
+	# Confirmation to the referring employee
+	if emp_email:
+		try:
+			frappe.sendmail(
+				recipients=[emp_email],
+				subject="Your LCS referral has been submitted",
+				message=(
+					"<p>Hi " + (emp.first_name or emp_full_name) + ",</p>"
+					"<p>Your referral has been received and is in the queue for Sales review.</p>"
+					"<table style='border-collapse:collapse;width:100%;max-width:480px;font-family:Arial,sans-serif;font-size:14px'>"
+					"<tr style='background:#1B2A4A;color:#fff'><td colspan='2' style='padding:10px 14px;font-weight:bold'>Your Referral</td></tr>"
+					"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold;width:40%'>Contact</td><td style='padding:8px 14px'>" + referred_name + "</td></tr>"
+					"<tr><td style='padding:8px 14px;font-weight:bold'>Company</td><td style='padding:8px 14px'>" + referred_co + (", " + referred_city if referred_city else "") + "</td></tr>"
+					"<tr style='background:#F2F4F8'><td style='padding:8px 14px;font-weight:bold'>Submitted</td><td style='padding:8px 14px'>" + paid_date + "</td></tr>"
+					"</table>"
+					"<p style='margin-top:16px'>Once Sales confirms this lead is qualified, you will receive another email and your <strong>$10 cash payout</strong> will be ready at the office.</p>"
+					"<p style='font-size:12px;color:#666;margin-top:24px'>— Left Coast Scales</p>"
+				),
+				now=True,
+			)
+		except Exception:
+			frappe.log_error(title="Referral confirmation email failed", message=frappe.get_traceback())
