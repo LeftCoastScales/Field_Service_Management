@@ -339,6 +339,9 @@ doc_events = {
 	"Lead": {
 		"after_insert": "beveren_fsm.field_service_management.api.lead_referral.on_lead_after_insert",
 	},
+	"Communication": {
+		"after_insert": "beveren_fsm.field_service_management.api.bookkeeper_mail.link_bookkeeper_communication",
+	},
 }
 
 # Scheduled Tasks
@@ -411,3 +414,4 @@ scheduler_events = {
 website_route_rules = [
 	{"from_route": "/schedule/<path:app_path>", "to_route": "schedule"},
 ]
+Page_UpPage_UpPage_UpPage_UpPage_UpPage_Up
