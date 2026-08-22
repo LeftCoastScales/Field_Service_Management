@@ -414,4 +414,3 @@ scheduler_events = {
 website_route_rules = [
 	{"from_route": "/schedule/<path:app_path>", "to_route": "schedule"},
 ]
-Page_UpPage_UpPage_UpPage_UpPage_UpPage_Up
