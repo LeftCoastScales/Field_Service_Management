@@ -55,6 +55,7 @@ fixtures = [
 	"LCS Scale Model",
 	"LCS Appointment Resource",  # Phase 2C — non-human resource child table
 	"LCS Vehicle",
+	"LCS Load Cell Family",
 	{
 		"dt": "Custom Field",
 		"filters": [
