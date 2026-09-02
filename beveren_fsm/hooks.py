@@ -136,9 +136,10 @@ fixtures = [
 	"LCS Audit",
 
 	# Phase 7B -- Section 6.6, measurement uncertainty & calibration
-	# traceability. No seed records exported yet (field reference
-	# standard inventory still pending) -- listed now so nothing is
-	# forgotten once records exist.
+	# traceability. LCS Reference Standard is seeded from LCS's real
+	# 2025/2026 AZ Dept. of Agriculture calibration certificates
+	# (owning_test_truck intentionally left blank in the seed data --
+	# assign per record in the Desk once trucks are confirmed).
 	"LCS Uncertainty Budget",
 	"LCS Reference Standard",
 
