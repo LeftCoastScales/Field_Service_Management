@@ -108,6 +108,33 @@ fixtures = [
 		],
 	},
 
+	# Custom Fields for the LCS NCR -> Customer Equipment "Out of Service" tag
+	# (Phase 7B -- ISO 17025 QMS, Section 6.2 / SOP-013 Section 5.3.3)
+	{
+		"doctype": "Custom Field",
+		"filters": [
+			[
+				"name",
+				"in",
+				[
+					"LCS Customer Equipment-custom_out_of_service",
+					"LCS Customer Equipment-custom_out_of_service_reason",
+					"LCS Customer Equipment-custom_out_of_service_tagged_by",
+					"LCS Customer Equipment-custom_out_of_service_date",
+				],
+			]
+		],
+	},
+
+	# ---------------------------------------------------------------------------
+	# Phase 7B -- ISO 17025 QMS doctypes
+	# ---------------------------------------------------------------------------
+	"LCS Controlled Document",
+	"LCS NCR",
+	"LCS RGA",
+	"LCS CAPA",
+	"LCS Audit",
+
 	# ---------------------------------------------------------------------------
 	# LCS HR / People fixtures — filtered exports of standard Frappe doctypes
 	#
@@ -353,6 +380,7 @@ scheduler_events = {
 		"beveren_fsm.field_service_management.doctype.service_request.service_request.update_status",
 		"beveren_fsm.field_service_management.doctype.lcs_service_agreement.lcs_service_agreement.auto_create_service_orders",
 		"beveren_fsm.field_service_management.doctype.lcs_customer_equipment.lcs_customer_equipment.flag_overdue_equipment",
+		"beveren_fsm.field_service_management.doctype.lcs_controlled_document.lcs_controlled_document.flag_documents_approaching_review",
 	],
 }
 
