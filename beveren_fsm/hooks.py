@@ -135,6 +135,13 @@ fixtures = [
 	"LCS CAPA",
 	"LCS Audit",
 
+	# Phase 7B -- Section 6.6, measurement uncertainty & calibration
+	# traceability. No seed records exported yet (field reference
+	# standard inventory still pending) -- listed now so nothing is
+	# forgotten once records exist.
+	"LCS Uncertainty Budget",
+	"LCS Reference Standard",
+
 	# ---------------------------------------------------------------------------
 	# LCS HR / People fixtures — filtered exports of standard Frappe doctypes
 	#
@@ -381,6 +388,7 @@ scheduler_events = {
 		"beveren_fsm.field_service_management.doctype.lcs_service_agreement.lcs_service_agreement.auto_create_service_orders",
 		"beveren_fsm.field_service_management.doctype.lcs_customer_equipment.lcs_customer_equipment.flag_overdue_equipment",
 		"beveren_fsm.field_service_management.doctype.lcs_controlled_document.lcs_controlled_document.flag_documents_approaching_review",
+		"beveren_fsm.field_service_management.doctype.lcs_reference_standard.lcs_reference_standard.flag_reference_standards_due_for_recalibration",
 	],
 }
 

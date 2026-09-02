@@ -7,6 +7,10 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, today
 
+from beveren_fsm.field_service_management.doctype.lcs_calibration_traceability_link.lcs_calibration_traceability_link import (
+	is_standard_in_cal_on,
+)
+
 LOCATION_STATUS_MAP = {
 	"delivered to customer": "Review",
 	"deliver to customer": "Review",  # fallback for legacy value
@@ -39,6 +43,7 @@ class ServiceOrder(Document):
 		self.validate_items()
 		self.calculate_service_totals()
 		self.check_amc_budget()
+		self.validate_calibration_traceability()
 
 	def before_submit(self):
 		self.update_linked_doc_status_before_submit()
@@ -57,6 +62,32 @@ class ServiceOrder(Document):
 	def validate_items(self):
 		if not self.get("items"):
 			frappe.throw(_("Please add at least one item"))
+
+	def validate_calibration_traceability(self):
+		"""Phase 7B Active Brief Section 6.6 -- reuses the shape of Phase 2C's
+		Service Appointment.validate_overlap(): compute a per-row derived
+		field from the parent's validate(), then block the save if any row
+		fails, rather than relying on the child row's own controller being
+		invoked (it isn't, for custom validate() logic -- only Service
+		Appointment/its resource-overlap sibling establish that reuse
+		pattern, both defined directly on the owning doctype)."""
+		rows = self.get("calibration_traceability")
+		if not rows:
+			return
+
+		out_of_cal = []
+		for row in rows:
+			row.standard_was_in_cal = 1 if is_standard_in_cal_on(row.reference_standard, row.used_on_date) else 0
+			if not row.standard_was_in_cal:
+				out_of_cal.append(row.reference_standard)
+
+		if out_of_cal:
+			frappe.throw(
+				_(
+					"This job is logged against reference standard(s) that were not in "
+					"calibration on the date used: {0}"
+				).format(", ".join(out_of_cal))
+			)
 
 	def update_linked_doc_status_before_submit(self):
 		if not self.service_quotation and not self.service_request:
