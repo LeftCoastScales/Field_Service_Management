@@ -71,10 +71,56 @@ silently losing the "one line" behavior. get_print_line_groups guards
 against this with the doc.flags check below -- once before_print has
 run, it treats doc.items as already-final print rows instead of
 re-deriving groups from the Item master.
+
+Why pass-through rows stay real Documents
+------------------------------------------
+Caught by actually printing a real Sales Order with a letterhead selected
+(no test in this file exercised that path): once the before_print signature
+bug above was fixed, before_print started actually running and replacing
+doc.items -- and frappe/www/printview.py renders the letterhead by calling
+doc.as_dict(), which walks every child table and calls .as_dict() on each
+row. The very first cut of this hook rebuilt EVERY row (pass-through items
+included) as a plain frappe._dict. frappe._dict.__getattr__ returns None
+for a missing key instead of raising, so `row.as_dict` silently evaluated
+to None and `row.as_dict(...)` blew up with "TypeError: 'NoneType' object
+is not callable" -- a different, print-still-completely-broken failure
+than the one this hook was written to fix, and one none of the tests below
+caught because none of them called doc.as_dict() afterward.
+
+Fixed by leaving pass-through ("item" type) rows as the SAME original
+child-table Document objects already on doc.items -- they already have a
+working .as_dict() and every other field a real row has, so only their idx
+is renumbered. Only the synthesized "group" rows have no backing document,
+so those use _LCSGroupRow below, a frappe._dict subclass with a real
+as_dict() method, keeping the print-only in-memory doc safe to fully
+serialize exactly like an unmodified one.
 """
 
 import frappe
 from frappe.utils import flt
+from collections import defaultdict, deque
+
+
+class _LCSGroupRow(frappe._dict):
+	"""
+	Stand-in for a real child-table row, used only for a synthesized
+	consolidation "group" line in apply_print_line_consolidation -- there is
+	no backing Item Code for a group, so there is no real document to reuse
+	the way pass-through rows do.
+
+	frappe._dict supports attribute access but is a plain dict: it has no
+	as_dict() method, and frappe._dict.__getattr__ returns None for any
+	missing key rather than raising, so code that walks doc.items and calls
+	row.as_dict() (e.g. rendering a Jinja letterhead against doc.as_dict(),
+	see frappe/www/printview.py get_rendered_template) would try to call
+	None(...) and raise "TypeError: 'NoneType' object is not callable" the
+	moment before_print had replaced doc.items with plain dicts -- exactly
+	the bug that motivated this class. Defining as_dict() here keeps the
+	print-only in-memory doc safe to fully serialize, same as a real row.
+	"""
+
+	def as_dict(self, *args, **kwargs):
+		return dict(self)
 
 
 def get_print_line_groups(doc):
@@ -106,7 +152,17 @@ def get_print_line_groups(doc):
 			else {
 				"type": "item",
 				"item_code": item.item_code,
-				"description": item.description,
+				# Same fallback as the first-pass branch below -- must stay
+				# in sync, or a pass-through item with a blank description
+				# renders correctly the first time get_print_line_groups
+				# runs (via apply_print_line_consolidation) but loses its
+				# label on any second call (e.g. a Jinja format calling
+				# get_print_line_groups(doc) after before_print already
+				# ran). Caught by test_print_output_shows_one_line_not_three
+				# once pass-through rows started keeping their real,
+				# blank-by-default description field instead of a rebuilt
+				# dict that always carried the fallback forward.
+				"description": item.description or item.item_name,
 				"qty": item.qty,
 				"rate": item.rate,
 				"amount": item.amount,
@@ -192,6 +248,16 @@ def apply_print_line_consolidation(doc, method=None, *args, **kwargs):
 	raises "takes from 1 to 2 positional arguments but 3 were given" on
 	every print. *args/**kwargs makes this robust to that regardless of
 	how a given Frappe version chooses to pass it.
+
+	Pass-through ("item" type) rows keep the SAME original child-table
+	Document object doc.items already had -- see the module docstring's
+	"Why pass-through rows stay real Documents" section for the letterhead
+	as_dict() crash this avoids. remaining_by_code queues the original rows
+	per item_code (in original order) so two lines sharing one item code
+	still get matched back to the correct original row instead of both
+	binding to the first -- get_print_line_groups's output rows carry only
+	item_code, not a stable identity, so this is how each "item" row here
+	is paired back up with the real object it came from.
 	"""
 	if not getattr(doc, "items", None):
 		return
@@ -200,28 +266,18 @@ def apply_print_line_consolidation(doc, method=None, *args, **kwargs):
 	if not any(row.get("type") == "group" for row in line_rows):
 		return
 
+	remaining_by_code = defaultdict(deque)
+	for original_item in doc.items:
+		remaining_by_code[original_item.item_code].append(original_item)
+
 	new_items = []
 	idx = 0
 	for row in line_rows:
 		idx += 1
 		if row.get("type") == "item":
-			new_items.append(
-				frappe._dict(
-					{
-						"idx": idx,
-						"item_code": row.get("item_code"),
-						"item_name": row.get("item_code"),
-						"description": row.get("description"),
-						"qty": row.get("qty"),
-						"uom": None,
-						"rate": row.get("rate"),
-						"price_list_rate": row.get("rate"),
-						"discount_amount": 0,
-						"amount": row.get("amount"),
-						"base_amount": row.get("amount"),
-					}
-				)
-			)
+			original_item = remaining_by_code[row.get("item_code")].popleft()
+			original_item.idx = idx
+			new_items.append(original_item)
 			continue
 
 		# Consolidated group row: a lightweight pseudo item so Print
@@ -231,9 +287,11 @@ def apply_print_line_consolidation(doc, method=None, *args, **kwargs):
 		# apart from a real pass-through item if something calls it again
 		# on this already-consolidated doc (see the idempotency guard
 		# there) -- this attribute is never persisted, doc.items here
-		# only ever exists in memory for this one print render.
+		# only ever exists in memory for this one print render. Built as
+		# _LCSGroupRow (not a plain frappe._dict) so it has a working
+		# as_dict() -- see that class's docstring.
 		new_items.append(
-			frappe._dict(
+			_LCSGroupRow(
 				{
 					"idx": idx,
 					"item_code": row.get("label"),

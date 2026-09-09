@@ -406,3 +406,47 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		self.assertAlmostEqual(group_rows[0]["amount"], 173.5, places=2)
 		self.assertEqual(len(item_rows), 1)
 		self.assertEqual(item_rows[0]["item_code"], "_Test Scale Calibration Service")
+
+	def test_before_print_hook_output_survives_doc_as_dict(self):
+		"""
+		Regression test for a third production bug, caught only by actually
+		printing a real Sales Order that had a letterhead selected -- no test
+		in this file exercised that path. frappe/www/printview.py renders the
+		letterhead by calling doc.as_dict(), which walks every child table
+		and calls .as_dict() on each row. The first cut of this hook rebuilt
+		EVERY row (pass-through items included) as a plain frappe._dict.
+		frappe._dict.__getattr__ returns None for a missing key instead of
+		raising, so `row.as_dict` silently evaluated to None and
+		`row.as_dict(...)` raised "TypeError: 'NoneType' object is not
+		callable" -- print was still completely broken, just with a new and
+		more confusing error, once the signature bug above was fixed. Fixed
+		by leaving pass-through rows as the same original child-table
+		Document objects (already have a working as_dict()) and only using a
+		dict subclass with a real as_dict() for the synthesized group row.
+		Exercise the exact call letterhead rendering makes so this class of
+		"looks like a dict, isn't a real row" bug can't regress.
+		"""
+		si = self._make_invoice()
+		original_uom = si.items[0].uom
+
+		from beveren_fsm.field_service_management.api.print_helpers import apply_print_line_consolidation
+
+		apply_print_line_consolidation(si)
+
+		# Must not raise -- this is the exact call
+		# frappe/www/printview.get_rendered_template makes to build the
+		# letterhead's Jinja context.
+		as_dict = si.as_dict()
+		item_dicts = as_dict["items"]
+		self.assertEqual(len(item_dicts), 2)
+
+		pass_through = next(
+			d for d in item_dicts if d["item_code"] == "_Test Scale Calibration Service"
+		)
+		group = next(d for d in item_dicts if d["item_code"] == "Service & Handling")
+
+		# The pass-through row is a real dict produced by a real Document's
+		# as_dict(), so fields this hook never touches (like uom) are still
+		# correct -- not silently hardcoded away.
+		self.assertEqual(pass_through["uom"], original_uom)
+		self.assertAlmostEqual(group["amount"], 173.5, places=2)
