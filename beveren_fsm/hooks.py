@@ -354,6 +354,10 @@ doc_events = {
 			"beveren_fsm.field_service_management.fsm_utils.update_invoice_status",
 			"beveren_fsm.field_service_management.fsm_utils.update_per_billed_status",
 		],
+		"before_print": "beveren_fsm.field_service_management.api.print_helpers.apply_print_line_consolidation",
+	},
+	"Sales Order": {
+		"before_print": "beveren_fsm.field_service_management.api.print_helpers.apply_print_line_consolidation",
 	},
 	"Delivery Note": {
 		"on_submit": [
