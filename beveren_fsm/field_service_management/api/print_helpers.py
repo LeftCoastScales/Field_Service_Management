@@ -58,6 +58,19 @@ group lines so Print Designer's table renders them with its normal
 per-row styling. Because this only runs during print rendering and the
 mutated doc is never saved, GL/tax/stock are unaffected -- identical
 safety property to the Jinja path above.
+
+`before_print` fires for EVERY print of that doctype, Jinja formats
+included -- Frappe doesn't scope it to Print Designer formats only. So a
+Jinja format for the same doctype (e.g. a future Sales Invoice format
+that calls get_print_line_groups(doc) directly, the same way Quotation's
+does) would otherwise run against a doc.items already rewritten by
+apply_print_line_consolidation and double-process it: the group's pseudo
+item_code doesn't match any real Item, so the second pass would find no
+consolidation group and print it back out as a second ordinary line,
+silently losing the "one line" behavior. get_print_line_groups guards
+against this with the doc.flags check below -- once before_print has
+run, it treats doc.items as already-final print rows instead of
+re-deriving groups from the Item master.
 """
 
 import frappe
@@ -76,6 +89,31 @@ def get_print_line_groups(doc):
 	or:
 	    {"type": "group", "label": str, "note": str, "amount": float}
 	"""
+	if getattr(doc, "flags", None) and doc.flags.get("lcs_print_line_consolidation_applied"):
+		# apply_print_line_consolidation (the before_print hook) already
+		# rebuilt doc.items into final print rows for this render. Treat
+		# them as already-consolidated instead of re-deriving groups from
+		# the Item master -- see the "Print Designer formats" note above
+		# for why re-running this would double-process and corrupt output.
+		return [
+			{
+				"type": "group",
+				"label": item.item_code,
+				"note": item.description,
+				"amount": item.amount,
+			}
+			if getattr(item, "_lcs_group_row", False)
+			else {
+				"type": "item",
+				"item_code": item.item_code,
+				"description": item.description,
+				"qty": item.qty,
+				"rate": item.rate,
+				"amount": item.amount,
+			}
+			for item in doc.items
+		]
+
 	groups = {}
 	rows = []
 
@@ -130,7 +168,7 @@ def get_print_line_groups(doc):
 	return rows
 
 
-def apply_print_line_consolidation(doc, method=None):
+def apply_print_line_consolidation(doc, method=None, *args, **kwargs):
 	"""
 	before_print doc event: for print formats built with Frappe's visual
 	Print Designer tool, there is no Jinja loop to point at
@@ -145,6 +183,15 @@ def apply_print_line_consolidation(doc, method=None):
 	on the document actually belongs to a consolidation group, so plain
 	documents with nothing to consolidate pay no extra cost and render
 	exactly as before.
+
+	Accepts and ignores extra positional/keyword arguments: Frappe's
+	print-view code (frappe.www.printview) calls before_print hooks with
+	an extra `print_settings` argument -- observed in production as a
+	positional arg (doc, method, print_settings), not the keyword-only
+	call the "run_method" docs imply -- so a strict 2-argument signature
+	raises "takes from 1 to 2 positional arguments but 3 were given" on
+	every print. *args/**kwargs makes this robust to that regardless of
+	how a given Frappe version chooses to pass it.
 	"""
 	if not getattr(doc, "items", None):
 		return
@@ -180,6 +227,11 @@ def apply_print_line_consolidation(doc, method=None):
 		# Consolidated group row: a lightweight pseudo item so Print
 		# Designer's items table (bound to doc.items field-by-field)
 		# renders it using the exact same column layout as real rows.
+		# Tagged with _lcs_group_row so get_print_line_groups can tell it
+		# apart from a real pass-through item if something calls it again
+		# on this already-consolidated doc (see the idempotency guard
+		# there) -- this attribute is never persisted, doc.items here
+		# only ever exists in memory for this one print render.
 		new_items.append(
 			frappe._dict(
 				{
@@ -194,8 +246,11 @@ def apply_print_line_consolidation(doc, method=None):
 					"discount_amount": 0,
 					"amount": flt(row.get("amount")),
 					"base_amount": flt(row.get("amount")),
+					"_lcs_group_row": True,
 				}
 			)
 		)
 
 	doc.items = new_items
+	if getattr(doc, "flags", None) is not None:
+		doc.flags.lcs_print_line_consolidation_applied = True

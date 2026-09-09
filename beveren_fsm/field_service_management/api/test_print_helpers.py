@@ -340,3 +340,69 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		original_items = list(si.items)
 		apply_print_line_consolidation(si)
 		self.assertEqual(si.items, original_items)
+
+	def test_before_print_hook_survives_frappes_actual_dispatch_call(self):
+		"""
+		Regression test for a production bug caught by actually printing a
+		real Sales Order after this feature went live: frappe/www/printview.py
+		calls `doc.run_method("before_print", print_settings)` with
+		print_settings as a POSITIONAL argument, not a keyword. Document's
+		hook dispatcher (Document.hook -> compose -> runner) then invokes
+		every doc_events "before_print" handler as
+		`fn(doc, "before_print", print_settings)` -- three positional
+		arguments. A handler declared as
+		`apply_print_line_consolidation(doc, method=None)` raises
+		"TypeError: ... takes from 1 to 2 positional arguments but 3 were
+		given" on every single print, which none of the tests above caught
+		because they all call the function directly with 1-2 args instead
+		of going through Frappe's real hook dispatch. Exercise that exact
+		path here so this class of signature mismatch can't regress.
+		"""
+		si = self._make_invoice()
+		# Mirrors frappe.www.printview's exact call shape, dispatched
+		# through the real hooks.py "before_print" wiring for Sales Invoice.
+		si.run_method("before_print", frappe._dict({"some": "print_settings"}))
+
+		codes = [d.item_code for d in si.items]
+		self.assertIn("Service & Handling", codes)
+		self.assertNotIn("_Test Zone Charge", codes)
+
+	def test_get_print_line_groups_is_idempotent_after_before_print(self):
+		"""
+		Regression test for a second bug found while fixing the one above:
+		before_print fires for EVERY print of a doctype it's wired to --
+		Jinja formats included, not just Print Designer ones. A Jinja
+		format for the same doctype that calls get_print_line_groups(doc)
+		directly (the pattern this app's Quotation format uses) would run
+		AFTER before_print already rewrote doc.items into pass-through +
+		pseudo-group rows. Re-deriving groups from that already-mutated
+		list looks up the pseudo group row's fabricated item_code
+		("Service & Handling") against the Item master, finds no
+		consolidation group, and silently prints it back out as a second
+		ordinary item -- the exact opposite of what this feature promises,
+		and different from (and worse than) simply erroring: it produces
+		wrong, believable-looking output. Caught by simulating that
+		ordering directly here.
+		"""
+		si = self._make_invoice()
+		from beveren_fsm.field_service_management.api.print_helpers import (
+			apply_print_line_consolidation,
+			get_print_line_groups,
+		)
+
+		# Simulate before_print already having run for this render (as it
+		# always does, before any Jinja template body executes).
+		apply_print_line_consolidation(si)
+
+		# A Jinja print format calling get_print_line_groups(doc) itself,
+		# same as Quotation's, must see the SAME consolidated view --
+		# not double-process it into a second ordinary line.
+		rows = get_print_line_groups(si)
+		group_rows = [r for r in rows if r["type"] == "group"]
+		item_rows = [r for r in rows if r["type"] == "item"]
+
+		self.assertEqual(len(group_rows), 1)
+		self.assertEqual(group_rows[0]["label"], "Service & Handling")
+		self.assertAlmostEqual(group_rows[0]["amount"], 173.5, places=2)
+		self.assertEqual(len(item_rows), 1)
+		self.assertEqual(item_rows[0]["item_code"], "_Test Scale Calibration Service")
