@@ -43,9 +43,25 @@ Wiring notes for print formats:
   instead of doc.items, rendering {"type": "item", ...} rows normally and
   {"type": "group", ...} rows as one summed line (with `note` printed
   underneath if present).
+
+Print Designer formats
+-----------------------
+Some print formats (Frappe's visual "Print Designer" tool, identifiable by
+`print_designer=1` on the Print Format record) don't render a Jinja
+template at all -- their items table is a JSON layout bound directly to
+the doctype's `items` child table field-by-field, so there is no Jinja
+loop to edit. For those, `apply_print_line_consolidation` is registered as
+a `before_print` doc event instead: it swaps `doc.items` in memory (for
+that single print render only, never saved) for a consolidated list built
+from get_print_line_groups, using lightweight pseudo item rows for the
+group lines so Print Designer's table renders them with its normal
+per-row styling. Because this only runs during print rendering and the
+mutated doc is never saved, GL/tax/stock are unaffected -- identical
+safety property to the Jinja path above.
 """
 
 import frappe
+from frappe.utils import flt
 
 
 def get_print_line_groups(doc):
@@ -112,3 +128,74 @@ def get_print_line_groups(doc):
 	# Consolidated rows print together after the ordinary line items.
 	rows.extend(groups.values())
 	return rows
+
+
+def apply_print_line_consolidation(doc, method=None):
+	"""
+	before_print doc event: for print formats built with Frappe's visual
+	Print Designer tool, there is no Jinja loop to point at
+	get_print_line_groups -- the items table there is bound directly to
+	doc.items field-by-field. This hook rebuilds doc.items in memory
+	(for this print render only; never saved back to the database) so
+	those tables show the same consolidated view as the Jinja print
+	formats, using get_print_line_groups for the actual grouping logic
+	so both code paths agree on what counts as "the same group".
+
+	No-ops entirely (leaves doc.items untouched) unless at least one line
+	on the document actually belongs to a consolidation group, so plain
+	documents with nothing to consolidate pay no extra cost and render
+	exactly as before.
+	"""
+	if not getattr(doc, "items", None):
+		return
+
+	line_rows = get_print_line_groups(doc)
+	if not any(row.get("type") == "group" for row in line_rows):
+		return
+
+	new_items = []
+	idx = 0
+	for row in line_rows:
+		idx += 1
+		if row.get("type") == "item":
+			new_items.append(
+				frappe._dict(
+					{
+						"idx": idx,
+						"item_code": row.get("item_code"),
+						"item_name": row.get("item_code"),
+						"description": row.get("description"),
+						"qty": row.get("qty"),
+						"uom": None,
+						"rate": row.get("rate"),
+						"price_list_rate": row.get("rate"),
+						"discount_amount": 0,
+						"amount": row.get("amount"),
+						"base_amount": row.get("amount"),
+					}
+				)
+			)
+			continue
+
+		# Consolidated group row: a lightweight pseudo item so Print
+		# Designer's items table (bound to doc.items field-by-field)
+		# renders it using the exact same column layout as real rows.
+		new_items.append(
+			frappe._dict(
+				{
+					"idx": idx,
+					"item_code": row.get("label"),
+					"item_name": row.get("label"),
+					"description": row.get("note") or "",
+					"qty": None,
+					"uom": None,
+					"rate": None,
+					"price_list_rate": None,
+					"discount_amount": 0,
+					"amount": flt(row.get("amount")),
+					"base_amount": flt(row.get("amount")),
+				}
+			)
+		)
+
+	doc.items = new_items

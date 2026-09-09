@@ -276,3 +276,67 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		self.assertNotIn("_Test Travel Labor", html)
 		self.assertNotIn("_Test S&R Recovery", html)
 		self.assertIn("_Test Scale Calibration Service", html)
+
+	def test_before_print_hook_rebuilds_items_for_print_designer(self):
+		"""
+		apply_print_line_consolidation is the before_print hook that
+		Print Designer formats need (their items table reads doc.items
+		directly instead of calling get_print_line_groups itself).
+		Confirm it rebuilds doc.items in memory to the same consolidated
+		shape -- and that it never touches the database, so reloading
+		the invoice still shows the real, fully itemized rows.
+		"""
+		si = self._make_invoice()
+		from beveren_fsm.field_service_management.api.print_helpers import (
+			apply_print_line_consolidation,
+		)
+
+		original_item_count = len(si.items)
+		apply_print_line_consolidation(si)
+
+		self.assertEqual(len(si.items), 2)  # 1 pass-through + 1 consolidated
+		codes = [d.item_code for d in si.items]
+		self.assertIn("_Test Scale Calibration Service", codes)
+		self.assertIn("Service & Handling", codes)
+
+		group_row = next(d for d in si.items if d.item_code == "Service & Handling")
+		self.assertAlmostEqual(group_row.amount, 173.5, places=2)
+		self.assertIsNone(group_row.qty)
+		self.assertEqual([d.idx for d in si.items], [1, 2])
+
+		# Never persisted: reloading from the database still shows all
+		# original line items, untouched.
+		reloaded = frappe.get_doc("Sales Invoice", si.name)
+		self.assertEqual(len(reloaded.items), original_item_count)
+
+	def test_before_print_hook_is_noop_without_any_grouped_items(self):
+		"""
+		A document with nothing to consolidate should render exactly as
+		before -- no pseudo-rows, no renumbering, no wasted work.
+		"""
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"customer": "_Test LCS Consolidation Customer",
+				"company": COMPANY,
+				"currency": "USD",
+				"conversion_rate": 1,
+				"selling_price_list": "_Test Standard Selling LCS",
+				"price_list_currency": "USD",
+				"plc_conversion_rate": 1,
+				"due_date": frappe.utils.nowdate(),
+				"items": [
+					{"item_code": "_Test Scale Calibration Service", "qty": 1, "rate": 250.00},
+				],
+			}
+		)
+		si.insert()
+		si.submit()
+
+		from beveren_fsm.field_service_management.api.print_helpers import (
+			apply_print_line_consolidation,
+		)
+
+		original_items = list(si.items)
+		apply_print_line_consolidation(si)
+		self.assertEqual(si.items, original_items)
