@@ -450,3 +450,44 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		# correct -- not silently hardcoded away.
 		self.assertEqual(pass_through["uom"], original_uom)
 		self.assertAlmostEqual(group["amount"], 173.5, places=2)
+
+	def test_group_row_supports_arbitrary_document_methods(self):
+		"""
+		Regression test for a fourth production bug, caught only by actually
+		printing a real Sales Order through a SECOND Print Designer format
+		("Sales Order with Item Image") on production, with a letterhead
+		selected: Print Designer's item-table macro renders each cell by
+		calling `row.get_formatted(fieldname)` -- a real Document method.
+		The group row built by the previous fix (a frappe._dict subclass
+		with only an as_dict() method bolted on) had no get_formatted
+		either, and frappe._dict.__getattr__ returns None for a missing
+		attribute instead of raising, so `row.get_formatted` evaluated to
+		None and `None(fieldname)` raised "TypeError: 'NoneType' object is
+		not callable" all over again -- a different Document method than
+		the one the previous fix anticipated, but the exact same class of
+		bug. Fixed by building the group row as a genuine, unsaved instance
+		of the doctype's own child table (via frappe.get_doc), which has
+		every Document method a real row has. Exercise get_formatted
+		directly (not just as_dict, already covered above) so this class of
+		"looks like a dict, isn't a real row" bug can't regress again on
+		some other Document method a future print format happens to call.
+		"""
+		si = self._make_invoice()
+
+		from beveren_fsm.field_service_management.api.print_helpers import apply_print_line_consolidation
+
+		apply_print_line_consolidation(si)
+
+		group_row = next(d for d in si.items if d.item_code == "Service & Handling")
+
+		# Must not raise -- this is the exact call Print Designer's table
+		# macro makes per cell (print_designer/.../macros/spantag.html).
+		formatted_amount = group_row.get_formatted("amount")
+		self.assertIn("173.5", formatted_amount.replace(",", ""))
+
+		# The group row is a real child-table Document now, not a bare
+		# dict -- same doctype as every other row in doc.items.
+		pass_through = next(
+			d for d in si.items if d.item_code == "_Test Scale Calibration Service"
+		)
+		self.assertEqual(group_row.doctype, pass_through.doctype)
