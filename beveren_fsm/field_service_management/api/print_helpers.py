@@ -72,8 +72,8 @@ against this with the doc.flags check below -- once before_print has
 run, it treats doc.items as already-final print rows instead of
 re-deriving groups from the Item master.
 
-Why pass-through rows stay real Documents
-------------------------------------------
+Why pass-through rows stay real Documents, and why the group row is one too
+-----------------------------------------------------------------------------
 Caught by actually printing a real Sales Order with a letterhead selected
 (no test in this file exercised that path): once the before_print signature
 bug above was fixed, before_print started actually running and replacing
@@ -90,10 +90,23 @@ caught because none of them called doc.as_dict() afterward.
 Fixed by leaving pass-through ("item" type) rows as the SAME original
 child-table Document objects already on doc.items -- they already have a
 working .as_dict() and every other field a real row has, so only their idx
-is renumbered. Only the synthesized "group" rows have no backing document,
-so those use _LCSGroupRow below, a frappe._dict subclass with a real
-as_dict() method, keeping the print-only in-memory doc safe to fully
-serialize exactly like an unmodified one.
+is renumbered.
+
+The synthesized "group" row has no backing document, so it originally used
+a small frappe._dict subclass with just an as_dict() method bolted on. That
+was still not enough: caught by printing through a SECOND Print Designer
+format ("Sales Order with Item Image") on production, whose items table
+renders each cell via a Jinja macro that calls `row.get_formatted(fieldname)`
+-- a real Document method, frappe._dict doesn't have it either, and the
+same None-instead-of-AttributeError behavior turned `row.get_formatted`
+into `None(...)` again. There was no reason to expect that particular
+method and not some other real Document method Print Designer, a Jinja
+format, or some future print format might call on a row -- so rather than
+keep patching one missing method at a time, _build_group_row below makes
+the group row a genuine, unsaved instance of the SAME child doctype every
+other row in doc.items already is (via frappe.get_doc), with every
+Document method a real row has, not just the ones this hook happened to
+anticipate.
 """
 
 import frappe
@@ -101,26 +114,43 @@ from frappe.utils import flt
 from collections import defaultdict, deque
 
 
-class _LCSGroupRow(frappe._dict):
+def _build_group_row(doc, idx, row):
 	"""
-	Stand-in for a real child-table row, used only for a synthesized
-	consolidation "group" line in apply_print_line_consolidation -- there is
-	no backing Item Code for a group, so there is no real document to reuse
-	the way pass-through rows do.
-
-	frappe._dict supports attribute access but is a plain dict: it has no
-	as_dict() method, and frappe._dict.__getattr__ returns None for any
-	missing key rather than raising, so code that walks doc.items and calls
-	row.as_dict() (e.g. rendering a Jinja letterhead against doc.as_dict(),
-	see frappe/www/printview.py get_rendered_template) would try to call
-	None(...) and raise "TypeError: 'NoneType' object is not callable" the
-	moment before_print had replaced doc.items with plain dicts -- exactly
-	the bug that motivated this class. Defining as_dict() here keeps the
-	print-only in-memory doc safe to fully serialize, same as a real row.
+	Build the synthesized consolidation "group" line as a real, unsaved
+	child-table Document -- the same doctype as every other row already on
+	doc.items (e.g. "Sales Order Item") -- instead of a plain dict standing
+	in for one. See the module docstring's "Why pass-through rows stay real
+	Documents, and why the group row is one too" section for why a fake
+	dict kept breaking on a new Document method each time a different print
+	format exercised it. frappe.get_doc() with a plain dict builds a real,
+	fully-functional Document of the target doctype; it is never inserted,
+	so nothing here ever touches the database -- doc.items only exists in
+	this shape for the one print render in progress.
 	"""
-
-	def as_dict(self, *args, **kwargs):
-		return dict(self)
+	group_row = frappe.get_doc(
+		{
+			"doctype": doc.get_table_field_doctype("items"),
+			"parent": doc.name,
+			"parenttype": doc.doctype,
+			"parentfield": "items",
+			"idx": idx,
+			"item_code": row.get("label"),
+			"item_name": row.get("label"),
+			"description": row.get("note") or "",
+			"qty": None,
+			"uom": None,
+			"rate": None,
+			"price_list_rate": None,
+			"discount_amount": 0,
+			"amount": flt(row.get("amount")),
+			"base_amount": flt(row.get("amount")),
+		}
+	)
+	# Never persisted, and never part of doc.items' real field list -- only
+	# used by get_print_line_groups's idempotency check below. Ordinary
+	# Python attribute; not a doctype field, so it can't collide with one.
+	group_row._lcs_group_row = True
+	return group_row
 
 
 def get_print_line_groups(doc):
@@ -283,31 +313,14 @@ def apply_print_line_consolidation(doc, method=None, *args, **kwargs):
 		# Consolidated group row: a lightweight pseudo item so Print
 		# Designer's items table (bound to doc.items field-by-field)
 		# renders it using the exact same column layout as real rows.
-		# Tagged with _lcs_group_row so get_print_line_groups can tell it
-		# apart from a real pass-through item if something calls it again
-		# on this already-consolidated doc (see the idempotency guard
-		# there) -- this attribute is never persisted, doc.items here
-		# only ever exists in memory for this one print render. Built as
-		# _LCSGroupRow (not a plain frappe._dict) so it has a working
-		# as_dict() -- see that class's docstring.
-		new_items.append(
-			_LCSGroupRow(
-				{
-					"idx": idx,
-					"item_code": row.get("label"),
-					"item_name": row.get("label"),
-					"description": row.get("note") or "",
-					"qty": None,
-					"uom": None,
-					"rate": None,
-					"price_list_rate": None,
-					"discount_amount": 0,
-					"amount": flt(row.get("amount")),
-					"base_amount": flt(row.get("amount")),
-					"_lcs_group_row": True,
-				}
-			)
-		)
+		# Built as a real child-table Document (see _build_group_row's
+		# docstring) so every Document method a real row has -- as_dict(),
+		# get_formatted(), etc. -- works here too, not just the ones this
+		# hook happened to anticipate. Tagged with _lcs_group_row so
+		# get_print_line_groups can tell it apart from a real pass-through
+		# item if something calls it again on this already-consolidated doc
+		# (see the idempotency guard there).
+		new_items.append(_build_group_row(doc, idx, row))
 
 	doc.items = new_items
 	if getattr(doc, "flags", None) is not None:
