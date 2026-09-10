@@ -491,3 +491,38 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 			d for d in si.items if d.item_code == "_Test Scale Calibration Service"
 		)
 		self.assertEqual(group_row.doctype, pass_through.doctype)
+
+	def test_group_row_amount_visible_through_net_amount_field_too(self):
+		"""
+		Regression test for a fifth production bug, caught only by actually
+		printing a real Sales Order through "Sales Order with Item Image" on
+		production AFTER the fourth fix shipped: that format is a plain
+		Jinja "Custom Format" (not Print Designer) whose row template calls
+		`item.get_formatted("net_rate", doc)` and
+		`item.get_formatted("net_amount", doc)` -- not "rate"/"amount".
+		Because a real Document has no missing-attribute crash to catch
+		this, the page rendered with no error but showed $0.00 for the
+		consolidated line's Amount: net_amount defaulted to 0 since
+		_build_group_row only populated amount/base_amount. Worse than the
+		fourth bug's crash, since it silently produced a customer-facing
+		total that didn't match the Sub Total (still correctly computed
+		from the real, untouched items). Fixed by populating
+		net_amount/base_net_amount alongside amount/base_amount. Exercise
+		net_amount directly (amount alone, already covered above, would
+		not have caught this) so this class of "right value, wrong field
+		name" bug can't regress on some other amount-equivalent field a
+		future print format happens to read.
+		"""
+		si = self._make_invoice()
+
+		from beveren_fsm.field_service_management.api.print_helpers import apply_print_line_consolidation
+
+		apply_print_line_consolidation(si)
+
+		group_row = next(d for d in si.items if d.item_code == "Service & Handling")
+
+		# This is the exact call "Sales Order with Item Image" makes per
+		# row: item.get_formatted("net_amount", doc).
+		formatted_net_amount = group_row.get_formatted("net_amount", si)
+		self.assertIn("173.5", formatted_net_amount.replace(",", ""))
+		self.assertAlmostEqual(group_row.base_net_amount, 173.5, places=2)

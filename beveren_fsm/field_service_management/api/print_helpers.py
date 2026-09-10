@@ -94,19 +94,37 @@ is renumbered.
 
 The synthesized "group" row has no backing document, so it originally used
 a small frappe._dict subclass with just an as_dict() method bolted on. That
-was still not enough: caught by printing through a SECOND Print Designer
-format ("Sales Order with Item Image") on production, whose items table
-renders each cell via a Jinja macro that calls `row.get_formatted(fieldname)`
--- a real Document method, frappe._dict doesn't have it either, and the
-same None-instead-of-AttributeError behavior turned `row.get_formatted`
-into `None(...)` again. There was no reason to expect that particular
-method and not some other real Document method Print Designer, a Jinja
-format, or some future print format might call on a row -- so rather than
-keep patching one missing method at a time, _build_group_row below makes
-the group row a genuine, unsaved instance of the SAME child doctype every
-other row in doc.items already is (via frappe.get_doc), with every
-Document method a real row has, not just the ones this hook happened to
-anticipate.
+was still not enough: caught by printing through a SECOND print format
+("Sales Order with Item Image" on production -- a plain Jinja "Custom
+Format", not actually a Print Designer format as first suspected; its
+`print_designer` flag is 0) whose item row template calls
+`item.get_formatted(fieldname, doc)` directly -- a real Document method,
+frappe._dict doesn't have it either, and the same None-instead-of-
+AttributeError behavior turned `row.get_formatted` into `None(...)` again.
+There was no reason to expect that particular method and not some other
+real Document method a Print Designer table, a Jinja format, or some
+future print format might call on a row -- so rather than keep patching
+one missing method at a time, _build_group_row below makes the group row
+a genuine, unsaved instance of the SAME child doctype every other row in
+doc.items already is (via frappe.get_doc), with every Document method a
+real row has, not just the ones this hook happened to anticipate.
+
+Fixing the method crash surfaced a fifth, quieter bug: with the crash
+gone, that same "Sales Order with Item Image" format rendered without
+error but showed $0.00 for the consolidated line's Amount, because its
+template reads `item.get_formatted("net_rate", doc)` and
+`item.get_formatted("net_amount", doc)` -- not "rate"/"amount" -- and
+_build_group_row only populated "amount"/"base_amount". A real Document
+has no AttributeError to catch this the way the fourth bug did: `net_amount`
+is a perfectly ordinary field on Sales Order Item, it just defaulted to 0
+because nothing set it, so the page rendered a wrong number instead of
+raising -- worse than a crash, since a customer-facing total silently
+didn't match the Sub Total (still computed correctly from the real,
+untouched item rows). No test caught it because every existing test here
+checks `group_row.amount`, never `net_amount`. Fixed by populating
+"net_amount"/"base_net_amount" alongside "amount"/"base_amount" so any
+print format's column -- whichever of these four equivalent standard
+field names it happens to bind to -- shows the same, correct total.
 """
 
 import frappe
@@ -126,7 +144,15 @@ def _build_group_row(doc, idx, row):
 	fully-functional Document of the target doctype; it is never inserted,
 	so nothing here ever touches the database -- doc.items only exists in
 	this shape for the one print render in progress.
+
+	amount/base_amount/net_amount/base_net_amount are all set to the same
+	total: a print format may bind its Amount column to any one of these
+	four standard field names (see the module docstring's fifth-bug note),
+	and this row has no per-field discount breakdown to make them differ
+	anyway. rate/net_rate stay unset (None) on purpose -- a consolidated
+	charge has no single meaningful rate.
 	"""
+	group_amount = flt(row.get("amount"))
 	group_row = frappe.get_doc(
 		{
 			"doctype": doc.get_table_field_doctype("items"),
@@ -140,10 +166,13 @@ def _build_group_row(doc, idx, row):
 			"qty": None,
 			"uom": None,
 			"rate": None,
+			"net_rate": None,
 			"price_list_rate": None,
 			"discount_amount": 0,
-			"amount": flt(row.get("amount")),
-			"base_amount": flt(row.get("amount")),
+			"amount": group_amount,
+			"base_amount": group_amount,
+			"net_amount": group_amount,
+			"base_net_amount": group_amount,
 		}
 	)
 	# Never persisted, and never part of doc.items' real field list -- only
