@@ -1002,6 +1002,7 @@ For **Opus or Sonnet** — use this workflow when starting a new phase.
 | **7U** | Pending | **Sonnet** | Recurring training invoices |
 | **7V** | Pending | **Sonnet** | Recurring vendor bills |
 | **7W** | Pending | **Sonnet** | Vehicle & equipment mgmt |
+| **7X** | Pending | **Opus first, then Sonnet** | DCC XML schema (digital calibration certificates) |
 
 ### Critical Decision Points: Escalate to Opus
 
@@ -1069,6 +1070,18 @@ For **Opus or Sonnet** — use this workflow when starting a new phase.
 - Hybrid: Frappe HR owns org structure, TriNet owns payroll data?
 - Conflict resolution: if both systems change the same field, which wins?
 
+#### Phase 7X (DCC XML Schema)
+
+**Decision:** How does LCS's calibration data map to the DCC (Digital Calibration Certificate) XML schema, and does DCC output replace or supplement the existing PDF certificate?
+
+**Why Opus:** DCC is an external, PTB-maintained international standard for machine-readable calibration certificates (measurement results, uncertainty, traceability chain, digital signature). Getting the mapping and validation approach wrong means rework once customers start requesting DCC-format certs alongside the PDF, and this phase likely shares data with Phase 7B (ISO 17025 QMS).
+
+**Key questions:**
+- Which doctype(s) hold the calibration/measurement results that map to the DCC schema's required elements?
+- Is DCC XML generated alongside the existing PDF certificate, or only on customer request?
+- What satisfies the schema's digital signature / authenticity requirement?
+- How does this phase sequence relative to Phase 7B, given the shared calibration-record data model?
+
 ### Cost & ROI
 
 | **Investment** | **Cost** | **Prevents** |
@@ -1081,7 +1094,7 @@ For **Opus or Sonnet** — use this workflow when starting a new phase.
 ### Summary
 
 - **Phase 2E:** ✅ Complete (6/16/26). Crew leader, time tracking, and travel time fields deployed.
-- **Phases 3 onward:** Use Sonnet as default. Escalate to Opus for Phases 5, 7B, 7E, 7F–7H, and 7J (critical architecture decisions).
+- **Phases 3 onward:** Use Sonnet as default. Escalate to Opus for Phases 5, 7B, 7E, 7F–7H, 7J, and 7X (critical architecture decisions).
 - **Total Opus budget:** ~6–8 sessions (~$5–$15). Saves weeks of rework.
 - **Keep the implementation guide handy** — both models learn from your established patterns (fixtures, naming, client scripts, scheduler hooks).
 
