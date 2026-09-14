@@ -183,6 +183,34 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		si.submit()
 		return si
 
+	def _make_quotation(self):
+		"""
+		Same item mix as _make_invoice, but as a draft Quotation -- Quotations
+		are never submitted (docstatus stays 0), so this mirrors how real LCS
+		quotations exist when a customer asks for a proposal print.
+		"""
+		qtn = frappe.get_doc(
+			{
+				"doctype": "Quotation",
+				"quotation_to": "Customer",
+				"party_name": "_Test LCS Consolidation Customer",
+				"company": COMPANY,
+				"currency": "USD",
+				"conversion_rate": 1,
+				"selling_price_list": "_Test Standard Selling LCS",
+				"price_list_currency": "USD",
+				"plc_conversion_rate": 1,
+				"items": [
+					{"item_code": "_Test Scale Calibration Service", "qty": 1, "rate": 250.00},
+					{"item_code": "_Test Zone Charge", "qty": 1, "rate": 35.00},
+					{"item_code": "_Test Travel Labor", "qty": 2, "rate": 60.00},
+					{"item_code": "_Test S&R Recovery", "qty": 1, "rate": 18.50},
+				],
+			}
+		)
+		qtn.insert()
+		return qtn
+
 	def test_gl_entries_stay_fully_itemized(self):
 		"""
 		The heart of the requirement: consolidating the customer-facing
@@ -526,3 +554,53 @@ class IntegrationTestPrintConsolidation(IntegrationTestCase):
 		formatted_net_amount = group_row.get_formatted("net_amount", si)
 		self.assertIn("173.5", formatted_net_amount.replace(",", ""))
 		self.assertAlmostEqual(group_row.base_net_amount, 173.5, places=2)
+
+	def test_before_print_hook_works_on_quotation_via_real_hook_dispatch(self):
+		"""
+		"Left Coast Scales Proposal" (a Quotation print format) has always
+		called get_print_line_groups(doc) directly in its own Jinja template,
+		so it was never exposed to any of the four before_print bugs fixed
+		above -- before_print was only wired for Sales Invoice and Sales
+		Order. But Quotation Standard and Quotation with Item Image (both
+		stock-style formats that iterate doc.items directly and call
+		item.get_formatted("net_rate"/"net_amount", doc) per row -- the
+		exact pattern that caused the fourth and fifth bugs on Sales Order)
+		showed every line itemized with no way to collapse them, since
+		nothing rewrote doc.items for Quotation prints. Wiring Quotation's
+		before_print to the same apply_print_line_consolidation hook used by
+		Sales Order/Sales Invoice makes every Quotation print format behave
+		consistently, without changing print_helpers.py itself -- the group
+		row it builds already has real Document methods and both
+		amount/net_amount populated (per the fourth and fifth bug fixes), so
+		it works here without any further change.
+
+		Exercised through frappe's real hook dispatch (run_method), not a
+		direct function call, so this also proves the hooks.py wiring itself
+		-- not just that the underlying function is doctype-agnostic.
+		"""
+		qtn = self._make_quotation()
+		original_item_count = len(qtn.items)
+
+		# Mirrors frappe.www.printview's exact call shape for before_print,
+		# same as the Sales Invoice dispatch test above.
+		qtn.run_method("before_print", frappe._dict({"some": "print_settings"}))
+
+		self.assertEqual(len(qtn.items), 2)  # 1 pass-through + 1 consolidated
+		codes = [d.item_code for d in qtn.items]
+		self.assertIn("_Test Scale Calibration Service", codes)
+		self.assertIn("Service & Handling", codes)
+
+		group_row = next(d for d in qtn.items if d.item_code == "Service & Handling")
+
+		# Both amount-field names a Quotation print format might read --
+		# Quotation Standard/with Item Image use net_amount, a future
+		# format might use amount directly, like the Proposal format's own
+		# get_print_line_groups(doc) call does.
+		self.assertAlmostEqual(group_row.amount, 173.5, places=2)
+		formatted_net_amount = group_row.get_formatted("net_amount", qtn)
+		self.assertIn("173.5", formatted_net_amount.replace(",", ""))
+
+		# Never persisted -- a draft Quotation is never submitted, so this
+		# also confirms before_print doesn't accidentally save anything.
+		reloaded = frappe.get_doc("Quotation", qtn.name)
+		self.assertEqual(len(reloaded.items), original_item_count)
