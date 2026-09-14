@@ -359,6 +359,9 @@ doc_events = {
 	"Sales Order": {
 		"before_print": "beveren_fsm.field_service_management.api.print_helpers.apply_print_line_consolidation",
 	},
+	"Quotation": {
+		"before_print": "beveren_fsm.field_service_management.api.print_helpers.apply_print_line_consolidation",
+	},
 	"Delivery Note": {
 		"on_submit": [
 			"beveren_fsm.field_service_management.doctype.service_order.service_order.update_product_movement_on_submit",
